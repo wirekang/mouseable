@@ -3,9 +3,14 @@ package config
 import (
 	"os"
 	"path"
+	"strings"
 )
 
-var DefaultConfigPath = path.Join(os.Getenv("USERPROFILE"), "mouseable.json")
+var ConfigPath = strings.ReplaceAll(
+	path.Join(
+		os.Getenv("USERPROFILE"), "mouseable.json",
+	), "\\", "/",
+)
 
 var DefaultConfig = Config{
 	Speed: Speed{
