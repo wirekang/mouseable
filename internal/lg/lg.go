@@ -4,24 +4,20 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
-	"strings"
+
+	"github.com/wirekang/mouseable/internal/check"
 )
 
-var LogPath = strings.ReplaceAll(
-	path.Join(
-		os.Getenv("USERPROFILE"), "mouseable.log",
-	), "\\", "/",
-)
+var FilePath = check.MustCacheDir() + "/debug.log"
 
 var logger *log.Logger
 
 func init() {
-	f, err := os.OpenFile(LogPath, os.O_CREATE|os.O_APPEND, 0755)
+	f, err := os.OpenFile(FilePath, os.O_CREATE|os.O_APPEND, 0755)
 	if err != nil {
 		panic(err)
 	}
-	logger = log.New(f, "", log.Llongfile|log.LstdFlags)
+	logger = log.New(f, "", log.LstdFlags)
 }
 
 func printf(prefix string, format string, v ...interface{}) {

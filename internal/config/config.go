@@ -10,12 +10,12 @@ import (
 )
 
 func Load() (cfg Config, err error) {
-	fmt.Println("load: " + ConfigPath)
-	b, err := os.ReadFile(ConfigPath)
+	fmt.Println("load: " + FilePath)
+	b, err := os.ReadFile(FilePath)
 	isNew := false
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			fmt.Println("no config file at " + ConfigPath)
+			fmt.Println("no config file at " + FilePath)
 			err = nil
 			isNew = true
 		} else {
@@ -27,7 +27,7 @@ func Load() (cfg Config, err error) {
 
 	var config Config
 	if isNew {
-		fmt.Println("write default config file at " + ConfigPath)
+		fmt.Println("write default config file at " + FilePath)
 		config = DefaultConfig
 		var b []byte
 		b, err = jsonMarshal(config)
@@ -36,7 +36,7 @@ func Load() (cfg Config, err error) {
 			return
 		}
 
-		err = os.WriteFile(ConfigPath, b, 0755)
+		err = os.WriteFile(FilePath, b, 0755)
 		if err != nil {
 			err = errors.Wrap(err, "write default config")
 			return

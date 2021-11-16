@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
+
+	"golang.org/x/sys/windows/svc"
 
 	"github.com/wirekang/mouseable/internal/check"
 	"github.com/wirekang/mouseable/internal/config"
 	"github.com/wirekang/mouseable/internal/lg"
-	"github.com/wirekang/mouseable/internal/svc"
+	"github.com/wirekang/mouseable/internal/script"
+	"github.com/wirekang/mouseable/internal/winsvc"
 )
 
 func main() {
@@ -16,7 +20,10 @@ func main() {
 	register := flag.Bool("register", false, "Register and run service")
 	unregister := flag.Bool("unregister", false, "Unregister service")
 	reload := flag.Bool(
-		"reload", false, "Reload config file at  "+config.ConfigPath,
+		"reload", false, "Reload config file at  "+config.FilePath,
+	)
+	open := flag.Bool(
+		"open", false, "Open directory where config.json and debug.log exist.",
 	)
 	run := flag.Bool(
 		"run", false,
@@ -24,38 +31,61 @@ func main() {
 	)
 	flag.Parse()
 
+	defer func() {
+		r := recover()
+		if r != nil {
+			lg.Errorf("panic: %v", r)
+			panic(r)
+		}
+	}()
+
 	if *register {
-		err := svc.Register()
+		err := script.Register()
 		if err != nil {
 			panic(err)
 		}
 	}
 
 	if *unregister {
-		err := svc.Unregister()
+		err := script.Unregister()
 		if err != nil {
 			panic(err)
 		}
 	}
 
 	if *reload {
-		err := svc.Reload()
+		err := script.Reload()
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	if !(*run || *register || *unregister || *reload) {
+	if *open {
+		err := script.OpenConfigDir()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if len(os.Args) < 2 {
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
 
 	if *run {
-		lg.Logf("start")
-		_, err := config.Load()
+		lg.Logf("Run")
+		err := svc.Run(
+			script.ServiceName, winsvc.Handler{
+				RunFunc: func(ctx context.Context) {
+					lg.Logf("Start")
+					<-ctx.Done()
+					lg.Logf("Stop")
+				},
+			},
+		)
+
 		if err != nil {
-			lg.Errorf("config.Load: %v", err)
-			os.Exit(1)
+			panic(err)
 		}
 	}
 }

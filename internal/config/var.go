@@ -1,16 +1,10 @@
 package config
 
 import (
-	"os"
-	"path"
-	"strings"
+	"github.com/wirekang/mouseable/internal/check"
 )
 
-var ConfigPath = strings.ReplaceAll(
-	path.Join(
-		os.Getenv("USERPROFILE"), "mouseable.json",
-	), "\\", "/",
-)
+var FilePath = check.MustCacheDir() + "/config.json"
 
 var DefaultConfig = Config{
 	Speed: Speed{
