@@ -4,7 +4,7 @@ import (
 	"github.com/wirekang/mouseable/internal/check"
 )
 
-var FilePath = check.MustCacheDir() + "/config.json"
+var FilePath = check.MustConfigDir() + "config.json"
 
 var DefaultConfig = Config{
 	Speed: Speed{

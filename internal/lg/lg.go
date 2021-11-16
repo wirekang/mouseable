@@ -8,7 +8,7 @@ import (
 	"github.com/wirekang/mouseable/internal/check"
 )
 
-var FilePath = check.MustCacheDir() + "/debug.log"
+var FilePath = check.MustConfigDir() + "debug.log"
 
 var logger *log.Logger
 

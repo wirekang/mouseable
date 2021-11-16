@@ -3,7 +3,6 @@ package check
 import (
 	"os"
 	"runtime"
-	"strings"
 )
 
 func MustWindows() {
@@ -12,12 +11,12 @@ func MustWindows() {
 	}
 }
 
-func MustCacheDir() string {
-	d, err := os.UserCacheDir()
+func MustConfigDir() string {
+	d, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
 	}
-	dir := strings.ReplaceAll(d, "\\", "/") + "/mouseable"
+	dir := d[:2] + "\\mouseable\\"
 	_ = os.Mkdir(dir, 0777)
 	return dir
 }

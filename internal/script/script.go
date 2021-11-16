@@ -83,7 +83,7 @@ func Reload() (err error) {
 
 func OpenConfigDir() (err error) {
 	_ = exec.Command(
-		"explorer", strings.ReplaceAll(check.MustCacheDir(), "/", "\\"),
+		"explorer", check.MustConfigDir(),
 	).Run()
 	return
 }
