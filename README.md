@@ -46,5 +46,5 @@ example ```C:/Users/user1/mouseable.json```
 
 # Roadmap
 
-[ ] Clean error handling
-[ ] Custom config file path
+* [ ] UI based config
+* [ ] Fine error handling
