@@ -46,5 +46,7 @@ example ```C:/Users/user1/mouseable.json```
 
 # Roadmap
 
+* [ ] Support double press
+* [ ] UI based config
 * [ ] UI based config
 * [ ] Fine error handling
