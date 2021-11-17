@@ -1,10 +1,10 @@
 package config
 
 import (
-	"github.com/wirekang/mouseable/internal/check"
+	"github.com/wirekang/winsvc/internal/must"
 )
 
-var FilePath = check.MustConfigDir() + "config.json"
+var FilePath = must.ConfigDir() + "\\" + "mouseable.json"
 
 var DefaultConfig = Config{
 	Speed: Speed{

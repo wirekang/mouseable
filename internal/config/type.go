@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/wirekang/mouseable/internal/key"
+	"github.com/wirekang/winsvc/internal/key"
 )
 
 type Config struct {

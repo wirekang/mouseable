@@ -18,35 +18,19 @@ Also mouseable is written in pure Go, so it's easy to install and maintain.
 
 ```go install github.com/wirekang/mouseable/cmd/mouseable@latest```
 
-## Register Service
+## Create Config File
 
-Open terminal as **Admin**. Run command to register Windows Service. This step
-may be optional if you don't want to use mouseable in background.
+execute  
+```mouseable -config```  
+to open config file. If config file does not exist, create new one.
 
-```mouseable -register```
+## Config Detail
 
-## Edit Config
-
-After register, mouseable was started automatically.  
-Edit ```[Home Directory]/mouseable.json``` for
-example ```C:/Users/user1/mouseable.json```
-
-## All Flags
-
-```
-  -register
-        Register and run service
-  -reload
-        Reload config file at  %USERPROFILE%/mouseable.json
-  -run
-        This flag run mouseable in foreground that usually NOT NEEDED
-  -unregister
-        Unregister windows service
-```
+todo
 
 # Roadmap
 
+* [ ] Support background running
 * [ ] Support double press
-* [ ] UI based config
-* [ ] UI based config
 * [ ] Fine error handling
+* [ ] UI based config

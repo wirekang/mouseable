@@ -3,34 +3,34 @@ package config
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/pkg/errors"
+
+	"github.com/wirekang/winsvc/internal/lg"
 )
 
 func Load() (cfg Config, err error) {
-	fmt.Println("load: " + FilePath)
+	lg.Logf("load config: %s", FilePath)
 	b, err := os.ReadFile(FilePath)
 	isNew := false
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			fmt.Println("no config file at " + FilePath)
+			lg.Logf("no config file: %s", FilePath)
 			err = nil
 			isNew = true
 		} else {
 			err = errors.Wrap(err, "open config file")
 			return
 		}
-
 	}
 
 	var config Config
 	if isNew {
-		fmt.Println("write default config file at " + FilePath)
+		lg.Logf("write default config file: %s ", FilePath)
 		config = DefaultConfig
 		var b []byte
-		b, err = jsonMarshal(config)
+		b, err = config.JSON()
 		if err != nil {
 			err = errors.Wrap(err, "marshal default config")
 			return
@@ -54,8 +54,8 @@ func Load() (cfg Config, err error) {
 	return
 }
 
-func (c Config) ToJSON() ([]byte, error) {
-	return json.Marshal(c)
+func (c Config) JSON() ([]byte, error) {
+	return jsonMarshal(c)
 }
 
 func jsonMarshal(v interface{}) (rst []byte, err error) {
