@@ -9,8 +9,7 @@ and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 
 Unlike Windows built-in, you can customize every single shortcut. And unlike
 NeatMouse, there are no stammering or lag, and there are more customizable
-options.  
-Also mouseable is written in pure Go, so it's easy to install and maintain.
+options.
 
 # Getting Started
 
@@ -18,19 +17,4 @@ Also mouseable is written in pure Go, so it's easy to install and maintain.
 
 ```go install github.com/wirekang/mouseable/cmd/mouseable@latest```
 
-## Create Config File
-
-execute  
-```mouseable -config```  
-to open config file. If config file does not exist, create new one.
-
-## Config Detail
-
-todo
-
-# Roadmap
-
-* [ ] Support background running
-* [ ] Support double press
-* [ ] Fine error handling
-* [ ] UI based config
+## TODO

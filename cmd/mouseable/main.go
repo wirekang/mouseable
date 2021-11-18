@@ -1,40 +1,28 @@
 package main
 
 import (
-	"flag"
-	"os"
+	"github.com/pkg/errors"
 
-	"github.com/wirekang/winsvc/internal/lg"
-	"github.com/wirekang/winsvc/internal/must"
-	"github.com/wirekang/winsvc/internal/script"
+	"github.com/wirekang/mouseable/internal/lg"
+	"github.com/wirekang/mouseable/internal/must"
+	"github.com/wirekang/mouseable/internal/view"
 )
 
 func main() {
 	must.Windows()
-
-	openConfig := flag.Bool(
-		"config", false, "Open config file.",
-	)
-	flag.Parse()
-
 	defer func() {
-		r := recover()
-		if r != nil {
-			lg.Errorf("panic: %v", r)
-			panic(r)
-		}
+		lg.Logf("EXIT")
 	}()
 
-	if *openConfig {
-		err := script.OpenConfigFile()
-		if err != nil {
-			panic(err)
+	err := view.Init()
+	if err != nil {
+		if st, ok := err.(stackTracer); ok {
+			st.StackTrace()
 		}
+		panic(err)
 	}
+}
 
-	if len(os.Args) < 2 {
-		flag.PrintDefaults()
-		os.Exit(1)
-	}
-
+type stackTracer interface {
+	StackTrace() errors.StackTrace
 }

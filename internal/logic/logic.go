@@ -5,8 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/wirekang/winsvc/internal/config"
-	"github.com/wirekang/winsvc/internal/hook"
+	"github.com/wirekang/mouseable/internal/config"
 )
 
 func Loop(ctx context.Context) (err error) {
@@ -16,12 +15,6 @@ func Loop(ctx context.Context) (err error) {
 		err = errors.Wrap(err, "config.Load")
 		return
 	}
-
-	go func() {
-		if hook.Loop() != nil {
-			panic(err)
-		}
-	}()
 
 LOOP:
 	for {

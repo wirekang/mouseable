@@ -1,13 +1,13 @@
 package config
 
 import (
-	"bytes"
 	"encoding/json"
 	"os"
 
 	"github.com/pkg/errors"
 
-	"github.com/wirekang/winsvc/internal/lg"
+	"github.com/wirekang/mouseable/internal/key"
+	"github.com/wirekang/mouseable/internal/lg"
 )
 
 func Load() (cfg Config, err error) {
@@ -25,12 +25,10 @@ func Load() (cfg Config, err error) {
 		}
 	}
 
-	var config Config
 	if isNew {
 		lg.Logf("write default config file: %s ", FilePath)
-		config = DefaultConfig
 		var b []byte
-		b, err = config.JSON()
+		b, err = parse(DefaultConfig).Marshal()
 		if err != nil {
 			err = errors.Wrap(err, "marshal default config")
 			return
@@ -43,27 +41,42 @@ func Load() (cfg Config, err error) {
 		}
 
 	} else {
-		err = json.Unmarshal(b, &config)
+		var configJson ConfigJson
+		err = json.Unmarshal(b, &configJson)
 		if err != nil {
 			err = errors.Wrap(err, "json unmarshal")
 			return
 		}
-
+		cfg = configJson.Config()
 	}
 
 	return
 }
 
-func (c Config) JSON() ([]byte, error) {
-	return jsonMarshal(c)
+type Config struct {
+	Speed Speed
+	Key   Key
 }
 
-func jsonMarshal(v interface{}) (rst []byte, err error) {
-	buffer := new(bytes.Buffer)
-	encoder := json.NewEncoder(buffer)
-	encoder.SetIndent("", "    ")
-	encoder.SetEscapeHTML(false)
-	err = encoder.Encode(v)
-	rst = buffer.Bytes()
-	return
+type Speed struct {
+	Default int
+	Speed1  int
+	Speed2  int
+	Speed3  int
+}
+
+type Key struct {
+	Activate   key.Key
+	Deactivate key.Key
+	Right      key.Key
+	RightUp    key.Key
+	Up         key.Key
+	LeftUp     key.Key
+	Left       key.Key
+	LeftDown   key.Key
+	Down       key.Key
+	RightDown  key.Key
+	Speed1     key.Key
+	Speed2     key.Key
+	Speed3     key.Key
 }

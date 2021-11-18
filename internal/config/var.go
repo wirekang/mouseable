@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/wirekang/winsvc/internal/must"
+	"github.com/wirekang/mouseable/internal/must"
 )
 
 var FilePath = must.ConfigDir() + "\\" + "mouseable.json"
@@ -13,7 +13,7 @@ var DefaultConfig = Config{
 		Speed2:  0,
 		Speed3:  0,
 	},
-	Shortcut: Shortcut{
+	Key: Key{
 		Activate:   "<A-0>",
 		Deactivate: "<A-0>",
 		Right:      "H",

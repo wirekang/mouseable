@@ -13,7 +13,7 @@ func init() {
 }
 
 func printf(prefix string, format string, v ...interface{}) {
-	logger.SetPrefix(fmt.Sprintf("%-10s", prefix))
+	logger.SetPrefix(fmt.Sprintf("%-7s", prefix))
 	logger.Printf(format, v...)
 }
 
