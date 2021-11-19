@@ -2,22 +2,25 @@ package view
 
 import (
 	"bytes"
-	"image/png"
 
 	"github.com/lxn/walk"
+	"github.com/mat/besticon/ico"
 	"github.com/pkg/errors"
 
 	"github.com/wirekang/mouseable/asset"
 )
 
+var mainWindow *walk.MainWindow
+
 func Init() (err error) {
-	mainWindow, err := walk.NewMainWindowWithName("Mouseable")
+
+	mainWindow, err = walk.NewMainWindowWithName("Mouseable")
 	if err != nil {
 		err = errors.WithStack(err)
 		return
 	}
 
-	err = mainWindow.SetLayout(walk.NewVBoxLayout())
+	err = initMainWindowLayout()
 	if err != nil {
 		err = errors.WithStack(err)
 		return
@@ -32,7 +35,7 @@ func Init() (err error) {
 	)
 
 	br := bytes.NewReader(asset.Icon)
-	img, err := png.Decode(br)
+	img, err := ico.Decode(br)
 	if err != nil {
 		err = errors.WithStack(err)
 		return
@@ -106,5 +109,14 @@ func Init() (err error) {
 	}
 
 	mainWindow.Run()
+	return
+}
+
+func initMainWindowLayout() (err error) {
+	err = mainWindow.SetLayout(walk.NewVBoxLayout())
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
 	return
 }
