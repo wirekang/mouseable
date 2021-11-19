@@ -11,18 +11,20 @@ import (
 func main() {
 	must.Windows()
 	defer func() {
+		err := recover()
+		if err != nil {
+			lg.Errorf("panic: %v", err)
+			if st, ok := err.(interface {
+				StackTrace() errors.StackTrace
+			}); ok {
+				lg.Errorf("StackTrace: \n%+v", st.StackTrace())
+			}
+		}
 		lg.Logf("EXIT")
 	}()
 
 	err := view.Init()
 	if err != nil {
-		if st, ok := err.(stackTracer); ok {
-			st.StackTrace()
-		}
 		panic(err)
 	}
-}
-
-type stackTracer interface {
-	StackTrace() errors.StackTrace
 }

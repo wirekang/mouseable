@@ -13,13 +13,16 @@ import (
 func Init() (err error) {
 	mainWindow, err := walk.NewMainWindowWithName("Mouseable")
 	if err != nil {
-		err = errors.Wrap(err, "NewMainWindow")
+		err = errors.WithStack(err)
 		return
 	}
 
-	if err := mainWindow.SetLayout(walk.NewVBoxLayout()); err != nil {
-		panic(err)
+	err = mainWindow.SetLayout(walk.NewVBoxLayout())
+	if err != nil {
+		err = errors.WithStack(err)
+		return
 	}
+
 	mainWindow.SetVisible(true)
 	mainWindow.Closing().Attach(
 		func(canceled *bool, reason walk.CloseReason) {
@@ -31,29 +34,36 @@ func Init() (err error) {
 	br := bytes.NewReader(asset.Icon)
 	img, err := png.Decode(br)
 	if err != nil {
-		panic(err)
+		err = errors.WithStack(err)
+		return
 	}
 
 	icon, err := walk.NewIconFromImageForDPI(img, 96)
 	if err != nil {
-		panic(err)
+		err = errors.WithStack(err)
+		return
 	}
 
 	defer icon.Dispose()
 
 	notifyIcon, err := walk.NewNotifyIcon(mainWindow)
 	if err != nil {
-		panic(err)
+		err = errors.WithStack(err)
+		return
 	}
 
 	defer notifyIcon.Dispose()
 
-	if err := notifyIcon.SetIcon(icon); err != nil {
-		panic(err)
+	err = notifyIcon.SetIcon(icon)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
 	}
 
-	if err := notifyIcon.SetToolTip("ToolTip"); err != nil {
-		panic(err)
+	err = notifyIcon.SetToolTip("ToolTip")
+	if err != nil {
+		err = errors.WithStack(err)
+		return
 	}
 
 	notifyIcon.MouseDown().Attach(
@@ -67,24 +77,32 @@ func Init() (err error) {
 	)
 
 	exitAction := walk.NewAction()
-	if err := exitAction.SetText("E&xit"); err != nil {
-		panic(err)
+	err = exitAction.SetText("E&xit")
+	if err != nil {
+		err = errors.WithStack(err)
+		return
 	}
 
 	exitAction.Triggered().Attach(
 		func() { walk.App().Exit(0) },
 	)
 
-	if err := notifyIcon.ContextMenu().Actions().Add(exitAction); err != nil {
-		panic(err)
+	err = notifyIcon.ContextMenu().Actions().Add(exitAction)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
 	}
 
-	if err := notifyIcon.SetVisible(true); err != nil {
-		panic(err)
+	err = notifyIcon.SetVisible(true)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
 	}
 
-	if err := notifyIcon.ShowInfo("title", "info"); err != nil {
-		panic(err)
+	err = notifyIcon.ShowInfo("title", "info")
+	if err != nil {
+		err = errors.WithStack(err)
+		return
 	}
 
 	mainWindow.Run()

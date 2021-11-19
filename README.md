@@ -5,16 +5,10 @@ This program was inspired by
 [Windows built-in function](https://support.microsoft.com/en-us/windows/use-mouse-keys-to-move-the-mouse-pointer-9e0c72c8-b882-7918-8e7b-391fd62adf33)
 and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 
-## Improvement
+## Plug-off Your Physical Mouse
 
-Unlike Windows built-in, you can customize every single shortcut. And unlike
-NeatMouse, there are no stammering or lag, and there are more customizable
-options.
+Mouseable is intended to replace a mouse or trackpad.
 
-# Getting Started
+# Limitation
 
-## Install
-
-```go install github.com/wirekang/mouseable/cmd/mouseable@latest```
-
-## TODO
+Not for games.

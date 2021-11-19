@@ -3,8 +3,8 @@ tmp_dir = "tmp"
 
 [build]
   bin = "build\\out.exe"
-  cmd = 'go build -o ./build/out.exe ./cmd/mouseable/...'
-  delay = 3000
+  cmd = 'go build -o ./build/out.exe '
+  delay = 1000
   exclude_dir = ["assets", "tmp", "vendor"]
   exclude_file = []
   exclude_regex = []
