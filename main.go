@@ -27,13 +27,13 @@ func main() {
 		lg.Logf("EXIT")
 	}()
 
-	logic.SetCursorPos = hook.SetCursorPos
-	logic.GetCursorPos = hook.GetCursorPos
-	logic.AddCursorPos = hook.AddCursorPos
-	logic.MouseDown = hook.MouseDown
-	logic.MouseUp = hook.MouseUp
-	logic.Wheel = hook.Wheel
-	hook.OnKey = logic.OnKey
+	logic.DI.SetCursorPos = hook.SetCursorPos
+	logic.DI.GetCursorPos = hook.GetCursorPos
+	logic.DI.AddCursorPos = hook.AddCursorPos
+	logic.DI.MouseDown = hook.MouseDown
+	logic.DI.MouseUp = hook.MouseUp
+	logic.DI.Wheel = hook.Wheel
+	hook.DI.OnKey = logic.OnKey
 	hook.Install()
 
 	go logic.Loop()

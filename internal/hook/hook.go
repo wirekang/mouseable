@@ -7,7 +7,9 @@ import (
 )
 
 var hHook w32.HHOOK
-var OnKey func(keyCode uint32, isDown bool) (preventDefault bool)
+var DI struct {
+	OnKey func(keyCode uint32, isDown bool) (preventDefault bool)
+}
 
 func Install() {
 	hHook = w32.SetWindowsHookEx(w32.WH_KEYBOARD_LL, hookProc, 0, 0)
@@ -106,9 +108,9 @@ var hookProc w32.HOOKPROC = func(
 		"Up":            data.Flags & (w32.KF_UP >> 8),
 	}
 
-	if OnKey != nil {
+	if DI.OnKey != nil {
 		isDown := flagMap["Up"] == 0
-		preventDefault := OnKey(uint32(data.VkCode), isDown)
+		preventDefault := DI.OnKey(uint32(data.VkCode), isDown)
 
 		if preventDefault {
 			return 1

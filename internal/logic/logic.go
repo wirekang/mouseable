@@ -14,12 +14,14 @@ var xSpeed, ySpeed int
 var friction = 3
 var speed = 4
 
-var SetCursorPos func(x, y int)
-var AddCursorPos func(dx, dy int32)
-var GetCursorPos func() (x, y int)
-var MouseDown func(button int)
-var MouseUp func(button int)
-var Wheel func(amount int, hor bool)
+var DI struct {
+	SetCursorPos func(x, y int)
+	AddCursorPos func(dx, dy int32)
+	GetCursorPos func() (x, y int)
+	MouseDown    func(button int)
+	MouseUp      func(button int)
+	Wheel        func(amount int, hor bool)
+}
 
 func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
 	if isDown {
@@ -34,10 +36,16 @@ func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
 			activate = activate && checkKeycode(kCode)
 		}
 		if !fnc.isActivated && activate {
+			if fnc.onActivate != nil {
+				fnc.onActivate()
+			}
 			lg.Logf("Activate %s", fnc.name)
 		}
 
 		if fnc.isActivated && !activate {
+			if fnc.onDeactivate != nil {
+				fnc.onDeactivate()
+			}
 			lg.Logf("Deactivate %s", fnc.name)
 
 		}
@@ -78,15 +86,15 @@ func procFriction(s *int) {
 }
 
 func moveCursor() {
-	AddCursorPos(int32(xSpeed), int32(ySpeed))
+	DI.AddCursorPos(int32(xSpeed), int32(ySpeed))
 	procFriction(&xSpeed)
 	procFriction(&ySpeed)
 }
 
 func stepFunctions() {
 	for _, fnc := range functions {
-		if fnc.isActivated {
-			fnc.step()
+		if fnc.isActivated && fnc.onStep != nil {
+			fnc.onStep()
 		}
 	}
 }
