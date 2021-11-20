@@ -2,6 +2,7 @@ package logic
 
 import (
 	"fmt"
+	"math"
 	"sync"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 var state struct {
 	mutex          sync.Mutex
 	keycode        map[uint32]struct{}
-	xSpeed, ySpeed int
+	speedX, speedY float64
 	isActivated    bool
 }
 
@@ -74,9 +75,9 @@ func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
 func Loop() {
 	state.keycode = make(map[uint32]struct{})
 	for {
-		time.Sleep(10 * time.Millisecond)
-		moveCursor()
+		time.Sleep(15 * time.Millisecond)
 		stepFunctions()
+		moveCursor()
 	}
 }
 
@@ -84,14 +85,17 @@ func moveCursor() {
 	state.mutex.Lock()
 	defer state.mutex.Unlock()
 
-	DI.AddCursorPos(int32(state.xSpeed), int32(state.ySpeed))
-	procFriction(&state.xSpeed)
-	procFriction(&state.ySpeed)
+	DI.AddCursorPos(
+		int32(math.Round(state.speedX)), int32(math.Round(state.speedY)),
+	)
+
+	procFriction(&state.speedX)
+	procFriction(&state.speedY)
 }
 
-func procFriction(s *int) {
+func procFriction(s *float64) {
 	if *s > 0 {
-		*s -= getInt("friction")
+		*s -= getFloat("friction")
 		if *s < 0 {
 			*s = 0
 		}
@@ -99,7 +103,7 @@ func procFriction(s *int) {
 	}
 
 	if *s < 0 {
-		*s += getInt("friction")
+		*s += getFloat("friction")
 		if *s > 0 {
 			*s = 0
 		}

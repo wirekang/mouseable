@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"math"
 	"sync"
 )
 
@@ -38,28 +39,29 @@ var functions = []*function{
 			state.isActivated = false
 		},
 	},
+
 	{
 		name: "MoveRight",
 		onStep: func() {
-			state.xSpeed += getInt("acceleration")
+			state.speedX += getFloat("acceleration")
 		},
 	},
 	{
 		name: "MoveUp",
 		onStep: func() {
-			state.ySpeed -= getInt("acceleration")
+			state.speedY -= getFloat("acceleration")
 		},
 	},
 	{
 		name: "MoveLeft",
 		onStep: func() {
-			state.xSpeed -= getInt("acceleration")
+			state.speedX -= getFloat("acceleration")
 		},
 	},
 	{
 		name: "MoveDown",
 		onStep: func() {
-			state.ySpeed += getInt("acceleration")
+			state.speedY += getFloat("acceleration")
 		},
 	},
 	{
@@ -99,6 +101,14 @@ var functions = []*function{
 		name: "WheelDown",
 		onStep: func() {
 			DI.Wheel(-getInt("wheelAmount"), false)
+		},
+	},
+	{
+		name: "Sniper",
+		onStep: func() {
+			sniper := getFloat("sniper")
+			state.speedX = math.Min(sniper, math.Max(state.speedX, -sniper))
+			state.speedY = math.Min(sniper, math.Max(state.speedY, -sniper))
 		},
 	},
 }

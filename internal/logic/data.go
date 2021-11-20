@@ -31,3 +31,10 @@ func getInt(key string) int {
 	i, _ := strconv.ParseInt(data[key], 10, 32)
 	return int(i)
 }
+
+func getFloat(key string) float64 {
+	dataMutex.Lock()
+	defer dataMutex.Unlock()
+	i, _ := strconv.ParseFloat(data[key], 64)
+	return i
+}
