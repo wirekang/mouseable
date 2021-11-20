@@ -10,49 +10,56 @@ import (
 	"github.com/wirekang/mouseable/internal/lg"
 )
 
-var keycodeState = make(map[uint32]struct{})
-var keycodeStateMutex sync.Mutex
-var xSpeed, ySpeed int
+var state struct {
+	mutex          sync.Mutex
+	keycode        map[uint32]struct{}
+	xSpeed, ySpeed int
+	isActivated    bool
+}
 
 func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
-	keycodeStateMutex.Lock()
-	defer keycodeStateMutex.Unlock()
+	state.mutex.Lock()
+	defer state.mutex.Unlock()
+
 	if isDown {
-		keycodeState[keyCode] = struct{}{}
+		state.keycode[keyCode] = struct{}{}
 	} else {
-		delete(keycodeState, keyCode)
+		delete(state.keycode, keyCode)
 	}
 
 	functionsMutex.Lock()
 	defer functionsMutex.Unlock()
 	for _, fnc := range functions {
-		activate := len(fnc.keyCodes) != 0
+		if !state.isActivated && !fnc.isIgnoreDeactivate {
+			continue
+		}
+
+		isStart := len(fnc.keyCodes) != 0
 		for _, kCode := range fnc.keyCodes {
-			activate = activate && checkKeycode(kCode)
+			isStart = isStart && checkKeycode(kCode)
 		}
-		if !fnc.isActivated && activate {
-			if fnc.onActivate != nil {
-				fnc.onActivate()
+		if !fnc.isStepping && isStart {
+			if fnc.onStart != nil {
+				fnc.onStart()
 			}
-			lg.Logf("Activate %s", fnc.name)
+			lg.Logf("Start %s", fnc.name)
 		}
 
-		if fnc.isActivated && !activate {
-			if fnc.onDeactivate != nil {
-				fnc.onDeactivate()
+		if fnc.isStepping && !isStart {
+			if fnc.onStop != nil {
+				fnc.onStop()
 			}
-			lg.Logf("Deactivate %s", fnc.name)
-
+			lg.Logf("Stop %s", fnc.name)
 		}
 
-		fnc.isActivated = activate
-		if !preventDefault && activate {
+		fnc.isStepping = isStart
+		if !preventDefault && isStart {
 			preventDefault = true
 		}
 	}
 
 	if lg.IsDev {
-		for k := range keycodeState {
+		for k := range state.keycode {
 			d := vkmap.Map[k].VK
 			if d == "" {
 				d = vkmap.Map[k].Description
@@ -65,11 +72,21 @@ func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
 }
 
 func Loop() {
+	state.keycode = make(map[uint32]struct{})
 	for {
 		time.Sleep(10 * time.Millisecond)
 		moveCursor()
 		stepFunctions()
 	}
+}
+
+func moveCursor() {
+	state.mutex.Lock()
+	defer state.mutex.Unlock()
+
+	DI.AddCursorPos(int32(state.xSpeed), int32(state.ySpeed))
+	procFriction(&state.xSpeed)
+	procFriction(&state.ySpeed)
 }
 
 func procFriction(s *int) {
@@ -89,23 +106,17 @@ func procFriction(s *int) {
 	}
 }
 
-func moveCursor() {
-	DI.AddCursorPos(int32(xSpeed), int32(ySpeed))
-	procFriction(&xSpeed)
-	procFriction(&ySpeed)
-}
-
 func stepFunctions() {
 	functionsMutex.Lock()
 	defer functionsMutex.Unlock()
 	for _, fnc := range functions {
-		if fnc.isActivated && fnc.onStep != nil {
+		if fnc.isStepping && fnc.onStep != nil {
 			fnc.onStep()
 		}
 	}
 }
 
 func checkKeycode(keycode uint32) (ok bool) {
-	_, ok = keycodeState[keycode]
+	_, ok = state.keycode[keycode]
 	return
 }

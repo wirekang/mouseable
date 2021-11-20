@@ -2,16 +2,20 @@ package view
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/lxn/walk"
 	"github.com/mat/besticon/ico"
 	"github.com/pkg/errors"
+	"github.com/wirekang/vkmap"
 
 	"github.com/wirekang/mouseable/asset"
 	"github.com/wirekang/mouseable/internal/lg"
 )
 
 var mainWindow *walk.MainWindow
+var keymap map[string][]uint32
+var data map[string]string
 
 func Run() (err error) {
 	mainWindow, err = walk.NewMainWindowWithName("Mouseable")
@@ -20,13 +24,18 @@ func Run() (err error) {
 		return
 	}
 
-	err = initMainWindowLayout()
+	keymap, data, err = DI.LoadData()
 	if err != nil {
 		err = errors.WithStack(err)
 		return
 	}
 
-	// prevent window flashing when using hot reload in development
+	err = tempUI()
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+	// prevent window flashing when using hot reloading in development
 	mainWindow.SetVisible(!lg.IsDev)
 
 	mainWindow.Closing().Attach(
@@ -114,11 +123,59 @@ func Run() (err error) {
 	return
 }
 
-func initMainWindowLayout() (err error) {
-	err = mainWindow.SetLayout(walk.NewVBoxLayout())
+func tempUI() (err error) {
+	vbox := walk.NewVBoxLayout()
+	err = mainWindow.SetLayout(vbox)
 	if err != nil {
 		err = errors.WithStack(err)
 		return
 	}
+
+	txt := "\r\nKeymap\r\n\r\n"
+	for name, keycodes := range keymap {
+		txt += name + ": "
+		for _, kc := range keycodes {
+			t := vkmap.Map[kc].VK
+			if t == "" {
+				t = vkmap.Map[kc].Description
+			}
+			txt += " <" + t + "> "
+		}
+		txt += "\r\n"
+	}
+	txt += "\r\n\r\nData\r\n\r\n"
+	for key, value := range data {
+		txt += key + ": " + value + "\n"
+	}
+
+	label, err := walk.NewTextLabel(vbox.Container())
+	err = label.SetText(txt)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	btn, err := walk.NewPushButton(vbox.Container())
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	err = btn.SetText("Save to appdata")
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	btn.MouseDown().Attach(
+		func(_, _ int, _ walk.MouseButton) {
+			err := DI.SaveData(keymap, data)
+			if err != nil {
+				fmt.Println(err)
+				label.SetText(err.Error())
+			}
+		},
+	)
+
 	return
 }

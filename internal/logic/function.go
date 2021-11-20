@@ -5,64 +5,87 @@ import (
 )
 
 type function struct {
-	name         string
-	keyCodes     []uint32
-	onStep       func()
-	onActivate   func()
-	onDeactivate func()
-	isActivated  bool
+	name               string
+	keyCodes           []uint32
+	onStart            func()
+	onStep             func()
+	onStop             func()
+	isStepping         bool
+	isIgnoreDeactivate bool
 }
 
 var functionsMutex sync.Mutex
 var functions = []*function{
 	{
+		name:               "Activate",
+		isIgnoreDeactivate: true,
+		onStart: func() {
+			state.isActivated = true
+		},
+	},
+	{
+		name: "Deactivate",
+		onStart: func() {
+			state.isActivated = false
+		},
+	},
+	{
+		name: "HoldToActivate",
+		onStart: func() {
+			state.isActivated = true
+		},
+		onStop: func() {
+			state.isActivated = false
+		},
+	},
+	{
 		name: "MoveRight",
 		onStep: func() {
-			xSpeed += getInt("acceleration")
+			state.xSpeed += getInt("acceleration")
 		},
 	},
 	{
 		name: "MoveUp",
 		onStep: func() {
-			ySpeed -= getInt("acceleration")
+			state.ySpeed -= getInt("acceleration")
 		},
 	},
 	{
 		name: "MoveLeft",
 		onStep: func() {
-			xSpeed -= getInt("acceleration")
+			state.xSpeed -= getInt("acceleration")
 		},
 	},
 	{
 		name: "MoveDown",
 		onStep: func() {
-			ySpeed += getInt("acceleration")
+			state.ySpeed += getInt("acceleration")
 		},
 	},
 	{
 		name: "LeftClick",
-		onActivate: func() {
+		onStart: func() {
 			DI.MouseDown(0)
 		},
-		onDeactivate: func() {
+		onStop: func() {
 			DI.MouseUp(0)
 		},
 	},
 	{
 		name: "RightClick",
-		onActivate: func() {
+		onStart: func() {
 			DI.MouseDown(1)
 		},
-		onDeactivate: func() {
+		onStop: func() {
 			DI.MouseUp(1)
 		},
 	},
 	{
 		name: "MiddleClick",
-		onActivate: func() {
+		onStart: func() {
 			DI.MouseDown(2)
 		},
-		onDeactivate: func() {
+		onStop: func() {
 			DI.MouseUp(2)
 		},
 	},
