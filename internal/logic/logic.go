@@ -13,15 +13,7 @@ var xSpeed, ySpeed int
 // temp
 var friction = 3
 var speed = 4
-
-var DI struct {
-	SetCursorPos func(x, y int)
-	AddCursorPos func(dx, dy int32)
-	GetCursorPos func() (x, y int)
-	MouseDown    func(button int)
-	MouseUp      func(button int)
-	Wheel        func(amount int, hor bool)
-}
+var wheelAmount = 10
 
 func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
 	if isDown {
@@ -30,6 +22,8 @@ func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
 		delete(keycodeState, keyCode)
 	}
 
+	functionsMutex.Lock()
+	defer functionsMutex.Unlock()
 	for _, fnc := range functions {
 		activate := len(fnc.keyCodes) != 0
 		for _, kCode := range fnc.keyCodes {
@@ -92,6 +86,8 @@ func moveCursor() {
 }
 
 func stepFunctions() {
+	functionsMutex.Lock()
+	defer functionsMutex.Unlock()
 	for _, fnc := range functions {
 		if fnc.isActivated && fnc.onStep != nil {
 			fnc.onStep()
