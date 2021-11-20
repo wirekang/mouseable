@@ -2,13 +2,13 @@ package view
 
 import (
 	"bytes"
-	"os"
 
 	"github.com/lxn/walk"
 	"github.com/mat/besticon/ico"
 	"github.com/pkg/errors"
 
 	"github.com/wirekang/mouseable/asset"
+	"github.com/wirekang/mouseable/internal/lg"
 )
 
 var mainWindow *walk.MainWindow
@@ -27,12 +27,7 @@ func Run() (err error) {
 	}
 
 	// prevent window flashing when using hot reload in development
-	//
-	// checking -dev.exe instead of -dev is due to bug of air
-	// https://github.com/cosmtrek/air/issues/207
-	if !(len(os.Args) == 2 && os.Args[1] == "-dev.exe") {
-		mainWindow.SetVisible(true)
-	}
+	mainWindow.SetVisible(!lg.IsDev)
 
 	mainWindow.Closing().Attach(
 		func(canceled *bool, reason walk.CloseReason) {

@@ -16,36 +16,31 @@ type function struct {
 var functionsMutex sync.Mutex
 var functions = []*function{
 	{
-		name:     "MoveRight",
-		keyCodes: []uint32{164, 76},
+		name: "MoveRight",
 		onStep: func() {
-			xSpeed += speed
+			xSpeed += getInt("acceleration")
 		},
 	},
 	{
-		name:     "MoveUp",
-		keyCodes: []uint32{164, 75},
+		name: "MoveUp",
 		onStep: func() {
-			ySpeed -= speed
+			ySpeed -= getInt("acceleration")
 		},
 	},
 	{
-		name:     "MoveLeft",
-		keyCodes: []uint32{164, 72},
+		name: "MoveLeft",
 		onStep: func() {
-			xSpeed -= speed
+			xSpeed -= getInt("acceleration")
 		},
 	},
 	{
-		name:     "MoveDown",
-		keyCodes: []uint32{164, 74},
+		name: "MoveDown",
 		onStep: func() {
-			ySpeed += speed
+			ySpeed += getInt("acceleration")
 		},
 	},
 	{
-		name:     "LeftClick",
-		keyCodes: []uint32{164, 65},
+		name: "LeftClick",
 		onActivate: func() {
 			DI.MouseDown(0)
 		},
@@ -54,8 +49,7 @@ var functions = []*function{
 		},
 	},
 	{
-		name:     "RightClick",
-		keyCodes: []uint32{164, 68},
+		name: "RightClick",
 		onActivate: func() {
 			DI.MouseDown(1)
 		},
@@ -64,8 +58,7 @@ var functions = []*function{
 		},
 	},
 	{
-		name:     "MiddleClick",
-		keyCodes: []uint32{164, 83},
+		name: "MiddleClick",
 		onActivate: func() {
 			DI.MouseDown(2)
 		},
@@ -74,17 +67,15 @@ var functions = []*function{
 		},
 	},
 	{
-		name:     "WheelUp",
-		keyCodes: []uint32{164, 85},
+		name: "WheelUp",
 		onStep: func() {
-			DI.Wheel(wheelAmount, false)
+			DI.Wheel(getInt("wheelAmount"), false)
 		},
 	},
 	{
-		name:     "WheelDown",
-		keyCodes: []uint32{164, 78},
+		name: "WheelDown",
 		onStep: func() {
-			DI.Wheel(-wheelAmount, false)
+			DI.Wheel(-getInt("wheelAmount"), false)
 		},
 	},
 }

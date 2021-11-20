@@ -6,13 +6,14 @@ import (
 	"os"
 )
 
-var logger *log.Logger
-
-func init() {
-	logger = log.New(os.Stdout, "", log.LstdFlags)
-}
+var logger = log.New(os.Stdout, "", log.LstdFlags)
+var IsDev bool
 
 func printf(prefix string, format string, v ...interface{}) {
+	if !IsDev {
+		return
+	}
+
 	logger.SetPrefix(fmt.Sprintf("%-7s", prefix))
 	logger.Printf(format, v...)
 }

@@ -2,20 +2,21 @@ package logic
 
 import (
 	"fmt"
+	"sync"
 	"time"
+
+	"github.com/wirekang/vkmap"
 
 	"github.com/wirekang/mouseable/internal/lg"
 )
 
 var keycodeState = make(map[uint32]struct{})
+var keycodeStateMutex sync.Mutex
 var xSpeed, ySpeed int
 
-// temp
-var friction = 3
-var speed = 4
-var wheelAmount = 10
-
 func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
+	keycodeStateMutex.Lock()
+	defer keycodeStateMutex.Unlock()
 	if isDown {
 		keycodeState[keyCode] = struct{}{}
 	} else {
@@ -50,7 +51,16 @@ func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
 		}
 	}
 
-	fmt.Println(keycodeState)
+	if lg.IsDev {
+		for k := range keycodeState {
+			d := vkmap.Map[k].VK
+			if d == "" {
+				d = vkmap.Map[k].Description
+			}
+			fmt.Printf("%d: %s,      ", k, d)
+		}
+		fmt.Println()
+	}
 	return
 }
 
@@ -64,7 +74,7 @@ func Loop() {
 
 func procFriction(s *int) {
 	if *s > 0 {
-		*s -= friction
+		*s -= getInt("friction")
 		if *s < 0 {
 			*s = 0
 		}
@@ -72,7 +82,7 @@ func procFriction(s *int) {
 	}
 
 	if *s < 0 {
-		*s += friction
+		*s += getInt("friction")
 		if *s > 0 {
 			*s = 0
 		}

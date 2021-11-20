@@ -1,8 +1,11 @@
 package main
 
 import (
+	"os"
+
 	"github.com/pkg/errors"
 
+	"github.com/wirekang/mouseable/internal/data"
 	"github.com/wirekang/mouseable/internal/hook"
 	"github.com/wirekang/mouseable/internal/lg"
 	"github.com/wirekang/mouseable/internal/logic"
@@ -11,10 +14,15 @@ import (
 )
 
 func main() {
+	// checking -dev.exe instead of -dev is due to bug of air.
+	// https://github.com/cosmtrek/air/issues/207
+	if len(os.Args) == 2 && os.Args[1] == "-dev.exe" {
+		lg.IsDev = true
+	}
+
 	lg.Logf("Start")
 	must.Windows()
 	defer func() {
-		hook.Uninstall()
 		err := recover()
 		if err != nil {
 			lg.Errorf("panic: %v", err)
@@ -34,11 +42,20 @@ func main() {
 	logic.DI.MouseUp = hook.MouseUp
 	logic.DI.Wheel = hook.Wheel
 	hook.DI.OnKey = logic.OnKey
+	view.DI.LoadData = data.LoadData
+	view.DI.SaveData = data.SaveData
+	data.DI.SetData = logic.SetData
+
+	err := data.Init()
+	if err != nil {
+		panic(err)
+	}
+
 	hook.Install()
+	defer hook.Uninstall()
 
 	go logic.Loop()
-
-	err := view.Run()
+	err = view.Run()
 	if err != nil {
 		panic(err)
 	}
