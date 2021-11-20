@@ -5,10 +5,6 @@ This program was inspired by
 [Windows built-in function](https://support.microsoft.com/en-us/windows/use-mouse-keys-to-move-the-mouse-pointer-9e0c72c8-b882-7918-8e7b-391fd62adf33)
 and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 
-## Plug-off Your Physical Mouse
+## Unplug Your Physical Mouse
 
 Mouseable is intended to replace a mouse or trackpad.
-
-# Limitation
-
-Not for games.
