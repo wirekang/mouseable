@@ -1,6 +1,12 @@
 #!/bin/bash
 cd "$(dirname "$(dirname "$0")}")" || return
 
+BRANCH="$(git branch --show-current)"
+if [[ ! $BRANCH == "main" ]]; then
+  echo "$BRANCH is not main branch"
+  exit 1
+fi
+
 VERSION="$(cat version)"
 echo "old: $VERSION"
 IFS="."
