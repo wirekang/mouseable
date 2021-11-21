@@ -8,3 +8,10 @@ and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 ## Unplug Your Physical Mouse
 
 Mouseable is intended to replace a mouse or trackpad.
+
+# Install
+
+Download installer
+from [Releases](https://github.com/wirekang/mouseable/releases).
+
+# [Release Notes](release-notes.md)
