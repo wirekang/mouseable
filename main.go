@@ -13,6 +13,8 @@ import (
 	"github.com/wirekang/mouseable/internal/view"
 )
 
+var VERSION string
+
 func main() {
 	// checking -dev.exe instead of -dev is due to bug of air.
 	// https://github.com/cosmtrek/air/issues/207
