@@ -34,14 +34,13 @@ RELEASE_ID=$(
     -H "$TOKEN_HEADER" \
     -H "Accept: application/vnd.github.v3+json" \
     -d "{\"tag_name\": \"v$VERSION\", \"body\": \"[Release Note](https://github.com/wirekang/mouseable/blob/main/release-notes.md#v$VERSION)\"}" \
-    https://api.github.com/repos/wirekang/mouseable/releases |
+    "https://api.github.com/repos/wirekang/mouseable/releases" |
     awk '/"id":/{print substr($2, 1, length($2)-1); exit;}'
 )
 
 echo "RELEASE_ID: $RELEASE_ID"
 
 FILE="build/install.exe"
-FILE_SIZE="$(wc -c "$FILE" | awk '{print $1}')"
 
 curl \
   -X POST \
@@ -49,4 +48,4 @@ curl \
   -H "Accept: application/vnd.github.v3+json" \
   -H "Content-Type: $(file -b --mime-type "$FILE")" \
   --data-binary @"$FILE" \
-  https://uploads.github.com/repos/wirekang/mouseable/releases/"$RELEASE_ID"/assets?name=install
+  "https://uploads.github.com/repos/wirekang/mouseable/releases/$RELEASE_ID/assets?name=install.exe"
