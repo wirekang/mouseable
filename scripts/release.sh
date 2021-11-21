@@ -19,6 +19,8 @@ VERSION="$V_MAJOR.$V_MINOR.$V_PATCH"
 rm -f version
 echo "$VERSION" >>version
 echo "new: $VERSION"
+git add version
+git commit -m "Increase version"
 
 scripts/_build.sh || exit 1
 scripts/_nsi.sh || exit 1
