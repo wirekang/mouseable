@@ -9,6 +9,7 @@ and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 
 # TODO
 
+* [ ] Bug: keyboard not working when some functions stepping.
 * [ ] UI: Customize keymap
 * [ ] Readme: Function description
 * [ ] Readme: Default keymap description
