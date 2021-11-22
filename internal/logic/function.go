@@ -2,7 +2,6 @@ package logic
 
 import (
 	"math"
-	"sync"
 )
 
 type function struct {
@@ -11,11 +10,12 @@ type function struct {
 	onStart            func()
 	onStep             func()
 	onStop             func()
-	isStepping         bool
 	isIgnoreDeactivate bool
+
+	// internal
+	isStepping bool
 }
 
-var functionsMutex sync.Mutex
 var functions = []*function{
 	{
 		name:               "Activate",

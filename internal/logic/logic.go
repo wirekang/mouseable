@@ -11,79 +11,93 @@ import (
 	"github.com/wirekang/mouseable/internal/lg"
 )
 
+var mutex = sync.Mutex{}
+
 var state struct {
-	mutex          sync.Mutex
-	keycode        map[uint32]struct{}
+	keyCodeMap     map[uint32]struct{}
 	speedX, speedY float64
 	isActivated    bool
 }
 
 func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
-	state.mutex.Lock()
-	defer state.mutex.Unlock()
+	lg.Logf("#### %d %v", keyCode, isDown)
+	mutex.Lock()
+	defer mutex.Unlock()
 
-	if isDown {
-		state.keycode[keyCode] = struct{}{}
-	} else {
-		delete(state.keycode, keyCode)
+	if lg.IsDev {
+		lg.Logf("BEFORE")
+		logState()
 	}
 
-	functionsMutex.Lock()
-	defer functionsMutex.Unlock()
+	setMapKey(state.keyCodeMap, keyCode, isDown)
+
+	if lg.IsDev {
+		lg.Logf("AFTER")
+		logState()
+	}
+
 	for _, fnc := range functions {
 		if !state.isActivated && !fnc.isIgnoreDeactivate {
+			if fnc.isStepping {
+				fnc.isStepping = false
+				if fnc.onStop != nil {
+					fnc.onStop()
+				}
+			}
 			continue
 		}
 
-		isStart := len(fnc.keyCodes) != 0
-		for _, kCode := range fnc.keyCodes {
-			isStart = isStart && checkKeycode(kCode)
+		isAllKeysInState := isContainsAll(fnc.keyCodes, state.keyCodeMap)
+		isStart := isDown && !fnc.isStepping && isAllKeysInState
+		isStop := !isDown && fnc.isStepping && !isAllKeysInState
+
+		if !preventDefault &&
+			(isStart || isStop) &&
+			!(state.isActivated && fnc.isIgnoreDeactivate && !isDown) &&
+			(isDown == isStart) && (isDown == !isStop) {
+			lg.Logf(
+				"Prevent %d isDown: %v isStart: %v isStop: %v", keyCode, isDown,
+				isStart, isStop,
+			)
+			preventDefault = true
 		}
-		if !fnc.isStepping && isStart {
+
+		if isStart {
 			if fnc.onStart != nil {
 				fnc.onStart()
 			}
 			lg.Logf("Start %s", fnc.name)
 		}
 
-		if fnc.isStepping && !isStart {
+		if isStop {
 			if fnc.onStop != nil {
 				fnc.onStop()
 			}
 			lg.Logf("Stop %s", fnc.name)
 		}
 
-		fnc.isStepping = isStart
-		if !preventDefault && isStart {
-			preventDefault = true
-		}
+		fnc.isStepping = isAllKeysInState
 	}
 
-	if lg.IsDev {
-		for k := range state.keycode {
-			d := vkmap.Map[k].VK
-			if d == "" {
-				d = vkmap.Map[k].Description
-			}
-			fmt.Printf("%d: %s,      ", k, d)
-		}
-		fmt.Println()
-	}
 	return
 }
 
 func Loop() {
-	state.keycode = make(map[uint32]struct{})
+	initState()
 	for {
 		time.Sleep(15 * time.Millisecond)
+		mutex.Lock()
 		stepFunctions()
 		moveCursor()
+		mutex.Unlock()
 	}
 }
 
+func initState() {
+	state.keyCodeMap = map[uint32]struct{}{}
+}
+
 func moveCursor() {
-	state.mutex.Lock()
-	defer state.mutex.Unlock()
 
 	DI.AddCursorPos(
 		int32(math.Round(state.speedX)), int32(math.Round(state.speedY)),
@@ -111,16 +125,43 @@ func procFriction(s *float64) {
 }
 
 func stepFunctions() {
-	functionsMutex.Lock()
-	defer functionsMutex.Unlock()
 	for _, fnc := range functions {
-		if fnc.isStepping && fnc.onStep != nil {
-			fnc.onStep()
+		if fnc.isStepping {
+			if fnc.onStep != nil {
+				fnc.onStep()
+			}
 		}
 	}
 }
 
-func checkKeycode(keycode uint32) (ok bool) {
-	_, ok = state.keycode[keycode]
+func isContainsAll(slice []uint32, m map[uint32]struct{}) (rst bool) {
+	rst = len(slice) != 0
+	for _, ui := range slice {
+		rst = rst && isContains(ui, m)
+	}
 	return
+}
+
+func isContains(ui uint32, m map[uint32]struct{}) (ok bool) {
+	_, ok = m[ui]
+	return
+}
+
+func setMapKey(m map[uint32]struct{}, key uint32, isSet bool) {
+	if isSet {
+		m[key] = struct{}{}
+	} else {
+		delete(m, key)
+	}
+}
+
+func logState() {
+	for k := range state.keyCodeMap {
+		d := vkmap.Map[k].VK
+		if d == "" {
+			d = vkmap.Map[k].Description
+		}
+		fmt.Printf("%d: %s,      ", k, d)
+	}
+	fmt.Println()
 }
