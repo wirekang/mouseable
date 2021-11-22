@@ -9,7 +9,6 @@ and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 
 # TODO
 
-* Bug: Keyboard not working when some functions are stepping
 * Function: Horizontal scrolling
 * UI: Mouse overlay when activated
 * UI: Customize keymap
