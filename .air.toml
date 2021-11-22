@@ -2,8 +2,8 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-  bin = 'build\\out.exe -dev'
-  cmd = 'go build -o ./build/out.exe '
+  bin = 'tmp\\out.exe -dev'
+  cmd = 'go build -o ./tmp/out.exe '
   delay = 400
   exclude_dir = ["assets", "tmp", "vendor"]
   exclude_file = []

@@ -21,6 +21,7 @@ echo "$VERSION" >>version
 echo "new: $VERSION"
 git add version
 git commit -m "Increase version"
+git push origin main
 
 scripts/_build.sh || exit 1
 scripts/_nsi.sh || exit 1
@@ -42,12 +43,17 @@ RELEASE_ID=$(
 
 echo "RELEASE_ID: $RELEASE_ID"
 
-FILE="build/install.exe"
+uploadAsset(){
+ FILE="$1"
 
-curl \
-  -X POST \
-  -H "$TOKEN_HEADER" \
-  -H "Accept: application/vnd.github.v3+json" \
-  -H "Content-Type: $(file -b --mime-type "$FILE")" \
-  --data-binary @"$FILE" \
-  "https://uploads.github.com/repos/wirekang/mouseable/releases/$RELEASE_ID/assets?name=install.exe"
+ curl \
+   -X POST \
+   -H "$TOKEN_HEADER" \
+   -H "Accept: application/vnd.github.v3+json" \
+   -H "Content-Type: $(file -b --mime-type "$FILE")" \
+   --data-binary @"$FILE" \
+   "https://uploads.github.com/repos/wirekang/mouseable/releases/$RELEASE_ID/assets?name=$(basename "$FILE")"
+}
+
+uploadAsset "build/installer.exe"
+uploadAsset "build/portable.exe"

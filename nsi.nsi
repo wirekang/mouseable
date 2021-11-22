@@ -15,7 +15,7 @@ first time a user launches the application.
 !define NAME "Mouseable"
 !define REGPATH_UNINSTSUBKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}"
 Name "${NAME}"
-OutFile "build\install.exe"
+OutFile "build\installer.exe"
 Unicode True
 RequestExecutionLevel Admin ; Request admin rights on WinVista+ (when UAC is turned on)
 InstallDir "$ProgramFiles\$(^Name)"
@@ -65,7 +65,7 @@ Section "Program files (Required)"
   WriteRegDWORD HKLM "${REGPATH_UNINSTSUBKEY}" "NoModify" 1
   WriteRegDWORD HKLM "${REGPATH_UNINSTSUBKEY}" "NoRepair" 1
 
-  File "/oname=$InstDir\mouseable.exe" "build\out.exe" ; Pretend that we have a real application to install
+  File "/oname=$InstDir\mouseable.exe" "build\portable.exe" ; Pretend that we have a real application to install
 SectionEnd
 
 Section "Start Menu shortcut"
