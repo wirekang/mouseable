@@ -52,9 +52,11 @@ func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
 		isStop := !isDown && fnc.isStepping && !isAllKeysInState
 
 		if !preventDefault &&
-			(isStart || isStop) &&
-			!(state.isActivated && fnc.isIgnoreDeactivate && !isDown) &&
-			(isDown == isStart) && (isDown == !isStop) {
+			(((isStart || isStop) && (isDown == isStart) && (isDown == !isStop)) ||
+				isAllKeysInState && isContains(
+					keyCode, fnc.keyCodes,
+				)) &&
+			!(state.isActivated && fnc.isIgnoreDeactivate && !isDown) {
 			lg.Logf(
 				"Prevent %d isDown: %v isStart: %v isStop: %v", keyCode, isDown,
 				isStart, isStop,
@@ -137,13 +139,19 @@ func stepFunctions() {
 func isContainsAll(slice []uint32, m map[uint32]struct{}) (rst bool) {
 	rst = len(slice) != 0
 	for _, ui := range slice {
-		rst = rst && isContains(ui, m)
+		_, ok := m[ui]
+		rst = rst && ok
 	}
 	return
 }
 
-func isContains(ui uint32, m map[uint32]struct{}) (ok bool) {
-	_, ok = m[ui]
+func isContains(ui uint32, slice []uint32) (ok bool) {
+	for i := range slice {
+		if ui == slice[i] {
+			ok = true
+			return
+		}
+	}
 	return
 }
 
