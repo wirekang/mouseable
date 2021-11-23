@@ -21,7 +21,7 @@ func makeDefaultConfig() def.Config {
 		DataValueMap: map[*def.Data]float64{
 			def.Acceleration:    5.2,
 			def.Friction:        4.0,
-			def.SniperModeSpeed: 3.0,
+			def.SniperModeSpeed: 2.4,
 			def.WheelAmount:     40,
 		},
 		ActivateKey: def.HotKey{

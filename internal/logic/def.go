@@ -1,12 +1,11 @@
 package logic
 
 import (
-	"math"
-
 	"github.com/wirekang/mouseable/internal/def"
 )
 
 type logicState struct {
+	fixedSpeed     float64
 	speedX, speedY float64
 	steppingMap    map[*logicDef]struct{}
 }
@@ -84,14 +83,11 @@ var logicDefs = []*logicDef{
 	},
 	{
 		function: def.SniperMode,
-		onStep: func(s *logicState) {
-			spd := dataMap[def.SniperModeSpeed]
-			s.speedX = math.Min(
-				spd, math.Max(s.speedX, -spd),
-			)
-			s.speedY = math.Min(
-				spd, math.Max(s.speedY, -spd),
-			)
+		onStart: func(s *logicState) {
+			s.fixedSpeed = dataMap[def.SniperModeSpeed]
+		},
+		onStop: func(s *logicState) {
+			s.fixedSpeed = 0
 		},
 	},
 }

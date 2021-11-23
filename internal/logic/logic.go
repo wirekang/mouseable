@@ -2,6 +2,7 @@ package logic
 
 import (
 	"math"
+	"sort"
 	"sync"
 	"time"
 
@@ -16,8 +17,14 @@ var state = &logicState{
 	steppingMap: map[*logicDef]struct{}{},
 }
 
+func StopAllFunction() {
+	mutex.Lock()
+	defer mutex.Unlock()
+	state.steppingMap = map[*logicDef]struct{}{}
+}
+
 func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
-	lg.Logf("#### %d %v", keyCode, isDown)
+	lg.Logf("OnKey %d %v", keyCode, isDown)
 	mutex.Lock()
 	defer mutex.Unlock()
 
@@ -46,15 +53,16 @@ func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
 		}
 	}
 
-	preventDefault = isStart || isStop
-	lg.Logf("PreventDefault: %d down:%v", keyCode, isDown)
-
+	preventDefault = true
 	return
 }
 
 func Loop() {
+	var last int64
 	for {
-		time.Sleep(15 * time.Millisecond)
+		delta := time.Now().Unix() - last
+		last = time.Now().Unix()
+		time.Sleep(time.Duration((20 - delta) * 1000))
 		mutex.Lock()
 		stepFunctions()
 		moveCursor()
@@ -66,7 +74,23 @@ func moveCursor() {
 	sx := math.Round(state.speedX)
 	sy := math.Round(state.speedY)
 	if sx != 0 || sy != 0 {
-		DI.AddCursorPos(int32(sx), int32(sy))
+		ix := int32(sx)
+		iy := int32(sy)
+		if state.fixedSpeed != 0 {
+			if ix > 0 {
+				ix = int32(state.fixedSpeed)
+			} else if ix < 0 {
+				ix = -int32(state.fixedSpeed)
+			}
+			if iy > 0 {
+				iy = int32(state.fixedSpeed)
+			} else if iy < 0 {
+				iy = -int32(state.fixedSpeed)
+			}
+			state.speedX = float64(ix)
+			state.speedY = float64(iy)
+		}
+		DI.AddCursorPos(ix, iy)
 		procFriction(&state.speedX)
 		procFriction(&state.speedY)
 	}
@@ -91,9 +115,20 @@ func procFriction(s *float64) {
 }
 
 func stepFunctions() {
-	for lgc := range state.steppingMap {
-		if lgc.onStep != nil {
-			lgc.onStep(state)
+	lds := make([]*logicDef, len(state.steppingMap))
+	var i int
+	for lgc, _ := range state.steppingMap {
+		lds[i] = lgc
+		i++
+	}
+	sort.Slice(
+		lds, func(i, j int) bool {
+			return lds[i].function.Order < lds[i].function.Order
+		},
+	)
+	for _, ld := range lds {
+		if ld.onStep != nil {
+			ld.onStep(state)
 		}
 	}
 }

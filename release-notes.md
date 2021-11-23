@@ -1,6 +1,12 @@
-# v.1.0.4
+# v1.0.5
 
-* Rewrite whole logic. Now the program use hooks only when necessary.
+* Fix loop logic to ensure a constant period
+* Fix default config
+* Fix bug
+
+# v1.0.4
+
+* Rewrite whole program to use keyboard hook only when necessary
 
 # v1.0.3
 

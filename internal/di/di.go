@@ -17,6 +17,7 @@ func Init() {
 	logic.DI.Wheel = hook.Wheel
 	hook.DI.OnKey = logic.OnKey
 	hook.DI.AlertError = view.AlertError
+	hook.DI.OnUnhook = logic.StopAllFunction
 	view.DI.LoadConfig = data.LoadConfig
 	view.DI.SaveConfig = data.SaveConfig
 	data.DI.SetConfig = func(config def.Config) {

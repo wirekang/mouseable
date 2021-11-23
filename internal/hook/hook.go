@@ -11,6 +11,7 @@ import (
 )
 
 var DI struct {
+	OnUnhook   func()
 	OnKey      func(keyCode uint32, isDown bool) (preventDefault bool)
 	AlertError func(string)
 }
@@ -74,6 +75,7 @@ func hook() {
 func unhook() {
 	lg.Logf("Unhook")
 	w32.UnhookWindowsHookEx(hHook)
+	DI.OnUnhook()
 }
 
 func registerHotKey(id int, key def.HotKey) {
