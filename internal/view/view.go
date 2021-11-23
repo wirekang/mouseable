@@ -4,31 +4,39 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/JamesHovious/w32"
 	"github.com/lxn/walk"
 	"github.com/mat/besticon/ico"
 	"github.com/pkg/errors"
 	"github.com/wirekang/vkmap"
 
 	"github.com/wirekang/mouseable/asset"
+	"github.com/wirekang/mouseable/internal/def"
 	"github.com/wirekang/mouseable/internal/lg"
 )
 
 var mainWindow *walk.MainWindow
-var keymap map[string][]uint32
-var data map[string]string
+var config def.Config
 
-func Run() (err error) {
+func AlertError(msg string) {
+	w32.MessageBox(0, msg, "Mouseable", 0)
+}
+
+func Run() {
+	err := run()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func run() (err error) {
 	mainWindow, err = walk.NewMainWindowWithName("Mouseable")
 	if err != nil {
 		err = errors.WithStack(err)
 		return
 	}
 
-	keymap, data, err = DI.LoadData()
-	if err != nil {
-		err = errors.WithStack(err)
-		return
-	}
+	config = DI.LoadConfig()
 
 	err = tempUI()
 	if err != nil {
@@ -132,20 +140,18 @@ func tempUI() (err error) {
 	}
 
 	txt := "\r\nKeymap\r\n\r\n"
-	for name, keycodes := range keymap {
-		txt += name + ": "
-		for _, kc := range keycodes {
-			t := vkmap.Map[kc].VK
-			if t == "" {
-				t = vkmap.Map[kc].Description
-			}
-			txt += " <" + t + "> "
+	for fnc, keyCode := range config.FunctionKeyCodeMap {
+		txt += fnc.Name + ": "
+		t := vkmap.Map[keyCode].VK
+		if t == "" {
+			t = vkmap.Map[keyCode].Description
 		}
+		txt += " <" + t + "> "
 		txt += "\r\n"
 	}
 	txt += "\r\n\r\nData\r\n\r\n"
-	for key, value := range data {
-		txt += key + ": " + value + "\n"
+	for data, value := range config.DataValueMap {
+		txt += data.Name + ": " + fmt.Sprintf("%f", value) + "\n"
 	}
 
 	label, err := walk.NewTextLabel(vbox.Container())
@@ -169,11 +175,7 @@ func tempUI() (err error) {
 
 	btn.MouseDown().Attach(
 		func(_, _ int, _ walk.MouseButton) {
-			err := DI.SaveData(keymap, data)
-			if err != nil {
-				fmt.Println(err)
-				label.SetText(err.Error())
-			}
+			DI.SaveConfig(config)
 		},
 	)
 

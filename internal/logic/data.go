@@ -1,31 +1,22 @@
 package logic
 
 import (
-	"strconv"
+	"github.com/wirekang/mouseable/internal/def"
 )
 
-var data map[string]string
-
-func SetData(keymap map[string][]uint32, d map[string]string) {
+func SetConfig(config def.Config) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	data = d
-	for name, ks := range keymap {
-		for _, fnc := range functions {
-			if fnc.name == name {
-				fnc.keyCodes = ks
+	dataMap = config.DataValueMap
+	keyCodeLogicMap = make(
+		map[uint32]*logicDef, len(config.FunctionKeyCodeMap),
+	)
+	for fnc, keyCode := range config.FunctionKeyCodeMap {
+		for _, lgc := range logicDefs {
+			if lgc.function == fnc {
+				keyCodeLogicMap[keyCode] = lgc
 			}
 		}
 	}
-}
-
-func getInt(key string) int {
-	i, _ := strconv.ParseInt(data[key], 10, 32)
-	return int(i)
-}
-
-func getFloat(key string) float64 {
-	i, _ := strconv.ParseFloat(data[key], 64)
-	return i
 }

@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/pkg/errors"
 
 	"github.com/wirekang/mouseable/internal/data"
-	"github.com/wirekang/mouseable/internal/hook"
+	_ "github.com/wirekang/mouseable/internal/def"
+	"github.com/wirekang/mouseable/internal/di"
 	"github.com/wirekang/mouseable/internal/lg"
 	"github.com/wirekang/mouseable/internal/logic"
 	"github.com/wirekang/mouseable/internal/must"
@@ -18,7 +20,7 @@ var VERSION string
 func main() {
 	// checking -dev.exe instead of -dev is due to bug of air.
 	// https://github.com/cosmtrek/air/issues/207
-	if len(os.Args) == 2 && os.Args[1] == "-dev.exe" {
+	if len(os.Args) == 2 && (os.Args[1] == "-dev.exe" || os.Args[1] == "-dev") {
 		lg.IsDev = true
 	}
 
@@ -27,38 +29,20 @@ func main() {
 	defer func() {
 		err := recover()
 		if err != nil {
-			lg.Errorf("panic: %v", err)
+			msg := fmt.Sprintf("panic: %v\n\n", err)
 			if st, ok := err.(interface {
 				StackTrace() errors.StackTrace
 			}); ok {
-				lg.Errorf("StackTrace: \n%+v", st.StackTrace())
+				msg += fmt.Sprintf("StackTrace: \n%+v", st.StackTrace())
 			}
+			lg.Errorf(msg)
+			view.AlertError(msg)
 		}
 		lg.Logf("EXIT")
 	}()
 
-	logic.DI.SetCursorPos = hook.SetCursorPos
-	logic.DI.GetCursorPos = hook.GetCursorPos
-	logic.DI.AddCursorPos = hook.AddCursorPos
-	logic.DI.MouseDown = hook.MouseDown
-	logic.DI.MouseUp = hook.MouseUp
-	logic.DI.Wheel = hook.Wheel
-	hook.DI.OnKey = logic.OnKey
-	view.DI.LoadData = data.LoadData
-	view.DI.SaveData = data.SaveData
-	data.DI.SetData = logic.SetData
-
-	err := data.Init()
-	if err != nil {
-		panic(err)
-	}
-
-	hook.Install()
-	defer hook.Uninstall()
-
+	di.Init()
+	data.Init()
 	go logic.Loop()
-	err = view.Run()
-	if err != nil {
-		panic(err)
-	}
+	view.Run()
 }

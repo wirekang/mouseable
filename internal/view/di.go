@@ -1,6 +1,10 @@
 package view
 
+import (
+	"github.com/wirekang/mouseable/internal/def"
+)
+
 var DI struct {
-	LoadData func() (map[string][]uint32, map[string]string, error)
-	SaveData func(map[string][]uint32, map[string]string) error
+	LoadConfig func() def.Config
+	SaveConfig func(def.Config)
 }

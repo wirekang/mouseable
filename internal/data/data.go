@@ -5,37 +5,43 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
+
+	"github.com/wirekang/mouseable/internal/def"
 )
 
 var DI struct {
-	SetData func(map[string][]uint32, map[string]string)
+	SetConfig  func(config def.Config)
+	AlertError func(string)
 }
 
 type jsonHolder struct {
-	Keymap map[string][]uint32
-	Data   map[string]string
+	FunctionNameMap map[string]uint32
+	DataNameMap     map[string]float64
+	ActivateKey     def.HotKey
+	DeactivateKey   def.HotKey
 }
 
-func Init() (err error) {
-	k, d, err := LoadData()
-	if err != nil {
-		err = errors.WithStack(err)
-		return
-	}
-
-	DI.SetData(k, d)
+func Init() {
+	config := LoadConfig()
+	DI.SetConfig(config)
 	return
 }
 
-func SaveData(
-	keymap map[string][]uint32, data map[string]string,
-) (err error) {
-	DI.SetData(keymap, data)
+func SaveConfig(config def.Config) {
+	err := saveData(config)
+	if err != nil {
+		DI.AlertError(err.Error())
+	}
+}
 
+func saveData(config def.Config) (err error) {
+	DI.SetConfig(config)
 	_ = os.MkdirAll(configDir, os.ModeDir)
 	jh := jsonHolder{
-		Keymap: keymap,
-		Data:   data,
+		FunctionNameMap: functionMapToNameMap(config.FunctionKeyCodeMap),
+		DataNameMap:     dataMapToNameMap(config.DataValueMap),
+		ActivateKey:     config.ActivateKey,
+		DeactivateKey:   config.DeactivateKey,
 	}
 	bytes, err := json.Marshal(jh)
 	if err != nil {
@@ -52,20 +58,22 @@ func SaveData(
 	return
 }
 
-func LoadData() (
-	keymap map[string][]uint32, data map[string]string, err error,
-) {
+func LoadConfig() (config def.Config) {
+	config, err := loadConfig()
+	if err != nil {
+		DI.AlertError("config file not exists. use default.")
+		config = makeDefaultConfig()
+	}
+	return
+}
+
+func loadConfig() (config def.Config, err error) {
 	bytes, err := os.ReadFile(configFile)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			keymap = makeDefaultKeymap()
-			data = makeDefaultData()
-			err = nil
-			return
-		}
 		err = errors.WithStack(err)
 		return
 	}
+
 	var jh jsonHolder
 	err = json.Unmarshal(bytes, &jh)
 	if err != nil {
@@ -73,8 +81,45 @@ func LoadData() (
 		return
 	}
 
-	keymap = jh.Keymap
-	data = jh.Data
+	config = def.Config{
+		FunctionKeyCodeMap: nameMapToFunctionMap(jh.FunctionNameMap),
+		DataValueMap:       nameMapToDataMap(jh.DataNameMap),
+		ActivateKey:        jh.ActivateKey,
+		DeactivateKey:      jh.DeactivateKey,
+	}
+
+	return
+}
+
+func functionMapToNameMap(m map[*def.Function]uint32) (rst map[string]uint32) {
+	rst = make(map[string]uint32, len(m))
+	for fnc := range m {
+		rst[fnc.Name] = m[fnc]
+	}
+	return
+}
+
+func dataMapToNameMap(m map[*def.Data]float64) (rst map[string]float64) {
+	rst = make(map[string]float64, len(m))
+	for data := range m {
+		rst[data.Name] = m[data]
+	}
+	return
+}
+
+func nameMapToFunctionMap(m map[string]uint32) (rst map[*def.Function]uint32) {
+	rst = make(map[*def.Function]uint32, len(m))
+	for name, keyCode := range m {
+		rst[def.FunctionNameMap[name]] = keyCode
+	}
+	return
+}
+
+func nameMapToDataMap(m map[string]float64) (rst map[*def.Data]float64) {
+	rst = make(map[*def.Data]float64, len(m))
+	for name, value := range m {
+		rst[def.DataNameMap[name]] = value
+	}
 	return
 }
 

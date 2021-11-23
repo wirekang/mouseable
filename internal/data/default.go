@@ -1,27 +1,35 @@
 package data
 
-func makeDefaultKeymap() map[string][]uint32 {
-	return map[string][]uint32{
-		"Activate":    {164, 74},
-		"Deactivate":  {186},
-		"MoveRight":   {76},
-		"MoveUp":      {75},
-		"MoveLeft":    {72},
-		"MoveDown":    {74},
-		"LeftClick":   {65},
-		"RightClick":  {68},
-		"MiddleClick": {83},
-		"WheelUp":     {85},
-		"WheelDown":   {78},
-		"Sniper":      {32},
-	}
-}
+import (
+	"github.com/wirekang/mouseable/internal/def"
+)
 
-func makeDefaultData() map[string]string {
-	return map[string]string{
-		"acceleration": "5.0",
-		"friction":     "4.0",
-		"sniper":       "3.0",
-		"wheelAmount":  "30",
+func makeDefaultConfig() def.Config {
+	return def.Config{
+		FunctionKeyCodeMap: map[*def.Function]uint32{
+			def.MoveRight:   76,
+			def.MoveUp:      75,
+			def.MoveLeft:    72,
+			def.MoveDown:    74,
+			def.ClickLeft:   65,
+			def.ClickRight:  68,
+			def.ClickMiddle: 83,
+			def.WheelUp:     85,
+			def.WheelDown:   78,
+			def.SniperMode:  32,
+		},
+		DataValueMap: map[*def.Data]float64{
+			def.Acceleration:    5.2,
+			def.Friction:        4.0,
+			def.SniperModeSpeed: 3.0,
+			def.WheelAmount:     40,
+		},
+		ActivateKey: def.HotKey{
+			IsAlt:   true,
+			KeyCode: 74,
+		},
+		DeactivateKey: def.HotKey{
+			KeyCode: 186,
+		},
 	}
 }
