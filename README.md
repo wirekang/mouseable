@@ -1,9 +1,4 @@
-# Install
-
-Download installer or portable executable file
-at [Releases](https://github.com/wirekang/mouseable/releases).
-
-# Motivation
+# Mouseable
 
 This program was inspired by
 [Ultimate Hacking Keyboard Demo](https://youtu.be/4rjnkHqnA3s?t=20),  
@@ -30,6 +25,11 @@ and [NeatMouse](https://github.com/neatdecisions/neatmouse).
    Using a mouse puts strain on your wrist.
 
    Writing... (Please contribute)
+
+# Install
+
+Download installer or portable executable file
+at [Releases](https://github.com/wirekang/mouseable/releases).
 
 # Contributing
 
