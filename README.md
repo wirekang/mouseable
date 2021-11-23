@@ -1,9 +1,4 @@
-# Install
-
-Download installer or portable executable file
-at [Releases](https://github.com/wirekang/mouseable/releases).
-
-# Motivation
+# Mouseable
 
 This program was inspired by
 [Ultimate Hacking Keyboard Demo](https://youtu.be/4rjnkHqnA3s?t=20),  
@@ -31,7 +26,16 @@ and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 
    Writing... (Please contribute)
 
+# Install
+
+Download installer or portable executable file
+at [Releases](https://github.com/wirekang/mouseable/releases).
+
 # Contributing
+
+### Project Name
+
+Mouseable is good name, but if you come up with a good name, let me know!
 
 ### English
 
