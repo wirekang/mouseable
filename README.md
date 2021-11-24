@@ -47,8 +47,6 @@ This project needs image assets such as icon, social preview image.
 
 # Roadmap
 
-* Function: Horizontal scrolling
-* UI: Customize keymap
 * Readme: Function description
 * Readme: Default keymap description
 * Readme: Video demo
