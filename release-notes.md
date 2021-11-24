@@ -1,3 +1,9 @@
+# v1.0.6
+
+* Add an overlay near the mouse when activated
+* Add 'Flash'
+* Fix bug
+
 # v1.0.5
 
 * Fix loop logic to ensure a constant period

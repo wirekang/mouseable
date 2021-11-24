@@ -71,6 +71,7 @@ func hook() {
 	lg.Logf("Hook")
 	hHook = w32.SetWindowsHookEx(w32.WH_KEYBOARD_LL, hookProc, 0, 0)
 	isHooking = true
+	DI.OnHook()
 }
 
 func unhook() {

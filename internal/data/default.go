@@ -17,12 +17,14 @@ func makeDefaultConfig() def.Config {
 			def.WheelUp:     85,
 			def.WheelDown:   78,
 			def.SniperMode:  32,
+			def.Flash:       70,
 		},
 		DataValueMap: map[*def.Data]float64{
-			def.Acceleration:    5.2,
-			def.Friction:        4.0,
-			def.SniperModeSpeed: 2.4,
+			def.Acceleration:    4.0,
+			def.Friction:        3.6,
+			def.SniperModeSpeed: 1.0,
 			def.WheelAmount:     40,
+			def.FlashFactor:     30,
 		},
 		ActivateKey: def.HotKey{
 			IsAlt:   true,

@@ -62,7 +62,8 @@ func Loop() {
 	for {
 		delta := time.Now().Unix() - last
 		last = time.Now().Unix()
-		time.Sleep(time.Duration((20 - delta) * 1000))
+		sleep := time.Duration(10-delta) * time.Millisecond
+		time.Sleep(sleep)
 		mutex.Lock()
 		stepFunctions()
 		moveCursor()
@@ -71,11 +72,9 @@ func Loop() {
 }
 
 func moveCursor() {
-	sx := math.Round(state.speedX)
-	sy := math.Round(state.speedY)
-	if sx != 0 || sy != 0 {
-		ix := int32(sx)
-		iy := int32(sy)
+	ix := int32(math.Round(state.speedX))
+	iy := int32(math.Round(state.speedY))
+	if ix != 0 || iy != 0 {
 		if state.fixedSpeed != 0 {
 			if ix > 0 {
 				ix = int32(state.fixedSpeed)
@@ -91,13 +90,20 @@ func moveCursor() {
 			state.speedY = float64(iy)
 		}
 		DI.AddCursorPos(ix, iy)
-		procFriction(&state.speedX)
-		procFriction(&state.speedY)
+		friction := dataMap[def.Friction]
+		procFriction(friction, &state.speedX)
+		procFriction(friction, &state.speedY)
+		if !state.wasCursorMoving {
+			state.wasCursorMoving = true
+			DI.OnCursorMove()
+		}
+	} else if state.wasCursorMoving {
+		state.wasCursorMoving = false
+		DI.OnCursorStop()
 	}
 }
 
-func procFriction(s *float64) {
-	friction := dataMap[def.Friction]
+func procFriction(friction float64, s *float64) {
 	if *s > 0 {
 		*s -= friction
 		if *s < 0 {
@@ -115,7 +121,12 @@ func procFriction(s *float64) {
 }
 
 func stepFunctions() {
-	lds := make([]*logicDef, len(state.steppingMap))
+	cnt := len(state.steppingMap)
+	if cnt == 0 {
+		return
+	}
+
+	lds := make([]*logicDef, cnt)
 	var i int
 	for lgc, _ := range state.steppingMap {
 		lds[i] = lgc

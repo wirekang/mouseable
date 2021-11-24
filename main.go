@@ -45,5 +45,6 @@ func main() {
 	di.Init()
 	data.Init()
 	go logic.Loop()
+	overlay.Init()
 	view.Run()
 }

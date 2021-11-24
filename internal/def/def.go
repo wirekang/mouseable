@@ -58,14 +58,16 @@ var (
 	WheelUp       = newF(11, "WheelUp", "Wheel Up")
 	WheelDown     = newF(12, "WheelDown", "Wheel Down")
 	SniperMode    = newF(13, "SniperMode", "Slow down to increase accuracy")
+	Flash         = newF(14, "Flash", "Flash cursor to current angle")
 )
 
 var (
 	Acceleration    = newD(0, "Acceleration", "Cursor acceleration value")
 	Friction        = newD(1, "Friction", "Cursor friction value")
+	WheelAmount     = newD(2, "WheelAmount", "Wheel Up/Down amount")
 	SniperModeSpeed = newD(
-		2,
+		3,
 		"SniperModeSpeed", "Max speed when sniper mode is enabled",
 	)
-	WheelAmount = newD(3, "WheelAmount", "Wheel Up/Down amount")
+	FlashFactor = newD(4, "FlashFactor", "Speed multiplier when flash")
 )

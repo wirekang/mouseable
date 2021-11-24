@@ -2,12 +2,14 @@ package logic
 
 import (
 	"github.com/wirekang/mouseable/internal/def"
+	"github.com/wirekang/mouseable/internal/hook"
 )
 
 type logicState struct {
-	fixedSpeed     float64
-	speedX, speedY float64
-	steppingMap    map[*logicDef]struct{}
+	fixedSpeed      float64
+	speedX, speedY  float64
+	steppingMap     map[*logicDef]struct{}
+	wasCursorMoving bool
 }
 
 type logicDef struct {
@@ -88,6 +90,13 @@ var logicDefs = []*logicDef{
 		},
 		onStop: func(s *logicState) {
 			s.fixedSpeed = 0
+		},
+	},
+	{
+		function: def.Flash,
+		onStart: func(s *logicState) {
+			factor := dataMap[def.FlashFactor]
+			hook.AddCursorPos(int32(s.speedX*factor), int32(s.speedY*factor))
 		},
 	},
 }

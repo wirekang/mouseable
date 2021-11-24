@@ -45,6 +45,8 @@ func run() (err error) {
 	}
 	// prevent window flashing when using hot reloading in development
 	mainWindow.SetVisible(!cnst.IsDev)
+	mainWindow.SetWidth(400)
+	mainWindow.SetHeight(800)
 
 	mainWindow.Closing().Attach(
 		func(canceled *bool, reason walk.CloseReason) {

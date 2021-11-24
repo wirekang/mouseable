@@ -10,8 +10,7 @@ import (
 )
 
 var DI struct {
-	SetConfig  func(config def.Config)
-	AlertError func(string)
+	SetConfig func(config def.Config)
 }
 
 type jsonHolder struct {
@@ -28,10 +27,7 @@ func Init() {
 }
 
 func SaveConfig(config def.Config) {
-	err := saveData(config)
-	if err != nil {
-		DI.AlertError(err.Error())
-	}
+	saveData(config)
 }
 
 func saveData(config def.Config) (err error) {
@@ -61,7 +57,6 @@ func saveData(config def.Config) (err error) {
 func LoadConfig() (config def.Config) {
 	config, err := loadConfig()
 	if err != nil {
-		DI.AlertError("config file not exists. use default.")
 		config = makeDefaultConfig()
 	}
 	return
