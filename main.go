@@ -6,26 +6,27 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/wirekang/mouseable/internal/cnst"
 	"github.com/wirekang/mouseable/internal/data"
 	_ "github.com/wirekang/mouseable/internal/def"
 	"github.com/wirekang/mouseable/internal/di"
 	"github.com/wirekang/mouseable/internal/lg"
 	"github.com/wirekang/mouseable/internal/logic"
 	"github.com/wirekang/mouseable/internal/must"
+	"github.com/wirekang/mouseable/internal/overlay"
 	"github.com/wirekang/mouseable/internal/view"
 )
-
-var VERSION string
 
 func main() {
 	// checking -dev.exe instead of -dev is due to bug of air.
 	// https://github.com/cosmtrek/air/issues/207
 	if len(os.Args) == 2 && (os.Args[1] == "-dev.exe" || os.Args[1] == "-dev") {
-		lg.IsDev = true
+		cnst.IsDev = true
 	}
 
 	lg.Logf("Start")
 	must.Windows()
+
 	defer func() {
 		err := recover()
 		if err != nil {

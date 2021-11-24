@@ -11,8 +11,8 @@ import (
 	"github.com/wirekang/vkmap"
 
 	"github.com/wirekang/mouseable/asset"
+	"github.com/wirekang/mouseable/internal/cnst"
 	"github.com/wirekang/mouseable/internal/def"
-	"github.com/wirekang/mouseable/internal/lg"
 )
 
 var mainWindow *walk.MainWindow
@@ -44,7 +44,7 @@ func run() (err error) {
 		return
 	}
 	// prevent window flashing when using hot reloading in development
-	mainWindow.SetVisible(!lg.IsDev)
+	mainWindow.SetVisible(!cnst.IsDev)
 
 	mainWindow.Closing().Attach(
 		func(canceled *bool, reason walk.CloseReason) {

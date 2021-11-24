@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/wirekang/mouseable/internal/cnst"
 )
 
 var logger = log.New(os.Stdout, "", log.LstdFlags)
-var IsDev bool
 
 func printf(prefix string, format string, v ...interface{}) {
-	if !IsDev {
+	if !cnst.IsDev {
 		return
 	}
 
