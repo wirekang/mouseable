@@ -11,10 +11,12 @@ import (
 )
 
 var DI struct {
+	OnHook     func()
 	OnUnhook   func()
 	OnKey      func(keyCode uint32, isDown bool) (preventDefault bool)
 	AlertError func(string)
 }
+
 var hHook w32.HHOOK
 
 const activateID = 100

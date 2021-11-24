@@ -8,6 +8,8 @@ import (
 	"github.com/wirekang/mouseable/internal/view"
 )
 
+var doNothing = func() {}
+
 func Init() {
 	logic.DI.SetCursorPos = hook.SetCursorPos
 	logic.DI.GetCursorPos = hook.GetCursorPos
@@ -17,7 +19,8 @@ func Init() {
 	logic.DI.Wheel = hook.Wheel
 	hook.DI.OnKey = logic.OnKey
 	hook.DI.AlertError = view.AlertError
-	hook.DI.OnUnhook = logic.StopAllFunction
+	hook.DI.OnHook = doNothing
+	hook.DI.OnUnhook = logic.OnUnhook
 	view.DI.LoadConfig = data.LoadConfig
 	view.DI.SaveConfig = data.SaveConfig
 	data.DI.SetConfig = func(config def.Config) {

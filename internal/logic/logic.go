@@ -17,7 +17,7 @@ var state = &logicState{
 	steppingMap: map[*logicDef]struct{}{},
 }
 
-func StopAllFunction() {
+func OnUnhook() {
 	mutex.Lock()
 	defer mutex.Unlock()
 	state.steppingMap = map[*logicDef]struct{}{}
