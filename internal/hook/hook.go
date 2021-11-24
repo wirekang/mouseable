@@ -16,7 +16,7 @@ var hHook w32.HHOOK
 var isHooking bool
 
 func SetKey(config def.Config) {
-	go messageLoop(config.ActivateKey, config.DeactivateKey)
+	go messageLoop(config.ActivationKey, config.DeactivationKey)
 }
 
 func messageLoop(activateKey, deactivateKey def.HotKey) {

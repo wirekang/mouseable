@@ -36,8 +36,8 @@ func saveData(config def.Config) (err error) {
 	jh := jsonHolder{
 		FunctionNameMap: functionMapToNameMap(config.FunctionKeyCodeMap),
 		DataNameMap:     dataMapToNameMap(config.DataValueMap),
-		ActivateKey:     config.ActivateKey,
-		DeactivateKey:   config.DeactivateKey,
+		ActivateKey:     config.ActivationKey,
+		DeactivateKey:   config.DeactivationKey,
 	}
 	bytes, err := json.Marshal(jh)
 	if err != nil {
@@ -79,8 +79,8 @@ func loadConfig() (config def.Config, err error) {
 	config = def.Config{
 		FunctionKeyCodeMap: nameMapToFunctionMap(jh.FunctionNameMap),
 		DataValueMap:       nameMapToDataMap(jh.DataNameMap),
-		ActivateKey:        jh.ActivateKey,
-		DeactivateKey:      jh.DeactivateKey,
+		ActivationKey:      jh.ActivateKey,
+		DeactivationKey:    jh.DeactivateKey,
 	}
 
 	return

@@ -24,8 +24,8 @@ type HotKey struct {
 type Config struct {
 	FunctionKeyCodeMap map[*Function]uint32
 	DataValueMap       map[*Data]float64
-	ActivateKey        HotKey
-	DeactivateKey      HotKey
+	ActivationKey      HotKey
+	DeactivationKey    HotKey
 }
 
 var FunctionNameMap = map[string]*Function{}

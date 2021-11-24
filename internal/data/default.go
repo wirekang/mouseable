@@ -26,11 +26,11 @@ func makeDefaultConfig() def.Config {
 			def.WheelAmount:     40,
 			def.FlashDistance:   300,
 		},
-		ActivateKey: def.HotKey{
+		ActivationKey: def.HotKey{
 			IsAlt:   true,
 			KeyCode: 74,
 		},
-		DeactivateKey: def.HotKey{
+		DeactivationKey: def.HotKey{
 			KeyCode: 186,
 		},
 	}
