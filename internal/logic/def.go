@@ -1,6 +1,8 @@
 package logic
 
 import (
+	"math"
+
 	"github.com/wirekang/mouseable/internal/def"
 	"github.com/wirekang/mouseable/internal/hook"
 )
@@ -95,8 +97,16 @@ var logicDefs = []*logicDef{
 	{
 		function: def.Flash,
 		onStart: func(s *logicState) {
-			factor := dataMap[def.FlashFactor]
-			hook.AddCursorPos(int32(s.speedX*factor), int32(s.speedY*factor))
+			if math.Abs(s.speedX) < 0.5 && math.Abs(s.speedY) < 0.5 {
+				return
+			}
+			distance := dataMap[def.FlashDistance]
+			var dx int32
+			var dy int32
+			angle := math.Atan2(s.speedX, s.speedY)
+			dx = int32(distance * math.Sin(angle))
+			dy = int32(distance * math.Cos(angle))
+			hook.AddCursorPos(dx, dy)
 		},
 	},
 }

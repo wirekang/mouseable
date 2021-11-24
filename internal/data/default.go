@@ -24,7 +24,7 @@ func makeDefaultConfig() def.Config {
 			def.Friction:        3.6,
 			def.SniperModeSpeed: 1.0,
 			def.WheelAmount:     40,
-			def.FlashFactor:     30,
+			def.FlashDistance:   300,
 		},
 		ActivateKey: def.HotKey{
 			IsAlt:   true,

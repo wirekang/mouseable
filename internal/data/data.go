@@ -2,6 +2,7 @@ package data
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/pkg/errors"
@@ -63,6 +64,13 @@ func LoadConfig() (config def.Config) {
 }
 
 func loadConfig() (config def.Config, err error) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			err = errors.WithStack(fmt.Errorf("%+v", r))
+		}
+	}()
+
 	bytes, err := os.ReadFile(configFile)
 	if err != nil {
 		err = errors.WithStack(err)

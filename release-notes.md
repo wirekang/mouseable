@@ -1,3 +1,7 @@
+# v1.0.7
+
+* 'Flash' now jump fixed distance regardless of velocity.
+
 # v1.0.6
 
 * Add an overlay near the mouse when activated

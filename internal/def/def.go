@@ -67,7 +67,7 @@ var (
 	WheelAmount     = newD(2, "WheelAmount", "Wheel Up/Down amount")
 	SniperModeSpeed = newD(
 		3,
-		"SniperModeSpeed", "Max speed when sniper mode is enabled",
+		"SniperModeSpeed", "Speed in sniper mode",
 	)
-	FlashFactor = newD(4, "FlashFactor", "Speed multiplier when flash")
+	FlashDistance = newD(4, "FlashDistance", "Flash distance")
 )
