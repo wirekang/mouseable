@@ -28,7 +28,7 @@ func AlertError(msg string) {
 
 func Run() {
 	mainWindow, _ = walk.NewMainWindowWithName("Mouseable " + cnst.VERSION)
-	mainWindow.SetWidth(650)
+	mainWindow.SetWidth(700)
 	mainWindow.SetHeight(900)
 	defaultStyle := win.GetWindowLong(mainWindow.Handle(), win.GWL_STYLE)
 	win.SetWindowLong(
