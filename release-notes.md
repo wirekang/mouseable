@@ -1,11 +1,8 @@
-# v1.0.9
-
-* First GUI version
-* Fix bug
-
 # v1.0.8
 
+* First GUI version
 * Fix crashing issue
+* Fix bug
 
 # v1.0.7
 
