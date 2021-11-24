@@ -17,7 +17,10 @@ import (
 	"github.com/wirekang/mouseable/internal/view"
 )
 
+var VERSION string
+
 func main() {
+	cnst.VERSION = VERSION
 	// checking -dev.exe instead of -dev is due to bug of air.
 	// https://github.com/cosmtrek/air/issues/207
 	if len(os.Args) == 2 && (os.Args[1] == "-dev.exe" || os.Args[1] == "-dev") {

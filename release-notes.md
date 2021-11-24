@@ -1,3 +1,8 @@
+# v1.0.9 -- working
+
+* Fix window width
+* Fix bug: version not visible
+
 # v1.0.8
 
 * First GUI version
