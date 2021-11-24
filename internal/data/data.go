@@ -2,7 +2,6 @@ package data
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/pkg/errors"
@@ -64,13 +63,6 @@ func LoadConfig() (config def.Config) {
 }
 
 func loadConfig() (config def.Config, err error) {
-	defer func() {
-		r := recover()
-		if r != nil {
-			err = errors.WithStack(fmt.Errorf("%+v", r))
-		}
-	}()
-
 	bytes, err := os.ReadFile(configFile)
 	if err != nil {
 		err = errors.WithStack(err)
@@ -111,7 +103,7 @@ func dataMapToNameMap(m map[*def.Data]float64) (rst map[string]float64) {
 }
 
 func nameMapToFunctionMap(m map[string]uint32) (rst map[*def.Function]uint32) {
-	rst = make(map[*def.Function]uint32, len(m))
+	rst = makeDefaultConfig().FunctionKeyCodeMap
 	for name, keyCode := range m {
 		rst[def.FunctionNameMap[name]] = keyCode
 	}
@@ -119,7 +111,7 @@ func nameMapToFunctionMap(m map[string]uint32) (rst map[*def.Function]uint32) {
 }
 
 func nameMapToDataMap(m map[string]float64) (rst map[*def.Data]float64) {
-	rst = make(map[*def.Data]float64, len(m))
+	rst = makeDefaultConfig().DataValueMap
 	for name, value := range m {
 		rst[def.DataNameMap[name]] = value
 	}

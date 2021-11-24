@@ -1,3 +1,7 @@
+# v1.0.8
+
+* Fix crashing issue
+
 # v1.0.7
 
 * 'Flash' now jump fixed distance regardless of velocity.
