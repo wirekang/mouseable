@@ -14,10 +14,9 @@ var DI struct {
 }
 
 type jsonHolder struct {
+	HotKeyNameMap   map[string]def.HotKey
 	FunctionNameMap map[string]uint32
 	DataNameMap     map[string]float64
-	ActivateKey     def.HotKey
-	DeactivateKey   def.HotKey
 }
 
 func Init() {
@@ -28,18 +27,18 @@ func Init() {
 
 func SaveConfig(config def.Config) {
 	saveData(config)
+	DI.SetConfig(config)
 }
 
 func saveData(config def.Config) (err error) {
 	DI.SetConfig(config)
 	_ = os.MkdirAll(configDir, os.ModeDir)
 	jh := jsonHolder{
+		HotKeyNameMap:   hotKeyMapToNameMap(config.HotKeyMap),
 		FunctionNameMap: functionMapToNameMap(config.FunctionKeyCodeMap),
 		DataNameMap:     dataMapToNameMap(config.DataValueMap),
-		ActivateKey:     config.ActivationKey,
-		DeactivateKey:   config.DeactivationKey,
 	}
-	bytes, err := json.Marshal(jh)
+	bytes, err := json.MarshalIndent(jh, "", "    ")
 	if err != nil {
 		err = errors.WithStack(err)
 		return
@@ -77,16 +76,23 @@ func loadConfig() (config def.Config, err error) {
 	}
 
 	config = def.Config{
+		HotKeyMap:          nameMapToHotKeyMap(jh.HotKeyNameMap),
 		FunctionKeyCodeMap: nameMapToFunctionMap(jh.FunctionNameMap),
 		DataValueMap:       nameMapToDataMap(jh.DataNameMap),
-		ActivationKey:      jh.ActivateKey,
-		DeactivationKey:    jh.DeactivateKey,
 	}
 
 	return
 }
 
-func functionMapToNameMap(m map[*def.Function]uint32) (rst map[string]uint32) {
+func hotKeyMapToNameMap(m map[*def.HotKeyDef]def.HotKey) (rst map[string]def.HotKey) {
+	rst = make(map[string]def.HotKey, len(m))
+	for hk := range m {
+		rst[hk.Name] = m[hk]
+	}
+	return
+}
+
+func functionMapToNameMap(m map[*def.FunctionDef]uint32) (rst map[string]uint32) {
 	rst = make(map[string]uint32, len(m))
 	for fnc := range m {
 		rst[fnc.Name] = m[fnc]
@@ -94,7 +100,7 @@ func functionMapToNameMap(m map[*def.Function]uint32) (rst map[string]uint32) {
 	return
 }
 
-func dataMapToNameMap(m map[*def.Data]float64) (rst map[string]float64) {
+func dataMapToNameMap(m map[*def.DataDef]float64) (rst map[string]float64) {
 	rst = make(map[string]float64, len(m))
 	for data := range m {
 		rst[data.Name] = m[data]
@@ -102,7 +108,15 @@ func dataMapToNameMap(m map[*def.Data]float64) (rst map[string]float64) {
 	return
 }
 
-func nameMapToFunctionMap(m map[string]uint32) (rst map[*def.Function]uint32) {
+func nameMapToHotKeyMap(m map[string]def.HotKey) (rst map[*def.HotKeyDef]def.HotKey) {
+	rst = makeDefaultConfig().HotKeyMap
+	for name, keyCode := range m {
+		rst[def.HotKeyNameMap[name]] = keyCode
+	}
+	return
+}
+
+func nameMapToFunctionMap(m map[string]uint32) (rst map[*def.FunctionDef]uint32) {
 	rst = makeDefaultConfig().FunctionKeyCodeMap
 	for name, keyCode := range m {
 		rst[def.FunctionNameMap[name]] = keyCode
@@ -110,7 +124,7 @@ func nameMapToFunctionMap(m map[string]uint32) (rst map[*def.Function]uint32) {
 	return
 }
 
-func nameMapToDataMap(m map[string]float64) (rst map[*def.Data]float64) {
+func nameMapToDataMap(m map[string]float64) (rst map[*def.DataDef]float64) {
 	rst = makeDefaultConfig().DataValueMap
 	for name, value := range m {
 		rst[def.DataNameMap[name]] = value

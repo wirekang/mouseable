@@ -9,4 +9,5 @@ var DI struct {
 	Wheel        func(amount int, hor bool)
 	OnCursorMove func()
 	OnCursorStop func()
+	Unhook       func()
 }

@@ -1,7 +1,6 @@
 package overlay
 
 import (
-	"fmt"
 	"sync"
 	"syscall"
 	"unsafe"
@@ -38,7 +37,7 @@ func OnHook() {
 
 func OnUnhook() {
 	state.Lock()
-	state.isHooking = true
+	state.isHooking = false
 	state.Unlock()
 	hideWindow()
 }
@@ -66,21 +65,23 @@ func initWindow() {
 		500, 500, 16, 16,
 		0, 0, 0, nil,
 	)
-	lg.Logf("HWND %d\n", hwnd)
+	lg.Logf("Overlay HWND %d\n", hwnd)
 }
 
 func showWindow() {
+	lg.Logf("Show Overlay")
 	cursorWidth := w32.GetSystemMetrics(w32.SM_CXCURSOR)
 	cursorHeight := w32.GetSystemMetrics(w32.SM_CYCURSOR)
 	cursorX, cursorY, _ := w32.GetCursorPos()
 	w32.SetWindowPos(
-		hwnd, 0, cursorX+cursorWidth, cursorY+cursorHeight, 16, 16,
+		hwnd, 0, cursorX+cursorWidth-8, cursorY+cursorHeight-8, 16, 16,
 		w32.SWP_NOSIZE|w32.SWP_NOACTIVATE,
 	)
 	w32.ShowWindow(hwnd, w32.SW_SHOWNORMAL)
 }
 
 func hideWindow() {
+	lg.Logf("Hide Overlay")
 	w32.ShowWindow(hwnd, w32.SW_HIDE)
 }
 
@@ -100,7 +101,7 @@ func createSolidBrush() w32.HBRUSH {
 	f := dll.NewProc("CreateSolidBrush")
 	b, _, err := f.Call(0x000000FF)
 	if err != nil {
-		fmt.Printf("CreateSolidBrush: %v", err)
+		lg.Errorf("CreateSolidBrush: %v", err)
 	}
 	return w32.HBRUSH(b)
 }

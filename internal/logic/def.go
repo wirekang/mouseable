@@ -12,16 +12,23 @@ type logicState struct {
 	speedX, speedY  float64
 	steppingMap     map[*logicDef]struct{}
 	wasCursorMoving bool
+	willDeactivate  bool
 }
 
 type logicDef struct {
-	function *def.Function
+	function *def.FunctionDef
 	onStart  func(state *logicState)
 	onStep   func(state *logicState)
 	onStop   func(state *logicState)
 }
 
 var logicDefs = []*logicDef{
+	{
+		function: def.Deactivate,
+		onStop: func(s *logicState) {
+			s.willDeactivate = true
+		},
+	},
 	{
 		function: def.MoveRight,
 		onStep: func(s *logicState) {
@@ -44,6 +51,38 @@ var logicDefs = []*logicDef{
 		function: def.MoveDown,
 		onStep: func(s *logicState) {
 			s.speedY += dataMap[def.Acceleration]
+		},
+	},
+	{
+		function: def.MoveRightUp,
+		onStep: func(s *logicState) {
+			spd := dataMap[def.Acceleration] / 1.41412
+			s.speedX += spd
+			s.speedY -= spd
+		},
+	},
+	{
+		function: def.MoveLeftUp,
+		onStep: func(s *logicState) {
+			spd := dataMap[def.Acceleration] / 1.41412
+			s.speedX -= spd
+			s.speedY -= spd
+		},
+	},
+	{
+		function: def.MoveRightDown,
+		onStep: func(s *logicState) {
+			spd := dataMap[def.Acceleration] / 1.41412
+			s.speedX += spd
+			s.speedY += spd
+		},
+	},
+	{
+		function: def.MoveLeftDown,
+		onStep: func(s *logicState) {
+			spd := dataMap[def.Acceleration] / 1.41412
+			s.speedX -= spd
+			s.speedY += spd
 		},
 	},
 	{
@@ -83,6 +122,18 @@ var logicDefs = []*logicDef{
 		function: def.WheelDown,
 		onStep: func(_ *logicState) {
 			DI.Wheel(-int(dataMap[def.WheelAmount]), false)
+		},
+	},
+	{
+		function: def.WheelRight,
+		onStep: func(_ *logicState) {
+			DI.Wheel(int(dataMap[def.WheelAmount]), true)
+		},
+	},
+	{
+		function: def.WheelLeft,
+		onStep: func(_ *logicState) {
+			DI.Wheel(-int(dataMap[def.WheelAmount]), true)
 		},
 	},
 	{

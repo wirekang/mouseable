@@ -12,19 +12,12 @@ import (
 
 var mutex = sync.Mutex{}
 var keyCodeLogicMap = map[uint32]*logicDef{}
-var dataMap map[*def.Data]float64
+var dataMap map[*def.DataDef]float64
 var state = &logicState{
 	steppingMap: map[*logicDef]struct{}{},
 }
 
-func OnUnhook() {
-	mutex.Lock()
-	defer mutex.Unlock()
-	state.steppingMap = map[*logicDef]struct{}{}
-}
-
 func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
-	lg.Logf("OnKey %d %v", keyCode, isDown)
 	mutex.Lock()
 	defer mutex.Unlock()
 
@@ -67,6 +60,7 @@ func Loop() {
 		mutex.Lock()
 		stepFunctions()
 		moveCursor()
+		procDeactivate()
 		mutex.Unlock()
 	}
 }
@@ -141,5 +135,13 @@ func stepFunctions() {
 		if ld.onStep != nil {
 			ld.onStep(state)
 		}
+	}
+}
+
+func procDeactivate() {
+	if state.willDeactivate {
+		state.willDeactivate = false
+		state.steppingMap = map[*logicDef]struct{}{}
+		DI.Unhook()
 	}
 }

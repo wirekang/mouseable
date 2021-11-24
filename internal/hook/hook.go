@@ -1,6 +1,7 @@
 package hook
 
 import (
+	"sync"
 	"unsafe"
 
 	"github.com/JamesHovious/w32"
@@ -10,42 +11,43 @@ import (
 )
 
 const activateID = 100
-const deactivateID = 101
 
 var hHook w32.HHOOK
-var isHooking bool
-
-func SetKey(config def.Config) {
-	go messageLoop(config.ActivationKey, config.DeactivationKey)
+var state struct {
+	sync.RWMutex
+	activateKey def.HotKey
+	isHooking   bool
 }
 
-func messageLoop(activateKey, deactivateKey def.HotKey) {
+func SetKey(config def.Config) {
+	state.Lock()
+	state.activateKey = config.HotKeyMap[def.Activate]
+	state.Unlock()
+	go messageLoop(config.HotKeyMap[def.Activate])
+}
+
+func messageLoop(activateKey def.HotKey) {
 	unregisterHotKey(activateID)
-	unregisterHotKey(deactivateID)
-	if isHooking {
-		registerHotKey(deactivateID, deactivateKey)
-	} else {
-		registerHotKey(activateID, activateKey)
-	}
+	registerHotKey(activateID, activateKey)
 	lg.Logf("Start message loop")
+	defer func() { lg.Logf("Exit message loop") }()
 	var msg w32.MSG
 	for {
 		r := w32.GetMessage(&msg, 0, 0, 0)
+		state.RLock()
+		if state.activateKey != activateKey {
+			state.RUnlock()
+			return
+		}
+		state.RUnlock()
 		lg.Logf("message: %+v", msg)
 		if r == 0 {
-			lg.Logf("r == 0")
 			return
 		}
 		if msg.Message == w32.WM_HOTKEY {
 			switch msg.WParam {
 			case activateID:
-				unregisterHotKey(activateID)
 				hook()
-				registerHotKey(deactivateID, deactivateKey)
-			case deactivateID:
-				unregisterHotKey(deactivateID)
-				unhook()
-				registerHotKey(activateID, activateKey)
 			}
 		}
 	}
@@ -55,11 +57,11 @@ func getMod(h def.HotKey) (mod uint) {
 	if h.IsAlt {
 		mod = mod | w32.MOD_ALT
 	}
-	if h.IsWin {
-		mod = mod | w32.MOD_WIN
-	}
 	if h.IsControl {
 		mod = mod | w32.MOD_CONTROL
+	}
+	if h.IsWin {
+		mod = mod | w32.MOD_WIN
 	}
 	if h.IsShift {
 		mod = mod | w32.MOD_SHIFT
@@ -68,35 +70,52 @@ func getMod(h def.HotKey) (mod uint) {
 }
 
 func hook() {
+	state.Lock()
+	if state.isHooking {
+		lg.Errorf("Already hooking")
+		state.Unlock()
+		return
+	}
+	state.isHooking = true
+	state.Unlock()
+
 	lg.Logf("Hook")
 	hHook = w32.SetWindowsHookEx(w32.WH_KEYBOARD_LL, hookProc, 0, 0)
-	isHooking = true
 	DI.OnHook()
 }
 
-func unhook() {
+func Unhook() {
+	state.Lock()
+	if !state.isHooking {
+		lg.Errorf("Already not hooking")
+		state.Unlock()
+		return
+	}
+	state.isHooking = false
+	state.Unlock()
 	lg.Logf("Unhook")
 	w32.UnhookWindowsHookEx(hHook)
 	DI.OnUnhook()
-	isHooking = false
 }
 
 func registerHotKey(id int, key def.HotKey) {
-	lg.Logf("registerHotKey: %d %+v", id, key)
 	err := w32.RegisterHotKey(
 		0, id, getMod(key)|w32.MOD_NOREPEAT, uint(key.KeyCode),
 	)
 
 	if err != nil {
 		lg.Errorf("registerHotKey: %v", err)
+	} else {
+		lg.Logf("registerHotKey: %d %+v", id, key)
 	}
 }
 
 func unregisterHotKey(id int) {
-	lg.Logf("unregisterHotKey: %d", id)
 	err := w32.UnregisterHotKey(0, id)
 	if err != nil {
 		lg.Errorf("unregisterHotKey: %v", err)
+	} else {
+		lg.Logf("unregisterHotKey: %d", id)
 	}
 }
 

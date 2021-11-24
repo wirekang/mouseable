@@ -6,7 +6,14 @@ import (
 
 func makeDefaultConfig() def.Config {
 	return def.Config{
-		FunctionKeyCodeMap: map[*def.Function]uint32{
+		HotKeyMap: map[*def.HotKeyDef]def.HotKey{
+			def.Activate: {
+				IsAlt:   true,
+				KeyCode: 74,
+			},
+		},
+		FunctionKeyCodeMap: map[*def.FunctionDef]uint32{
+			def.Deactivate:  71,
 			def.MoveRight:   76,
 			def.MoveUp:      75,
 			def.MoveLeft:    72,
@@ -19,19 +26,12 @@ func makeDefaultConfig() def.Config {
 			def.SniperMode:  32,
 			def.Flash:       70,
 		},
-		DataValueMap: map[*def.Data]float64{
+		DataValueMap: map[*def.DataDef]float64{
 			def.Acceleration:    4.0,
 			def.Friction:        3.6,
 			def.SniperModeSpeed: 1.0,
 			def.WheelAmount:     40,
 			def.FlashDistance:   300,
-		},
-		ActivationKey: def.HotKey{
-			IsAlt:   true,
-			KeyCode: 74,
-		},
-		DeactivationKey: def.HotKey{
-			KeyCode: 186,
 		},
 	}
 }

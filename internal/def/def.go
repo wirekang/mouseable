@@ -1,17 +1,17 @@
 // Package def declares types for prevent circular dependencies.
 package def
 
-type Function struct {
+type def struct {
 	Order       int
 	Name        string
 	Description string
 }
 
-type Data struct {
-	Order       int
-	Name        string
-	Description string
-}
+type FunctionDef def
+
+type DataDef def
+
+type HotKeyDef def
 
 type HotKey struct {
 	IsAlt     bool
@@ -22,52 +22,71 @@ type HotKey struct {
 }
 
 type Config struct {
-	FunctionKeyCodeMap map[*Function]uint32
-	DataValueMap       map[*Data]float64
-	ActivationKey      HotKey
-	DeactivationKey    HotKey
+	HotKeyMap          map[*HotKeyDef]HotKey
+	FunctionKeyCodeMap map[*FunctionDef]uint32
+	DataValueMap       map[*DataDef]float64
 }
 
-var FunctionNameMap = map[string]*Function{}
-var DataNameMap = map[string]*Data{}
+var HotKeyNameMap = map[string]*HotKeyDef{}
+var FunctionNameMap = map[string]*FunctionDef{}
+var DataNameMap = map[string]*DataDef{}
 
-func newF(order int, name, des string) *Function {
-	f := &Function{Order: order, Name: name, Description: des}
+var nextHotKeyOrder = 0
+var nextFunctionOrder = 0
+var nextDataOrder = 0
+
+func newH(name, des string) *HotKeyDef {
+	h := &HotKeyDef{Order: nextHotKeyOrder, Name: name, Description: des}
+	nextHotKeyOrder++
+	HotKeyNameMap[name] = h
+	return h
+}
+
+func newF(name, des string) *FunctionDef {
+	f := &FunctionDef{Order: nextFunctionOrder, Name: name, Description: des}
+	nextFunctionOrder++
 	FunctionNameMap[name] = f
 	return f
 }
 
-func newD(order int, name, des string) *Data {
-	d := &Data{Order: order, Name: name, Description: des}
+func newD(name, des string) *DataDef {
+	d := &DataDef{Order: nextDataOrder, Name: name, Description: des}
+	nextDataOrder++
 	DataNameMap[name] = d
 	return d
 }
 
 var (
-	MoveRight     = newF(0, "MoveRight", "Move →")
-	MoveRightUp   = newF(1, "MoveRightUp", "Move ↗")
-	MoveUp        = newF(2, "MoveUp", "Move ↑")
-	MoveLeftUp    = newF(3, "MoveLeftUp", "Move ↖")
-	MoveLeft      = newF(4, "MoveLeft", "Move ←")
-	MoveLeftDown  = newF(5, "MoveLeftDown", "Move ↙")
-	MoveDown      = newF(6, "MoveDown", "Move ↓")
-	MoveRightDown = newF(7, "MoveRightDown", "Move ↘")
-	ClickLeft     = newF(8, "ClickLeft", "Click Left")
-	ClickRight    = newF(9, "ClickRight", "Click Right")
-	ClickMiddle   = newF(10, "ClickMiddle", "Click Middle")
-	WheelUp       = newF(11, "WheelUp", "Wheel Up")
-	WheelDown     = newF(12, "WheelDown", "Wheel Down")
-	SniperMode    = newF(13, "SniperMode", "Slow down to increase accuracy")
-	Flash         = newF(14, "Flash", "Flash cursor to current angle")
+	Activate = newH("Activate", "Activate Mouseable")
 )
 
 var (
-	Acceleration    = newD(0, "Acceleration", "Cursor acceleration value")
-	Friction        = newD(1, "Friction", "Cursor friction value")
-	WheelAmount     = newD(2, "WheelAmount", "Wheel Up/Down amount")
-	SniperModeSpeed = newD(
-		3,
-		"SniperModeSpeed", "Speed in sniper mode",
+	Deactivate    = newF("Deactivate", "Deactivate Mouseable")
+	MoveRight     = newF("MoveRight", "Move cursor →")
+	MoveRightUp   = newF("MoveRightUp", "Move cursor ↗")
+	MoveUp        = newF("MoveUp", "Move cursor ↑")
+	MoveLeftUp    = newF("MoveLeftUp", "Move cursor ↖")
+	MoveLeft      = newF("MoveLeft", "Move cursor ←")
+	MoveLeftDown  = newF("MoveLeftDown", "Move cursor ↙")
+	MoveDown      = newF("MoveDown", "Move cursor ↓")
+	MoveRightDown = newF("MoveRightDown", "Move cursor ↘")
+	ClickLeft     = newF("ClickLeft", "Click left mouse button")
+	ClickRight    = newF("ClickRight", "Click right mouse button")
+	ClickMiddle   = newF("ClickMiddle", "Click middle mouse button")
+	WheelUp       = newF("WheelUp", "Wheel ↑")
+	WheelDown     = newF("WheelDown", "Wheel ↓")
+	WheelRight    = newF("WheelRight", "Wheel →")
+	WheelLeft     = newF("WheelLeft", "Wheel ←")
+	SniperMode    = newF("SniperMode", "Slow down to increase accuracy")
+	Flash         = newF(
+		"Flash", "Teleport cursor to the direction it is moving",
 	)
-	FlashDistance = newD(4, "FlashDistance", "Flash distance")
+)
+
+var (
+	Acceleration    = newD("Acceleration", "Cursor acceleration value")
+	Friction        = newD("Friction", "Cursor friction value")
+	WheelAmount     = newD("WheelAmount", "Wheel Up/Down amount")
+	SniperModeSpeed = newD("SniperModeSpeed", "Speed in sniper mode")
+	FlashDistance   = newD("FlashDistance", "Flash distance")
 )
