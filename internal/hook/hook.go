@@ -1,7 +1,6 @@
 package hook
 
 import (
-	"fmt"
 	"unsafe"
 
 	"github.com/JamesHovious/w32"
@@ -10,25 +9,24 @@ import (
 	"github.com/wirekang/mouseable/internal/lg"
 )
 
-var DI struct {
-	OnHook     func()
-	OnUnhook   func()
-	OnKey      func(keyCode uint32, isDown bool) (preventDefault bool)
-	AlertError func(string)
-}
-
-var hHook w32.HHOOK
-
 const activateID = 100
 const deactivateID = 101
 
-func SetKey(activate, deactivate def.HotKey) {
-	go setKey(activate, deactivate)
+var hHook w32.HHOOK
+var isHooking bool
+
+func SetKey(config def.Config) {
+	go messageLoop(config.ActivateKey, config.DeactivateKey)
 }
 
-func setKey(activateKey, deactivateKey def.HotKey) {
-	registerHotKey(activateID, activateKey)
-
+func messageLoop(activateKey, deactivateKey def.HotKey) {
+	unregisterHotKey(activateID)
+	unregisterHotKey(deactivateID)
+	if isHooking {
+		registerHotKey(deactivateID, deactivateKey)
+	} else {
+		registerHotKey(activateID, activateKey)
+	}
 	lg.Logf("Start message loop")
 	var msg w32.MSG
 	for {
@@ -72,27 +70,32 @@ func getMod(h def.HotKey) (mod uint) {
 func hook() {
 	lg.Logf("Hook")
 	hHook = w32.SetWindowsHookEx(w32.WH_KEYBOARD_LL, hookProc, 0, 0)
+	isHooking = true
 }
 
 func unhook() {
 	lg.Logf("Unhook")
 	w32.UnhookWindowsHookEx(hHook)
 	DI.OnUnhook()
+	isHooking = false
 }
 
 func registerHotKey(id int, key def.HotKey) {
+	lg.Logf("registerHotKey: %d %+v", id, key)
 	err := w32.RegisterHotKey(
 		0, id, getMod(key)|w32.MOD_NOREPEAT, uint(key.KeyCode),
 	)
+
 	if err != nil {
-		DI.AlertError(fmt.Sprintf("RegisterHotKeyError: %v", err))
+		lg.Errorf("registerHotKey: %v", err)
 	}
 }
 
 func unregisterHotKey(id int) {
+	lg.Logf("unregisterHotKey: %d", id)
 	err := w32.UnregisterHotKey(0, id)
 	if err != nil {
-		DI.AlertError(fmt.Sprintf("UnregisterHotKeyError: %v", err))
+		lg.Errorf("unregisterHotKey: %v", err)
 	}
 }
 

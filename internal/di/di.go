@@ -18,13 +18,12 @@ func Init() {
 	logic.DI.MouseUp = hook.MouseUp
 	logic.DI.Wheel = hook.Wheel
 	hook.DI.OnKey = logic.OnKey
-	hook.DI.AlertError = view.AlertError
 	hook.DI.OnHook = doNothing
 	hook.DI.OnUnhook = logic.OnUnhook
 	view.DI.LoadConfig = data.LoadConfig
 	view.DI.SaveConfig = data.SaveConfig
 	data.DI.SetConfig = func(config def.Config) {
-		hook.SetKey(config.ActivateKey, config.DeactivateKey)
+		hook.SetKey(config)
 		logic.SetConfig(config)
 	}
 	data.DI.AlertError = view.AlertError
