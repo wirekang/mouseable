@@ -1,4 +1,4 @@
-# v1.0.9 - WORKING
+# v1.0.9
 
 ## More Features
 
