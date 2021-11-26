@@ -3,7 +3,7 @@ package view
 import (
 	"bytes"
 	"fmt"
-	"sort"
+	"os/exec"
 	"strconv"
 	"syscall"
 	"unsafe"
@@ -21,6 +21,7 @@ import (
 )
 
 var mainWindow *walk.MainWindow
+var config def.Config
 
 func AlertError(msg string) {
 	w32.MessageBox(0, msg, "Mouseable", 0)
@@ -28,14 +29,12 @@ func AlertError(msg string) {
 
 func Run() {
 	mainWindow, _ = walk.NewMainWindowWithName("Mouseable " + cnst.VERSION)
-	mainWindow.SetWidth(700)
-	mainWindow.SetHeight(900)
 	defaultStyle := win.GetWindowLong(mainWindow.Handle(), win.GWL_STYLE)
 	win.SetWindowLong(
 		mainWindow.Handle(), win.GWL_STYLE, defaultStyle^win.WS_THICKFRAME,
 	)
-	config := DI.LoadConfig()
-	tempUI(&config)
+	config = DI.LoadConfig()
+	ui()
 	mainWindow.SetVisible(true)
 
 	mainWindow.Closing().Attach(
@@ -81,143 +80,142 @@ func Run() {
 	mainWindow.Run()
 }
 
-func tempUI(config *def.Config) {
-	mainWindow.SetLayout(walk.NewVBoxLayout())
-	hotKeyGroup, _ := walk.NewGroupBox(mainWindow)
-	hotKeyGroup.SetLayout(walk.NewVBoxLayout())
-	hotKeyGroup.SetTitle("HotKey")
-	helpRow, _ := walk.NewVSplitter(hotKeyGroup)
-	helpText, _ := walk.NewTextLabel(helpRow)
-	helpText.SetText("※ Using Win key alone is not recommended ※\n※ Click left to set key, right to unset.")
-	var hkDefs []*def.HotKeyDef
-	for _, hkd := range def.HotKeyNameMap {
-		hkDefs = append(hkDefs, hkd)
+func ui() {
+	mainLayout := walk.NewVBoxLayout()
+	mainWindow.SetLayout(mainLayout)
+	mainWindow.SetWidth(700)
+	mainWindow.SetHeight(900)
+	uiInfoGroup()
+	hotKeyGroup := newVGroupBox(mainWindow, "HotKey")
+	newRowText(
+		hotKeyGroup,
+		"※ Using Win key alone is not recommended. ※\n※ Click left to set key, right to unset.※",
+	)
+	for i := range def.HotKeyDefs {
+		uiHotkey(hotKeyGroup, def.HotKeyDefs[i])
 	}
-	sort.Slice(
-		hkDefs, func(i, j int) bool {
-			return hkDefs[i].Order < hkDefs[j].Order
+
+	functionGroup := newVGroupBox(mainWindow, "Function")
+	for i := range def.FunctionDefs {
+		uiFunction(functionGroup, def.FunctionDefs[i])
+	}
+
+	dataGroup := newVGroupBox(mainWindow, "Data")
+	for i := range def.DataDefs {
+		uiData(dataGroup, def.DataDefs[i])
+	}
+}
+
+func uiInfoGroup() {
+	infoGroup := newVGroupBox(mainWindow, "Info")
+	hs, _ := walk.NewHSplitter(infoGroup)
+	tl, _ := walk.NewTextLabel(hs)
+	tl.SetText(fmt.Sprintf("Version: %s", cnst.VERSION))
+	btnGithub, _ := walk.NewPushButton(hs)
+	btnGithub.SetText("If you find any bug or have a good idea, visit the GitHub.")
+
+	btnGithub.Clicked().Attach(
+		func() {
+			exec.Command(
+				"rundll32", "url.dll,FileProtocolHandler",
+				"https://github.com/wirekang/mouseable",
+			).Start()
 		},
 	)
-	for _, hkd := range hkDefs {
-		hotKey(config, hotKeyGroup, hkd)
-	}
+}
 
-	functionGroup, _ := walk.NewGroupBox(mainWindow)
-	functionGroup.SetLayout(walk.NewVBoxLayout())
-	functionGroup.SetTitle("Function")
-	var fncDefs []*def.FunctionDef
-	for _, fncDef := range def.FunctionNameMap {
-		fncDefs = append(fncDefs, fncDef)
-	}
-	sort.Slice(
-		fncDefs, func(i, j int) bool {
-			return fncDefs[i].Order < fncDefs[j].Order
-		},
-	)
-	for _, fncDef := range fncDefs {
-		function(config, functionGroup, fncDef)
-	}
-
-	dataGroup, _ := walk.NewGroupBox(mainWindow)
-	dataGroup.SetLayout(walk.NewVBoxLayout())
-	dataGroup.SetTitle("Data")
-	var dataDefs []*def.DataDef
-	for _, dataDef := range def.DataNameMap {
-		dataDefs = append(dataDefs, dataDef)
-	}
-	sort.Slice(
-		dataDefs, func(i, j int) bool {
-			return dataDefs[i].Order < dataDefs[j].Order
-		},
-	)
-	for _, dataDef := range dataDefs {
-		data(config, dataGroup, dataDef)
-	}
-
-	btn, _ := walk.NewPushButton(mainWindow)
-	btn.SetText("Save")
-
-	btn.MouseDown().Attach(
-		func(_, _ int, _ walk.MouseButton) {
-			DI.SaveConfig(*config)
-		},
-	)
-
+func newVGroupBox(p walk.Container, title string) (gb *walk.GroupBox) {
+	gb, _ = walk.NewGroupBox(p)
+	gb.SetLayout(walk.NewVBoxLayout())
+	gb.SetTitle(title)
 	return
 }
 
-func hotKey(config *def.Config, c walk.Container, hkd *def.HotKeyDef) {
+func newRowText(p walk.Container, txt string) (tl *walk.TextLabel) {
+	v, _ := walk.NewVSplitter(p)
+	tl, _ = walk.NewTextLabel(v)
+	tl.SetText(txt)
+	return
+}
+
+func uiHotkey(c walk.Container, hkd *def.HotKeyDef) {
 	s, _ := walk.NewHSplitter(c)
 	name, _ := walk.NewTextLabel(s)
 	name.SetText(hkd.Name)
 	description, _ := walk.NewTextLabel(s)
 	description.SetText(hkd.Description)
-	checkBox(
+	uiCheckbox(
 		config.HotKeyMap[hkd].IsControl, "Ctrl", s, func(b bool) {
 			t := config.HotKeyMap[hkd]
 			t.IsControl = b
 			config.HotKeyMap[hkd] = t
+			DI.SaveConfig(config)
 		},
 	)
-	checkBox(
+	uiCheckbox(
 		config.HotKeyMap[hkd].IsShift, "Shift", s, func(b bool) {
 			t := config.HotKeyMap[hkd]
 			t.IsShift = b
 			config.HotKeyMap[hkd] = t
+			DI.SaveConfig(config)
 		},
 	)
-	checkBox(
+	uiCheckbox(
 		config.HotKeyMap[hkd].IsAlt, "Alt", s, func(b bool) {
 			t := config.HotKeyMap[hkd]
 			t.IsAlt = b
 			config.HotKeyMap[hkd] = t
+			DI.SaveConfig(config)
 		},
 	)
-	checkBox(
+	uiCheckbox(
 		config.HotKeyMap[hkd].IsWin, "Win", s, func(b bool) {
 			t := config.HotKeyMap[hkd]
 			t.IsWin = b
 			config.HotKeyMap[hkd] = t
+			DI.SaveConfig(config)
 		},
 	)
 
-	keycode(
+	uiKeyCode(
 		config.HotKeyMap[hkd].KeyCode, s, func(v uint32) {
 			t := config.HotKeyMap[hkd]
 			t.KeyCode = v
 			config.HotKeyMap[hkd] = t
+			DI.SaveConfig(config)
 		},
 	)
-
 }
 
-func function(config *def.Config, c walk.Container, fnc *def.FunctionDef) {
+func uiFunction(c walk.Container, fnc *def.FunctionDef) {
 	s, _ := walk.NewHSplitter(c)
 	name, _ := walk.NewTextLabel(s)
 	name.SetText(fnc.Name)
 	description, _ := walk.NewTextLabel(s)
 	description.SetText(fnc.Description)
-	keycode(
+	uiKeyCode(
 		config.FunctionKeyCodeMap[fnc], s, func(u uint32) {
 			config.FunctionKeyCodeMap[fnc] = u
+			DI.SaveConfig(config)
 		},
 	)
 }
 
-func data(config *def.Config, c walk.Container, dd *def.DataDef) {
+func uiData(c walk.Container, dd *def.DataDef) {
 	s, _ := walk.NewHSplitter(c)
 	name, _ := walk.NewTextLabel(s)
 	name.SetText(dd.Name)
 	description, _ := walk.NewTextLabel(s)
 	description.SetText(dd.Description)
-	float(
+	uiFloat(
 		config.DataValueMap[dd], s, func(f float64) {
 			config.DataValueMap[dd] = f
+			DI.SaveConfig(config)
 		},
 	)
 }
 
-func checkBox(checked bool, label string, c walk.Container, f func(bool)) {
+func uiCheckbox(checked bool, label string, c walk.Container, f func(bool)) {
 	cb, _ := walk.NewCheckBox(c)
 	cb.SetChecked(checked)
 	cb.SetText(label)
@@ -229,36 +227,29 @@ func checkBox(checked bool, label string, c walk.Container, f func(bool)) {
 	)
 }
 
-func keycode(kc uint32, c walk.Container, cb func(uint32)) {
+func uiKeyCode(kc uint32, c walk.Container, cb func(uint32)) {
 	btn, _ := walk.NewPushButton(c)
 	btn.SetText(getKeyCodeText(kc))
+	setF := func(u uint32) {
+		btn.SetText(getKeyCodeText(u))
+		cb(u)
+	}
 	btn.MouseUp().Attach(
 		func(x, y int, button walk.MouseButton) {
 			if button == walk.RightButton {
-				btn.SetText(getKeyCodeText(0))
-				cb(0)
+				setF(0)
 			}
 
 			if button == walk.LeftButton {
-				openKeyCodeWindow(
-					func(u uint32) {
-						btn.SetText(getKeyCodeText(u))
-						cb(u)
-					},
-				)
+				openKeyCodeWindow(setF)
 			}
-		},
-	)
-	btn.Clicked().Attach(
-		func() {
-
 		},
 	)
 }
 
-func float(v float64, c walk.Container, cb func(float64)) {
+func uiFloat(v float64, c walk.Container, cb func(float64)) {
 	edit, _ := walk.NewTextEdit(c)
-	edit.SetText(fmt.Sprintf("%.2f", v))
+	edit.SetText(fmt.Sprintf("%.1f", v))
 	btn, _ := walk.NewPushButton(c)
 	btn.SetText("Apply")
 	btn.Clicked().Attach(
@@ -268,7 +259,7 @@ func float(v float64, c walk.Container, cb func(float64)) {
 				return
 			}
 
-			edit.SetText(fmt.Sprintf("%.2f", f))
+			edit.SetText(fmt.Sprintf("%.1f", f))
 			cb(f)
 		},
 	)
@@ -290,8 +281,15 @@ func getKeyCodeText(kc uint32) (txt string) {
 	return
 }
 
+var nextClassID = 0
+
 func openKeyCodeWindow(cb func(uint32)) {
-	className, _ := syscall.UTF16PtrFromString("MouseableKeyCodePopUpWindow")
+	nextClassID++
+	className, _ := syscall.UTF16PtrFromString(
+		fmt.Sprintf(
+			"MouseableKeyCodePopUpWindow%d", nextClassID,
+		),
+	)
 	windowName, _ := syscall.UTF16PtrFromString("Enter Key")
 	proc := func(
 		hwnd w32.HWND, msg uint32, wparam w32.WPARAM, lparam w32.LPARAM,
@@ -301,10 +299,13 @@ func openKeyCodeWindow(cb func(uint32)) {
 			switch wparam {
 			case w32.WA_INACTIVE:
 				w32.DestroyWindow(hwnd)
+				return 0
 			}
 		case w32.WM_KEYDOWN:
+			fmt.Println("KEYDOWN: ", hwnd, wparam)
 			cb(uint32(wparam))
 			w32.DestroyWindow(hwnd)
+			return 0
 		}
 		return w32.LRESULT(
 			w32.DefWindowProc(
@@ -332,6 +333,6 @@ func openKeyCodeWindow(cb func(uint32)) {
 		cx-w/2, cy+10, w, h,
 		w32.HWND(mainWindow.Handle()), 0, 0, nil,
 	)
-	w32.ShowWindow(hwnd, w32.SW_SHOWNORMAL)
+	w32.ShowWindow(hwnd, w32.SW_SHOW)
 	lg.Logf("HWND %d\n", hwnd)
 }

@@ -9,6 +9,7 @@ require (
 
 require (
 	github.com/JamesHovious/w32 v1.2.0 // indirect
+	github.com/juju/fslock v0.0.0-20160525022230-4d5c94c67b4b // indirect
 	github.com/lxn/win v0.0.0-20210218163916-a377121e959e // indirect
 	github.com/mat/besticon v3.12.0+incompatible // indirect
 	github.com/wirekang/vkmap v0.0.0-20211120100613-2957a3170010 // indirect

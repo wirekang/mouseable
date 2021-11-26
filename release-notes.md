@@ -1,5 +1,9 @@
 # v1.0.9 - WORKING
 
+## More Features
+
+* You can no longer run multiple Mouseable at the same time.
+
 ## Feature Updates
 
 * Removed 'Save' button. Key changes now take effect immediately.

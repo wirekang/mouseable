@@ -122,7 +122,7 @@ func stepFunctions() {
 
 	lds := make([]*logicDef, cnt)
 	var i int
-	for lgc, _ := range state.steppingMap {
+	for lgc := range state.steppingMap {
 		lds[i] = lgc
 		i++
 	}

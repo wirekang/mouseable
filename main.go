@@ -20,6 +20,7 @@ import (
 var VERSION string
 
 func main() {
+	lg.Logf("Start")
 	cnst.VERSION = VERSION
 	// checking -dev.exe instead of -dev is due to bug of air.
 	// https://github.com/cosmtrek/air/issues/207
@@ -27,10 +28,15 @@ func main() {
 		cnst.IsDev = true
 	}
 
-	lg.Logf("Start")
+	if !data.Lock() {
+		view.AlertError("Mouseable is already running.")
+		return
+	}
+
 	must.Windows()
 
 	defer func() {
+		data.Unlock()
 		err := recover()
 		if err != nil {
 			msg := fmt.Sprintf("panic: %v\n\n", err)

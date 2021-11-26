@@ -30,6 +30,9 @@ type Config struct {
 var HotKeyNameMap = map[string]*HotKeyDef{}
 var FunctionNameMap = map[string]*FunctionDef{}
 var DataNameMap = map[string]*DataDef{}
+var HotKeyDefs []*HotKeyDef
+var FunctionDefs []*FunctionDef
+var DataDefs []*DataDef
 
 var nextHotKeyOrder = 0
 var nextFunctionOrder = 0
@@ -39,6 +42,7 @@ func newH(name, des string) *HotKeyDef {
 	h := &HotKeyDef{Order: nextHotKeyOrder, Name: name, Description: des}
 	nextHotKeyOrder++
 	HotKeyNameMap[name] = h
+	HotKeyDefs = append(HotKeyDefs, h)
 	return h
 }
 
@@ -46,6 +50,7 @@ func newF(name, des string) *FunctionDef {
 	f := &FunctionDef{Order: nextFunctionOrder, Name: name, Description: des}
 	nextFunctionOrder++
 	FunctionNameMap[name] = f
+	FunctionDefs = append(FunctionDefs, f)
 	return f
 }
 
@@ -53,6 +58,7 @@ func newD(name, des string) *DataDef {
 	d := &DataDef{Order: nextDataOrder, Name: name, Description: des}
 	nextDataOrder++
 	DataNameMap[name] = d
+	DataDefs = append(DataDefs, d)
 	return d
 }
 
@@ -86,7 +92,7 @@ var (
 var (
 	Acceleration    = newD("Acceleration", "Cursor acceleration value")
 	Friction        = newD("Friction", "Cursor friction value")
-	WheelAmount     = newD("WheelAmount", "Wheel Up/Down amount")
-	SniperModeSpeed = newD("SniperModeSpeed", "Speed in sniper mode")
-	FlashDistance   = newD("FlashDistance", "Flash distance")
+	WheelAmount     = newD("WheelAmount", "Wheel Up/Down amount(integer)")
+	SniperModeSpeed = newD("SniperModeSpeed", "Speed in sniper mode(integer)")
+	FlashDistance   = newD("FlashDistance", "Flash distance(integer)")
 )
