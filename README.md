@@ -31,19 +31,25 @@ and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 Download installer or portable executable file
 at [Releases](https://github.com/wirekang/mouseable/releases).
 
+# Known Issues
+
+* Using WIN key is not recommended because sometimes it may not work.
+
 # Contributing
 
-### Project Name
+* Project Name
 
-Mouseable is good name, but if you come up with a good name, let me know!
+  Mouseable is good name, but if you come up with a good name, let me know!
 
-### English
 
-If you find any awkward sentence, please PR! I'm not good at english.
+* English
 
-### Graphic
+  If you find any awkward sentence, please PR! I'm not good at english.
 
-This project needs image assets such as icon, social preview image.
+
+* Graphic
+
+  This project needs image assets such as icon, social preview image.
 
 # Roadmap
 
