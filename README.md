@@ -33,7 +33,8 @@ at [Releases](https://github.com/wirekang/mouseable/releases).
 
 # Known Issues
 
-* Using WIN key is not recommended because sometimes it may not work.
+* When activation key does not change, please terminate mouseable from taskbar and restart it.
+* Using [WIN + ?] is not recommended because sometimes it may not work.
 
 # Contributing
 
