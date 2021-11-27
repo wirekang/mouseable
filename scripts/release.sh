@@ -31,12 +31,14 @@ git push origin --tags
 
 TOKEN_HEADER="Authorization: token $(cat githubtoken)"
 
+VERSION_LINK="$(echo "$VERSION" | sed 's/\.//g')"
+
 RELEASE_ID=$(
   curl \
     -X POST \
     -H "$TOKEN_HEADER" \
     -H "Accept: application/vnd.github.v3+json" \
-    -d "{\"tag_name\": \"v$VERSION\", \"body\": \"[Release Notes](https://github.com/wirekang/mouseable/blob/main/release-notes.md#v$VERSION)\"}" \
+    -d "{\"tag_name\": \"v$VERSION\", \"body\": \"[Release Notes](https://github.com/wirekang/mouseable/blob/main/release-notes.md#v$VERSION_LINK)\"}" \
     "https://api.github.com/repos/wirekang/mouseable/releases" |
     awk '/"id":/{print substr($2, 1, length($2)-1); exit;}'
 )
