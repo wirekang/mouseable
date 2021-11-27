@@ -33,7 +33,8 @@ at [Releases](https://github.com/wirekang/mouseable/releases).
 
 # Known Issues
 
-* When activation key does not change, please terminate mouseable from taskbar and restart it.
+* When activation key does not change, please terminate mouseable from taskbar
+  and restart it.
 * Using [WIN + ?] is not recommended because sometimes it may not work.
 
 # Contributing
@@ -54,8 +55,6 @@ at [Releases](https://github.com/wirekang/mouseable/releases).
 
 # Roadmap
 
-* Readme: Function description
-* Readme: Default keymap description
 * Readme: Video demo
 
 # [Release Notes](release-notes.md)
