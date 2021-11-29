@@ -57,6 +57,7 @@ at [Releases](https://github.com/wirekang/mouseable/releases).
 
 # Roadmap
 
+* Logic: Rewrite whole logic to support double press and combination key.
 * Readme: Video demo
 
 # [Release Notes](release-notes.md)
