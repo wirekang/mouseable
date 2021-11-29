@@ -3,9 +3,13 @@ package view
 import (
 	"os"
 
-	"github.com/pkg/errors"
 	"github.com/zserge/lorca"
+
+	"github.com/wirekang/mouseable/internal/lg"
 )
+
+var isOpened bool
+var ui lorca.UI
 
 func mustChrome() {
 	if lorca.LocateChrome() == "" {
@@ -14,13 +18,26 @@ func mustChrome() {
 	}
 }
 
-func waitLorca() (err error) {
-	ui, err := lorca.New("http://"+host, "", 800, 800)
-	if err != nil {
-		err = errors.WithStack(err)
+func open() {
+	if isOpened {
 		return
 	}
-	defer ui.Close()
+
+	url := "http://" + host
+	lg.Logf("Open: %s", url)
+
+	var err error
+	ui, err = lorca.New(url, "", 800, 800)
+	if err != nil {
+		panic(err)
+	}
+
+	isOpened = true
+	defer func() {
+		isOpened = false
+		ui.Close()
+		lg.Logf("Close")
+	}()
 	<-ui.Done()
 	return
 }

@@ -2,7 +2,6 @@ package view
 
 import (
 	"bytes"
-	"fmt"
 	"io/fs"
 	"net"
 	"net/http"
@@ -28,7 +27,7 @@ func serve() {
 		panic(err)
 	}
 	host = ln.Addr().String()
-	fmt.Println(host)
+	go open()
 	defer ln.Close()
 	sub, err := fs.Sub(cnst.AssetFS, "assets")
 	if err != nil {
@@ -43,6 +42,13 @@ func Run() {
 	go serve()
 	config = DI.LoadConfig()
 
+	defer func() {
+
+	}()
+	runNotifyIcon()
+}
+
+func runNotifyIcon() {
 	bs, err := cnst.AssetFS.ReadFile("assets/favicon.ico")
 	if err != nil {
 		panic(err)
@@ -63,24 +69,26 @@ func Run() {
 
 	notifyIcon.MouseDown().Attach(
 		func(x, y int, button walk.MouseButton) {
-			if button != walk.LeftButton {
-				return
+			if button == walk.LeftButton {
+				go open()
 			}
-
 		},
 	)
 
 	exitAction := walk.NewAction()
-	exitAction.SetText("E&xit")
+	exitAction.SetText("Exit")
 
 	exitAction.Triggered().Attach(
-		func() { walk.App().Exit(0) },
+		func() {
+			ui.Close()
+			walk.App().Exit(0)
+		},
 	)
 
 	notifyIcon.ContextMenu().Actions().Add(exitAction)
-	notifyIcon.SetVisible(true)
-	notifyIcon.ShowInfo("title", "info")
-
-	go waitLorca()
+	err = notifyIcon.SetVisible(true)
+	if err != nil {
+		panic(err)
+	}
 	mainWindow.Run()
 }
