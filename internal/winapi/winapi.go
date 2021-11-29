@@ -1,122 +1,19 @@
-package hook
+package winapi
 
 import (
-	"sync"
 	"unsafe"
 
 	"github.com/JamesHovious/w32"
-
-	"github.com/wirekang/mouseable/internal/def"
-	"github.com/wirekang/mouseable/internal/lg"
 )
 
-const activateID = 100
-
 var hHook w32.HHOOK
-var state struct {
-	sync.RWMutex
-	activateKey def.HotKey
-	isHooking   bool
-}
 
-func SetKey(config def.Config) {
-	state.Lock()
-	state.activateKey = config.HotKeyMap[def.Activate]
-	state.Unlock()
-	go messageLoop(config.HotKeyMap[def.Activate])
-}
-
-func messageLoop(activateKey def.HotKey) {
-	unregisterHotKey(activateID)
-	registerHotKey(activateID, activateKey)
-	lg.Logf("Start message loop")
-	defer func() { lg.Logf("Exit message loop") }()
-	var msg w32.MSG
-	for {
-		r := w32.GetMessage(&msg, 0, 0, 0)
-		state.RLock()
-		if state.activateKey != activateKey {
-			state.RUnlock()
-			return
-		}
-		state.RUnlock()
-		lg.Logf("message: %+v", msg)
-		if r == 0 {
-			return
-		}
-		if msg.Message == w32.WM_HOTKEY {
-			switch msg.WParam {
-			case activateID:
-				hook()
-			}
-		}
-	}
-}
-
-func getMod(h def.HotKey) (mod uint) {
-	if h.IsAlt {
-		mod = mod | w32.MOD_ALT
-	}
-	if h.IsControl {
-		mod = mod | w32.MOD_CONTROL
-	}
-	if h.IsWin {
-		mod = mod | w32.MOD_WIN
-	}
-	if h.IsShift {
-		mod = mod | w32.MOD_SHIFT
-	}
-	return
-}
-
-func hook() {
-	state.Lock()
-	if state.isHooking {
-		lg.Errorf("Already hooking")
-		state.Unlock()
-		return
-	}
-	state.isHooking = true
-	state.Unlock()
-
-	lg.Logf("Hook")
+func Hook() {
 	hHook = w32.SetWindowsHookEx(w32.WH_KEYBOARD_LL, hookProc, 0, 0)
-	DI.OnHook()
 }
 
-func Unhook() {
-	state.Lock()
-	if !state.isHooking {
-		lg.Errorf("Already not hooking")
-		state.Unlock()
-		return
-	}
-	state.isHooking = false
-	state.Unlock()
-	lg.Logf("Unhook")
+func UnHook() {
 	w32.UnhookWindowsHookEx(hHook)
-	DI.OnUnhook()
-}
-
-func registerHotKey(id int, key def.HotKey) {
-	err := w32.RegisterHotKey(
-		0, id, getMod(key)|w32.MOD_NOREPEAT, uint(key.KeyCode),
-	)
-
-	if err != nil {
-		lg.Errorf("registerHotKey: %v", err)
-	} else {
-		lg.Logf("registerHotKey: %d %+v", id, key)
-	}
-}
-
-func unregisterHotKey(id int) {
-	err := w32.UnregisterHotKey(0, id)
-	if err != nil {
-		lg.Errorf("unregisterHotKey: %v", err)
-	} else {
-		lg.Logf("unregisterHotKey: %d", id)
-	}
 }
 
 func SetCursorPos(x, y int) {

@@ -28,8 +28,15 @@ and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 
 # Install
 
+***Chrome is required because Mouseable
+use [lorca](https://github.com/zserge/lorca) to draw GUI.***
+
 Download installer or portable executable file
 at [Releases](https://github.com/wirekang/mouseable/releases).
+
+# Limitations
+
+* Windows Only
 
 # Known Issues
 
@@ -38,6 +45,7 @@ at [Releases](https://github.com/wirekang/mouseable/releases).
 * When activation key does not change, please terminate mouseable from taskbar
   and restart it.
 * Using [WIN + ?] is not recommended because sometimes it may not work.
+* Settings will be reset silently if there are big changes.
 
 # Contributing
 
@@ -57,7 +65,6 @@ at [Releases](https://github.com/wirekang/mouseable/releases).
 
 # Roadmap
 
-* Logic: Rewrite whole logic to support double press and combination key.
 * Readme: Video demo
 
 # [Release Notes](release-notes.md)

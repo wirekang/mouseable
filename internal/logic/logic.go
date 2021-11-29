@@ -7,46 +7,19 @@ import (
 	"time"
 
 	"github.com/wirekang/mouseable/internal/def"
-	"github.com/wirekang/mouseable/internal/lg"
 )
 
 var mutex = sync.Mutex{}
-var keyCodeLogicMap = map[uint32]*logicDef{}
-var dataMap map[*def.DataDef]float64
+var functionMap = def.FunctionMap{}
+var cachedDataMap = map[*def.DataDefinition]dataCache{}
 var state = &logicState{
-	steppingMap: map[*logicDef]struct{}{},
+	steppingLogics: []*logicDefinition{},
 }
 
 func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	lgc, ok := keyCodeLogicMap[keyCode]
-	if !ok {
-		return
-	}
-
-	_, isStepping := state.steppingMap[lgc]
-	isStart := isDown && !isStepping
-	isStop := !isDown && isStepping
-
-	if isStart {
-		state.steppingMap[lgc] = struct{}{}
-		lg.Logf("Start: %s", lgc.function.Name)
-		if lgc.onStart != nil {
-			lgc.onStart(state)
-		}
-	}
-
-	if isStop {
-		delete(state.steppingMap, lgc)
-		lg.Logf("Stop: %s", lgc.function.Name)
-		if lgc.onStop != nil {
-			lgc.onStop(state)
-		}
-	}
-
-	preventDefault = true
 	return
 }
 
@@ -60,14 +33,16 @@ func Loop() {
 		mutex.Lock()
 		stepFunctions()
 		moveCursor()
+		rotateWheel()
+		procFriction()
 		procDeactivate()
 		mutex.Unlock()
 	}
 }
 
 func moveCursor() {
-	ix := int32(math.Round(state.speedX))
-	iy := int32(math.Round(state.speedY))
+	ix := int32(math.Round(state.cursorDX))
+	iy := int32(math.Round(state.cursorDY))
 	if ix != 0 || iy != 0 {
 		if state.fixedSpeed != 0 {
 			if ix > 0 {
@@ -80,13 +55,10 @@ func moveCursor() {
 			} else if iy < 0 {
 				iy = -int32(state.fixedSpeed)
 			}
-			state.speedX = float64(ix)
-			state.speedY = float64(iy)
+			state.cursorDX = float64(ix)
+			state.cursorDY = float64(iy)
 		}
 		DI.AddCursorPos(ix, iy)
-		friction := dataMap[def.Friction]
-		procFriction(friction, &state.speedX)
-		procFriction(friction, &state.speedY)
 		if !state.wasCursorMoving {
 			state.wasCursorMoving = true
 			DI.OnCursorMove()
@@ -97,7 +69,43 @@ func moveCursor() {
 	}
 }
 
-func procFriction(friction float64, s *float64) {
+func rotateWheel() {
+	if state.wheelDX != 0 {
+		DI.Wheel(state.wheelDY, true)
+	}
+
+	if state.wheelDY != 0 {
+		DI.Wheel(state.wheelDY, false)
+	}
+}
+
+func procFriction() {
+	cursorFriction := cachedDataMap[def.CursorFriction].float
+	procFrictionFloat(cursorFriction, &state.cursorDX)
+	procFrictionFloat(cursorFriction, &state.cursorDY)
+	wheelFriction := cachedDataMap[def.WheelFriction].int
+	procFrictionInt(wheelFriction, &state.wheelDX)
+	procFrictionInt(wheelFriction, &state.wheelDY)
+}
+
+func procFrictionFloat(friction float64, s *float64) {
+	if *s > 0 {
+		*s -= friction
+		if *s < 0 {
+			*s = 0
+		}
+		return
+	}
+
+	if *s < 0 {
+		*s += friction
+		if *s > 0 {
+			*s = 0
+		}
+	}
+}
+
+func procFrictionInt(friction int, s *int) {
 	if *s > 0 {
 		*s -= friction
 		if *s < 0 {
@@ -115,16 +123,14 @@ func procFriction(friction float64, s *float64) {
 }
 
 func stepFunctions() {
-	cnt := len(state.steppingMap)
+	cnt := len(state.steppingLogics)
 	if cnt == 0 {
 		return
 	}
 
-	lds := make([]*logicDef, cnt)
-	var i int
-	for lgc := range state.steppingMap {
-		lds[i] = lgc
-		i++
+	lds := make([]*logicDefinition, cnt)
+	for i := range state.steppingLogics {
+		lds[i] = state.steppingLogics[i]
 	}
 	sort.Slice(
 		lds, func(i, j int) bool {
@@ -141,7 +147,7 @@ func stepFunctions() {
 func procDeactivate() {
 	if state.willDeactivate {
 		state.willDeactivate = false
-		state.steppingMap = map[*logicDef]struct{}{}
-		DI.Unhook()
+		state.steppingLogics = []*logicDefinition{}
+		DI.OnDeactivated()
 	}
 }

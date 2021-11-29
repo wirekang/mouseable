@@ -1,6 +1,19 @@
+# v1.0.10
+
+## New Features
+
+* Added acceleration and friction to wheel.
+* Added 8 way Teleport.
+* Rewrote logic to support double press and key combination.
+* Rewrote UI to support new logic.
+
+## Feature Updates
+
+* Rename Flash to Teleport.
+
 # v1.0.9
 
-## More Features
+## New Features
 
 * You can no longer run multiple Mouseable at the same time.
 

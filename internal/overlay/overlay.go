@@ -13,7 +13,7 @@ import (
 var hwnd w32.HWND
 var state struct {
 	sync.Mutex
-	isHooking bool
+	isActivating bool
 }
 
 func OnCursorMove() {
@@ -22,22 +22,22 @@ func OnCursorMove() {
 
 func OnCursorStop() {
 	state.Lock()
-	if state.isHooking {
+	if state.isActivating {
 		showWindow()
 	}
 	state.Unlock()
 }
 
-func OnHook() {
+func OnActivated() {
 	state.Lock()
-	state.isHooking = true
+	state.isActivating = true
 	state.Unlock()
 	showWindow()
 }
 
-func OnUnhook() {
+func OnDeactivated() {
 	state.Lock()
-	state.isHooking = false
+	state.isActivating = false
 	state.Unlock()
 	hideWindow()
 }
