@@ -33,6 +33,8 @@ at [Releases](https://github.com/wirekang/mouseable/releases).
 
 # Known Issues
 
+* Should run Mouseable as administrator otherwise Mouseable won't work with
+  system programs such as Task Manager.
 * When activation key does not change, please terminate mouseable from taskbar
   and restart it.
 * Using [WIN + ?] is not recommended because sometimes it may not work.
