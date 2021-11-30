@@ -1,25 +1,20 @@
-import React from 'react';
-import {loadBind} from "./gobind";
-import CategoryWrapper from "./components/CategoryWrapper";
+import React from "react";
+import { loadBind } from "./gobind";
+import { useAsync } from "react-use";
+import FunctionCategories from "./components/FunctionCategories";
 
 function App() {
-  loadBind().then((v) => {
-    console.log(v)
-  })
-  return (<div>
-    <CategoryWrapper title="Test">
-      <h1>asdfasdf</h1>
-      <h4>asdfasdf</h4>
-      <h3>asdfasdf</h3>
-      <h2>asdfasdf</h2>
-    </CategoryWrapper>
-    <CategoryWrapper title="Test-2">
-      <h1>asdfasdf</h1>
-      <h4>asdfasdf</h4>
-      <h3>asdfasdf</h3>
-      <h2>asdfasdf</h2>
-    </CategoryWrapper>
-  </div>);
+  const state = useAsync(loadBind);
+
+  if (state.loading || !state.value) {
+    return <h4>Loading...</h4>;
+  }
+
+  return (
+    <div>
+      <FunctionCategories def={state.value.functionDefinitions} record={state.value.functionNameKeyMap} />
+    </div>
+  );
 }
 
 export default App;
