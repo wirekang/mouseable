@@ -2,14 +2,12 @@ package io
 
 import (
 	"github.com/juju/fslock"
-
-	"github.com/wirekang/mouseable/internal/must"
 )
 
 var lock *fslock.Lock
 
 func Lock() (ok bool) {
-	lockFile := must.ConfigDir() + "\\lockfile"
+	lockFile := configDir + "\\lockfile"
 	lock = fslock.New(lockFile)
 	err := lock.TryLock()
 	if err != nil {

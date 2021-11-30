@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/pkg/errors"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/wirekang/mouseable/internal/io"
 	"github.com/wirekang/mouseable/internal/lg"
 	"github.com/wirekang/mouseable/internal/logic"
-	"github.com/wirekang/mouseable/internal/must"
 	"github.com/wirekang/mouseable/internal/overlay"
 	"github.com/wirekang/mouseable/internal/view"
 	"github.com/wirekang/mouseable/internal/winapi"
@@ -38,7 +38,9 @@ func main() {
 		return
 	}
 
-	must.Windows()
+	if runtime.GOOS != "windows" {
+		panic("not windows")
+	}
 
 	defer func() {
 		io.Unlock()
