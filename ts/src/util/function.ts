@@ -1,10 +1,7 @@
 import { FunctionKey } from "../gobind";
-import { getKeyFromVKCode } from "./keycode";
+import { fromVKCode } from "win-vk";
 
 export function functionKeyToText(k: FunctionKey): string {
-  if (k.KeyCode === 0) {
-    return "-";
-  }
   let s = "";
 
   if (k.IsWin) {
@@ -23,9 +20,9 @@ export function functionKeyToText(k: FunctionKey): string {
     s += "<S> + ";
   }
 
-  s += getKeyFromVKCode(k.KeyCode);
-
-  if (s.endsWith(" + ")) {
+  if (k.KeyCode != 0) {
+    s += fromVKCode(k.KeyCode);
+  } else {
     s = s.substring(0, s.length - 3);
   }
 

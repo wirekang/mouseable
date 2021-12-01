@@ -11200,11 +11200,6 @@ wbuf@^1.1.0, wbuf@^1.7.3:
   dependencies:
     minimalistic-assert "^1.0.0"
 
-web-vitals@^1.0.1:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/web-vitals/-/web-vitals-1.1.2.tgz#06535308168986096239aa84716e68b4c6ae6d1c"
-  integrity sha512-PFMKIY+bRSXlMxVAQ+m2aw9c/ioUYfDgrYot0YUa+/xa0sakubWhSDyxAKwzymvXVdF4CZI71g06W+mqhzu6ig==
-
 webidl-conversions@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/webidl-conversions/-/webidl-conversions-5.0.0.tgz#ae59c8a00b121543a2acc65c0434f57b0fc11aff"
@@ -11378,6 +11373,11 @@ which@^2.0.1, which@^2.0.2:
   integrity sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==
   dependencies:
     isexe "^2.0.0"
+
+win-vk@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/win-vk/-/win-vk-1.0.3.tgz#6224128a6097aeb305c21c11d2db1cec958ab185"
+  integrity sha512-UN9fqE0zKdOgSd3iBVTpPEMTBRN69JqEeHzRMWK44N7CsirtChaS8m9ExSiArCLVgXkKDTXjfIlCdoCyDER2Ew==
 
 word-wrap@^1.2.3, word-wrap@~1.2.3:
   version "1.2.3"

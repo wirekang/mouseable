@@ -41,11 +41,25 @@ export default function FunctionKeyInput(props: Props): JSX.Element {
           display: "flex",
           flexDirection: "row",
           justifyContent: "space-between",
-          alignItems: "center",
-          width: "90%",
+          alignItems: "flex-end",
+          width: "95%",
         }}
       >
-        <span style={{ fontSize: 24, fontWeight: "bold", marginTop: 6 }}>{props.name}</span>
+        <button
+          onClick={() => {
+            setBufferKey({
+              KeyCode: 0,
+              IsDouble: false,
+              IsWin: false,
+              IsShift: false,
+              IsAlt: false,
+              IsControl: false,
+            });
+          }}
+        >
+          Unset
+        </button>
+        <span style={{ fontSize: 18, fontWeight: "bold", marginTop: 6 }}>{props.name}</span>
         <button
           onClick={() => {
             props.change(props.name, bufferKey);

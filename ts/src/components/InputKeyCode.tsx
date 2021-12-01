@@ -1,7 +1,7 @@
 import React, { KeyboardEventHandler, useEffect, useRef, useState } from "react";
 import { useAsyncFn } from "react-use";
 import { getKeyCode } from "../gobind";
-import { getKeyFromVKCode } from "../util/keycode";
+import { fromVKCode } from "win-vk";
 
 interface Props {
   keyCode: number;
@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function InputKeyCode(props: Props): JSX.Element {
-  const [text, setText] = useState(getKeyFromVKCode(props.keyCode) ?? `${props.keyCode}`);
+  const [text, setText] = useState(fromVKCode(props.keyCode) ?? `${props.keyCode}`);
   const [state, doRequest] = useAsyncFn(getKeyCode);
   const [isSent, setIsSent] = useState(false);
   const ref = useRef<HTMLInputElement>(null);
@@ -26,7 +26,7 @@ export default function InputKeyCode(props: Props): JSX.Element {
 
     props.onChange(state.value);
     ref.current?.blur();
-    const key = getKeyFromVKCode(state.value);
+    const key = fromVKCode(state.value);
     if (key) {
       setText(key);
     }
@@ -58,6 +58,7 @@ export default function InputKeyCode(props: Props): JSX.Element {
       <button
         onClick={() => {
           onChange(0);
+          setText("-");
         }}
       >
         X

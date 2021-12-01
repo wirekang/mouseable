@@ -18,12 +18,12 @@ export default function KeyHolder(props: Props): JSX.Element {
         <div
           style={{
             cursor: "pointer",
-            backgroundColor: "#eee",
+            backgroundColor: "#f8f8f8",
             border: "1px solid #ccc",
             fontSize: 10,
-            margin: 2,
-            padding: 2,
-            height: "15px",
+            margin: "0 2px",
+            padding: "0 2px",
+            height: "14px",
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
