@@ -1,5 +1,4 @@
 import React from "react";
-import MyContext from "../MyContext";
 
 interface Props {
   children: React.ReactNode;

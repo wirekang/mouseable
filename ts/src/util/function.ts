@@ -20,7 +20,7 @@ export function functionKeyToText(k: FunctionKey): string {
     s += "<S> + ";
   }
 
-  if (k.KeyCode != 0) {
+  if (k.KeyCode !== 0) {
     s += fromVKCode(k.KeyCode);
   } else {
     s = s.substring(0, s.length - 3);

@@ -76,6 +76,16 @@ func open() {
 		panic(err)
 	}
 
+	err = ui.Bind("__changeData__", __changeData__)
+	if err != nil {
+		panic(err)
+	}
+
+	err = ui.Bind("__openGitHub__", __openGitHub__)
+	if err != nil {
+		panic(err)
+	}
+
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt)
 	select {

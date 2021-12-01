@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { changeFunction, DataDefinition, FunctionDefinition, FunctionKey, GoBind, loadBind } from "./gobind";
 import { useAsync } from "react-use";
-import FunctionCategories from "./components/FunctionCategories";
+import FunctionGroupBox from "./components/FunctionGroupBox";
 import FunctionKeyInput from "./components/FunctionKeyInput";
 import Background from "./components/Background";
 import MyContext from "./MyContext";
+import DataGroupBox from "./components/DataGroupBox";
+import InfoGroupBox from "./components/InfoGroupBox";
 
 function App() {
   const [requesterCounter, setRequesterCounter] = useState(0);
@@ -47,7 +49,9 @@ function App() {
       }}
     >
       <div>
-        <FunctionCategories def={goBind.functionDefinitions} record={goBind.functionNameKeyMap} />
+        <InfoGroupBox version={goBind.version} />
+        <FunctionGroupBox def={goBind.functionDefinitions} record={goBind.functionNameKeyMap} />
+        <DataGroupBox def={goBind.dataDefinitions} record={goBind.dataNameValueMap} />
 
         {keyInputState.isOpen && keyInputState.name && keyInputState.key && (
           <Background onClick={closeFunctionKeyInput}>

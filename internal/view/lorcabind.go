@@ -1,6 +1,9 @@
 package view
 
 import (
+	"os/exec"
+
+	"github.com/wirekang/mouseable/internal/cnst"
 	"github.com/wirekang/mouseable/internal/def"
 )
 
@@ -20,6 +23,7 @@ func __loadBind__() interface{} {
 		dnm[dd.Name] = configHolder.DataMap[dd]
 	}
 	m["dataNameValueMap"] = dnm
+	m["version"] = cnst.VERSION
 	return m
 }
 
@@ -34,4 +38,16 @@ func __changeFunction__(name string, key def.FunctionKey) bool {
 	configHolder.FunctionMap[def.FunctionNameMap[name]] = key
 	err := DI.SaveConfig(configHolder.Config)
 	return err == nil
+}
+
+func __changeData__(name string, value string) bool {
+	configHolder.Lock()
+	defer configHolder.Unlock()
+	configHolder.DataMap[def.DataNameMap[name]] = def.DataValue(value)
+	err := DI.SaveConfig(configHolder.Config)
+	return err == nil
+}
+
+func __openGitHub__() {
+	exec.Command("rundll32", "url.dll,FileProtocolHandler", "https://github.com/wirekang/mouseable").Start()
 }

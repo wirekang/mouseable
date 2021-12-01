@@ -21,7 +21,7 @@ import (
 //go:embed assets
 var Asset embed.FS
 
-var VERSION string
+var VERSION = "x.x.x"
 
 func main() {
 	lg.Logf("Start")

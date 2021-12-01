@@ -1,5 +1,15 @@
 import mock from "./mock";
 
+declare global {
+  interface Window {
+    __loadBind__: () => Promise<GoBind>;
+    __getKeyCode__: () => Promise<number>;
+    __changeFunction__: (name: string, key: FunctionKey) => Promise<boolean>;
+    __changeData__: (name: string, value: string) => Promise<boolean>;
+    __openGitHub__: () => Promise<void>;
+  }
+}
+
 export interface FunctionDefinition {
   Name: string;
   Category: string;
@@ -44,6 +54,7 @@ export interface GoBind {
   dataDefinitions: DataDefinition[];
   functionNameKeyMap: FunctionNameKeyRecord;
   dataNameValueMap: DataNameValueRecord;
+  version: string;
 }
 
 const isDev = process.env.NODE_ENV === "development";
@@ -69,6 +80,16 @@ export async function changeFunction(name: string, key: FunctionKey): Promise<bo
   return window.__changeFunction__(name, key);
 }
 
+export async function changeData(name: string, value: string): Promise<boolean> {
+  if (isDev) {
+    mock.dataNameValueMap[name] = value;
+    await new Promise((r) => setTimeout(r, 100));
+    return true;
+  }
+
+  return window.__changeData__(name, value);
+}
+
 export async function getKeyCode(): Promise<number> {
   if (isDev) {
     await new Promise((r) => setTimeout(r, 100));
@@ -78,4 +99,12 @@ export async function getKeyCode(): Promise<number> {
   }
 
   return window.__getKeyCode__();
+}
+
+export async function openGitHub(): Promise<void> {
+  if (isDev) {
+    return;
+  }
+
+  return window.__openGitHub__();
 }

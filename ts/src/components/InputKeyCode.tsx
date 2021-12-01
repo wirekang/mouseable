@@ -1,4 +1,4 @@
-import React, { KeyboardEventHandler, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAsyncFn } from "react-use";
 import { getKeyCode } from "../gobind";
 import { fromVKCode } from "win-vk";

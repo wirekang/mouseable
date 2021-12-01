@@ -16,7 +16,7 @@ export default function Row(props: Props): JSX.Element {
         flexDirection: "row",
         alignItems: "center",
         width: "100%",
-        height: 16,
+        height: 18,
         margin: "1px 5px",
         fontSize: 11,
         ...props.style,

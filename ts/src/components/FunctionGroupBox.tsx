@@ -1,15 +1,15 @@
 import React from "react";
-import { FunctionDefinition, FunctionNameKeyRecord, When } from "../gobind";
+import { FunctionDefinition, FunctionNameKeyRecord } from "../gobind";
 import Row from "./Row";
 import GroupBox from "./GroupBox";
-import KeyHolder from "./KeyHolder";
+import FunctionRow from "./FunctionRow";
 
 interface Props {
   def: FunctionDefinition[];
   record: FunctionNameKeyRecord;
 }
 
-export default function FunctionCategories(props: Props): JSX.Element {
+export default function FunctionGroupBox(props: Props): JSX.Element {
   const categoryMap = new Map<string, FunctionDefinition[]>();
   props.def.forEach((fd) => {
     const arr = categoryMap.get(fd.Category);
@@ -36,22 +36,7 @@ export default function FunctionCategories(props: Props): JSX.Element {
           ([category, fds]) => (
             <GroupBox key={category} title={category}>
               {fds.map((fd) => (
-                <Row
-                  key={fd.Name}
-                  name={fd.Name}
-                  description={fd.Description}
-                  column2={<KeyHolder name={fd.Name} functionKey={props.record[fd.Name]} />}
-                  column3={
-                    <span
-                      style={{
-                        fontSize: 8,
-                        transform: "scaleX(0.6)",
-                      }}
-                    >
-                      {When[fd.When]}
-                    </span>
-                  }
-                />
+                <FunctionRow key={fd.Name} def={fd} fKey={props.record[fd.Name]} />
               ))}
             </GroupBox>
           ),

@@ -450,6 +450,7 @@ const mock: GoBind = {
       KeyCode: 85,
     },
   },
+  version: "dev",
 };
 
 export default mock;
