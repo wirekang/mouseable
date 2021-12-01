@@ -21,6 +21,8 @@ var kState = keyState{
 }
 
 var steppingLogics = []*logicDefinition{}
+var willStartLogics = []*logicDefinition{}
+var willStopLogics = []*logicDefinition{}
 var isActivated bool
 var wasCursorMoving bool
 
@@ -63,7 +65,7 @@ func procFunction(
 
 	if fd.When == def.Activated && !isActivated || fd.When == def.Deactivated && isActivated {
 		if isStepping {
-			functionStop(ld)
+			registerStop(ld)
 		}
 		return
 	}
@@ -73,19 +75,19 @@ func procFunction(
 
 	if !wasOk && !willOk {
 		if isStepping {
-			lg.Errorf("LOGIC FALLACY: %s is stepping even if not ok", ld.function.Name)
-			functionStop(ld)
+			lg.Errorf("LOGIC FALLACY: %s is stepping even not ok", ld.function.Name)
+			registerStop(ld)
 		}
 		return
 	}
 
 	preventDefault = true
 	if !wasOk && willOk {
-		functionStart(ld)
+		registerStart(ld)
 	}
 
 	if wasOk && !willOk {
-		functionStop(ld)
+		registerStop(ld)
 	}
 
 	return
@@ -116,31 +118,22 @@ func updateModInfo(keyCode uint32, isDown bool, src modInfo) (mi modInfo) {
 	return
 }
 
-func functionStart(ld *logicDefinition) {
-	lg.Logf("Start Function %s", ld.function.Name)
-	if ld.onStart != nil {
-		ld.onStart(&lState)
-	}
-	if funk.Contains(steppingLogics, ld) {
-		lg.Errorf("LOGIC FALLACY: %s already stepping", ld.function.Name)
+func registerStart(ld *logicDefinition) {
+	if funk.Contains(willStartLogics, ld) {
+		lg.Errorf("LOGIC FALLACY: %s is already registered to start", ld.function.Name)
 	} else {
-		steppingLogics = append(steppingLogics, ld)
+		willStartLogics = append(willStartLogics, ld)
 	}
+
 }
 
-func functionStop(ld *logicDefinition) {
-	lg.Logf("Stop Function %s", ld.function.Name)
-	if ld.onStop != nil {
-		ld.onStop(&lState)
+func registerStop(ld *logicDefinition) {
+	if funk.Contains(willStopLogics, ld) {
+		lg.Errorf("LOGIC FALLACY: %s is already registered to stop", ld.function.Name)
+	} else {
+		willStopLogics = append(willStopLogics, ld)
 	}
-	if !funk.Contains(steppingLogics, ld) {
-		lg.Errorf("LOGIC FALLACY: %s is not stepping", ld.function.Name)
-	}
-	steppingLogics = funk.Filter(
-		steppingLogics, func(a *logicDefinition) bool {
-			return a != ld
-		},
-	).([]*logicDefinition)
+
 }
 
 func findLogicDefinition(fd *def.FunctionDefinition) *logicDefinition {
@@ -229,6 +222,8 @@ func Loop() {
 		sleep := time.Duration(10-delta) * time.Millisecond
 		time.Sleep(sleep)
 		mutex.Lock()
+		startFunctions()
+		stopFunctions()
 		stepFunctions()
 		moveCursor()
 		rotateWheel()
@@ -236,6 +231,41 @@ func Loop() {
 		procActivate()
 		mutex.Unlock()
 	}
+}
+
+func startFunctions() {
+	for _, ld := range willStartLogics {
+		lg.Logf("Start Function %s", ld.function.Name)
+		if ld.onStart != nil {
+			ld.onStart(&lState)
+		}
+
+		if funk.Contains(steppingLogics, ld) {
+			lg.Errorf("LOGIC FALLACY: %s already stepping", ld.function.Name)
+		} else {
+			steppingLogics = append(steppingLogics, ld)
+		}
+	}
+	willStartLogics = []*logicDefinition{}
+
+}
+
+func stopFunctions() {
+	for _, ld := range willStopLogics {
+		lg.Logf("Stop Function %s", ld.function.Name)
+		if ld.onStop != nil {
+			ld.onStop(&lState)
+		}
+		if !funk.Contains(steppingLogics, ld) {
+			lg.Errorf("LOGIC FALLACY: %s is not stepping", ld.function.Name)
+		}
+		steppingLogics = funk.Filter(
+			steppingLogics, func(a *logicDefinition) bool {
+				return a != ld
+			},
+		).([]*logicDefinition)
+	}
+	willStopLogics = []*logicDefinition{}
 }
 
 func moveCursor() {
@@ -256,24 +286,24 @@ func moveCursor() {
 			lState.cursorDX = float64(ix)
 			lState.cursorDY = float64(iy)
 		}
-		DI.AddCursorPos(ix, iy)
+		go DI.AddCursorPos(ix, iy)
 		if !wasCursorMoving {
 			wasCursorMoving = true
-			DI.OnCursorMove()
+			go DI.OnCursorMove()
 		}
 	} else if wasCursorMoving {
 		wasCursorMoving = false
-		DI.OnCursorStop()
+		go DI.OnCursorStop()
 	}
 }
 
 func rotateWheel() {
 	if lState.wheelDX != 0 {
-		DI.Wheel(lState.wheelDY, true)
+		go DI.Wheel(lState.wheelDY, true)
 	}
 
 	if lState.wheelDY != 0 {
-		DI.Wheel(lState.wheelDY, false)
+		go DI.Wheel(lState.wheelDY, false)
 	}
 }
 
@@ -344,17 +374,14 @@ func procActivate() {
 	if lState.willActivate {
 		lState.willActivate = false
 		isActivated = true
-		DI.OnActivated()
+		go DI.OnActivated()
 		return
 	}
 
 	if lState.willDeactivate {
 		lState.willDeactivate = false
 		isActivated = false
-		for _, ld := range steppingLogics {
-			functionStop(ld)
-		}
 		steppingLogics = []*logicDefinition{}
-		DI.OnDeactivated()
+		go DI.OnDeactivated()
 	}
 }
