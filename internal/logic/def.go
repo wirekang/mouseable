@@ -4,7 +4,6 @@ import (
 	"math"
 
 	"github.com/wirekang/mouseable/internal/def"
-	"github.com/wirekang/mouseable/internal/winapi"
 )
 
 type logicState struct {
@@ -173,7 +172,7 @@ var logicDefinitions = []*logicDefinition{
 	{
 		function: def.TeleportForward,
 		onStart: func(s *logicState) {
-			if math.Abs(s.cursorDX) < 0.5 && math.Abs(s.cursorDY) < 0.5 {
+			if math.Abs(s.cursorDX) < 0.3 && math.Abs(s.cursorDY) < 0.3 {
 				return
 			}
 			distance := cachedDataMap[def.TeleportDistanceF].int
@@ -182,7 +181,63 @@ var logicDefinitions = []*logicDefinition{
 			angle := math.Atan2(s.cursorDX, s.cursorDY)
 			dx = int(math.Round(float64(distance) * math.Sin(angle)))
 			dy = int(math.Round(float64(distance) * math.Cos(angle)))
-			winapi.AddCursorPos(dx, dy)
+			DI.AddCursorPos(dx, dy)
+		},
+	},
+	{
+		function: def.TeleportRight,
+		onStart: func(s *logicState) {
+			DI.AddCursorPos(cachedDataMap[def.TeleportDistanceH].int, 0)
+		},
+	},
+	{
+		function: def.TeleportLeft,
+		onStart: func(s *logicState) {
+			DI.AddCursorPos(-cachedDataMap[def.TeleportDistanceH].int, 0)
+		},
+	},
+	{
+		function: def.TeleportUp,
+		onStart: func(s *logicState) {
+			DI.AddCursorPos(0, -cachedDataMap[def.TeleportDistanceH].int)
+		},
+	},
+	{
+		function: def.TeleportDown,
+		onStart: func(s *logicState) {
+			DI.AddCursorPos(0, cachedDataMap[def.TeleportDistanceH].int)
+		},
+	},
+	{
+		function: def.TeleportRightUp,
+		onStart: func(s *logicState) {
+			dx := int(math.Round(float64(cachedDataMap[def.TeleportDistanceH].int) / 1.4))
+			dy := int(math.Round(float64(cachedDataMap[def.TeleportDistanceV].int) / 1.4))
+			DI.AddCursorPos(dx, -dy)
+		},
+	},
+	{
+		function: def.TeleportLeftUp,
+		onStart: func(s *logicState) {
+			dx := int(math.Round(float64(cachedDataMap[def.TeleportDistanceH].int) / 1.4))
+			dy := int(math.Round(float64(cachedDataMap[def.TeleportDistanceV].int) / 1.4))
+			DI.AddCursorPos(-dx, -dy)
+		},
+	},
+	{
+		function: def.TeleportLeftDown,
+		onStart: func(s *logicState) {
+			dx := int(math.Round(float64(cachedDataMap[def.TeleportDistanceH].int) / 1.4))
+			dy := int(math.Round(float64(cachedDataMap[def.TeleportDistanceV].int) / 1.4))
+			DI.AddCursorPos(-dx, dy)
+		},
+	},
+	{
+		function: def.TeleportRightDown,
+		onStart: func(s *logicState) {
+			dx := int(math.Round(float64(cachedDataMap[def.TeleportDistanceH].int) / 1.4))
+			dy := int(math.Round(float64(cachedDataMap[def.TeleportDistanceV].int) / 1.4))
+			DI.AddCursorPos(dx, dy)
 		},
 	},
 }

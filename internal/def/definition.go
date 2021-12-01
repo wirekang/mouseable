@@ -50,6 +50,7 @@ var (
 )
 
 var (
+	DoublePressSpeed    = nD("DoublePressSpeed", "Double press speed in ms", Int)
 	CursorAccelerationH = nD("CursorAccelerationH", "Cursor horizontal acceleration", Float)
 	CursorAccelerationV = nD("CursorAccelerationV", "Cursor vertical acceleration", Float)
 	CursorFrictionH     = nD("CursorFrictionH", "Cursor horizontal friction", Float)

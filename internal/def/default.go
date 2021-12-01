@@ -20,6 +20,7 @@ var DefaultConfig = Config{
 		TeleportForward: {KeyCode: 70},
 	},
 	DataMap: DataMap{
+		DoublePressSpeed:    "300",
 		CursorAccelerationH: "2.8",
 		CursorAccelerationV: "2.8",
 		CursorFrictionH:     "2.5",

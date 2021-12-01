@@ -23,6 +23,7 @@ var kState = keyState{
 var steppingLogics = []*logicDefinition{}
 var willStartLogics = []*logicDefinition{}
 var willStopLogics = []*logicDefinition{}
+var lastOkMap = map[*logicDefinition]int64{}
 var isActivated bool
 var wasCursorMoving bool
 
@@ -81,7 +82,29 @@ func procFunction(
 		return
 	}
 
-	preventDefault = true
+	isDouble := false
+	if willOk {
+		delta := time.Now().UnixMilli() - lastOkMap[ld]
+		if delta <= int64(cachedDataMap[def.DoublePressSpeed].int) {
+			isDouble = true
+			lastOkMap[ld] = 0
+		} else {
+
+			lastOkMap[ld] = time.Now().UnixMilli()
+		}
+	}
+
+	if key.IsDouble && !isDouble {
+		lg.Logf("%s ok but not double", fd.Name)
+		return
+	}
+
+	if keyCode == key.KeyCode {
+		if isDown && willOk || !isDown && wasOk {
+			preventDefault = true
+		}
+	}
+
 	if !wasOk && willOk {
 		registerStart(ld)
 	}
@@ -286,7 +309,7 @@ func moveCursor() {
 			lState.cursorDX = float64(ix)
 			lState.cursorDY = float64(iy)
 		}
-		go DI.AddCursorPos(ix, iy)
+		DI.AddCursorPos(ix, iy)
 		if !wasCursorMoving {
 			wasCursorMoving = true
 			go DI.OnCursorMove()
