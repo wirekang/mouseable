@@ -1,11 +1,15 @@
 # v1.0.10
 
+## Brand New UI
+
+Mouseable now use [lorca](https://github.com/zserge/lorca) to draw GUI.
+
 ## New Features
 
 * Added acceleration and friction to wheel.
 * Added 8 way Teleport.
+* Added horizontal and vertical data.
 * Rewrote logic to support double press and key combination.
-* Rewrote UI to support new logic.
 
 ## Feature Updates
 

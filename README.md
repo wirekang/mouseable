@@ -28,7 +28,7 @@ and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 
 # Install
 
-***Chrome is required because Mouseable
+***Requires Chrome or Edge because Mouseable
 use [lorca](https://github.com/zserge/lorca) to draw GUI.***
 
 Download installer or portable executable file
@@ -45,7 +45,6 @@ at [Releases](https://github.com/wirekang/mouseable/releases).
 * When activation key does not change, please terminate mouseable from taskbar
   and restart it.
 * Using [WIN + ?] is not recommended because sometimes it may not work.
-* Settings will be reset silently if there are big changes.
 
 # Contributing
 
