@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/wirekang/mouseable/internal/def"
+	"github.com/wirekang/mouseable/internal/lg"
 )
 
 const configVersion = "1"
@@ -18,27 +19,30 @@ var DI struct {
 	SetConfig func(config def.Config)
 }
 
-type functionNameMap map[string]def.FunctionKey
-type dataNameMap map[string]def.DataValue
+type functionNameKeyMap map[string]def.FunctionKey
+type dataNameValueMap map[string]def.DataValue
 
 type jsonHolder struct {
-	Function functionNameMap
-	Data     dataNameMap
+	Function functionNameKeyMap
+	Data     dataNameValueMap
 }
 
-func Init() {
-	config := LoadConfig()
+func Init() (err error) {
+	lg.Logf("ConfigFile: %s", configFile)
+	config, err := LoadConfig()
 	DI.SetConfig(config)
 	return
 }
 
-func SaveConfig(config def.Config) {
-	err := saveData(config)
+func SaveConfig(config def.Config) (err error) {
+	err = saveData(config)
 	if err != nil {
-		panic(err)
+		err = errors.WithStack(err)
+		return
 	}
 
 	DI.SetConfig(config)
+	return
 }
 
 func saveData(config def.Config) (err error) {
@@ -63,17 +67,28 @@ func saveData(config def.Config) (err error) {
 	return
 }
 
-func LoadConfig() (config def.Config) {
-	config, err := loadConfig()
+func LoadConfig() (config def.Config, err error) {
+	config, err = loadConfig()
 	if err != nil {
-		config = def.DefaultConfig
+		err = errors.WithStack(err)
+		return
 	}
+
 	return
 }
 
 func loadConfig() (config def.Config, err error) {
 	bytes, err := os.ReadFile(configFile)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			err = nil
+			config = def.Config{
+				FunctionMap: functionMapFromNameMap(functionMapToNameMap(def.DefaultConfig.FunctionMap)),
+				DataMap:     dataMapFromNameMap(dataMapToNameMap(def.DefaultConfig.DataMap)),
+			}
+			return
+		}
+
 		err = errors.WithStack(err)
 		return
 	}
@@ -93,34 +108,40 @@ func loadConfig() (config def.Config, err error) {
 	return
 }
 
-func functionMapToNameMap(m def.FunctionMap) (rst functionNameMap) {
-	rst = make(functionNameMap, len(m))
+func functionMapToNameMap(m def.FunctionMap) (rst functionNameKeyMap) {
+	rst = make(functionNameKeyMap, len(m))
 	for fnc := range m {
 		rst[fnc.Name] = m[fnc]
 	}
 	return
 }
 
-func dataMapToNameMap(m def.DataMap) (rst dataNameMap) {
-	rst = make(dataNameMap, len(m))
+func dataMapToNameMap(m def.DataMap) (rst dataNameValueMap) {
+	rst = make(dataNameValueMap, len(m))
 	for data := range m {
 		rst[data.Name] = m[data]
 	}
 	return
 }
 
-func functionMapFromNameMap(m functionNameMap) (rst def.FunctionMap) {
-	rst = def.DefaultConfig.FunctionMap
+func functionMapFromNameMap(m functionNameKeyMap) (rst def.FunctionMap) {
+	rst = make(def.FunctionMap, len(def.FunctionDefinitions))
 	for name, key := range m {
-		rst[def.GetFunctionDefinitionByName(name)] = key
+		rst[def.FunctionNameMap[name]] = key
+	}
+	for i := range def.FunctionDefinitions {
+		_, ok := rst[def.FunctionDefinitions[i]]
+		if !ok {
+			rst[def.FunctionDefinitions[i]] = def.FunctionKey{}
+		}
 	}
 	return
 }
 
-func dataMapFromNameMap(m dataNameMap) (rst map[*def.DataDefinition]def.DataValue) {
+func dataMapFromNameMap(m dataNameValueMap) (rst map[*def.DataDefinition]def.DataValue) {
 	rst = def.DefaultConfig.DataMap
 	for name, value := range m {
-		rst[def.GetDataDefinitionByName(name)] = value
+		rst[def.DataNameMap[name]] = value
 	}
 	return
 }

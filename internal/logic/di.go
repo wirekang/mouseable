@@ -11,4 +11,5 @@ var DI struct {
 	OnCursorStop  func()
 	OnActivated   func()
 	OnDeactivated func()
+	NormalKeyChan chan uint32
 }

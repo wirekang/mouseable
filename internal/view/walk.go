@@ -2,9 +2,7 @@ package view
 
 import (
 	"bytes"
-	"io/fs"
-	"net"
-	"net/http"
+	"os"
 
 	"github.com/JamesHovious/w32"
 	"github.com/lxn/walk"
@@ -15,37 +13,9 @@ import (
 )
 
 var config def.Config
-var host string
 
 func AlertError(msg string) {
 	w32.MessageBox(0, msg, "Mouseable", 0)
-}
-
-func serve() {
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		panic(err)
-	}
-	host = ln.Addr().String()
-	go open()
-	defer ln.Close()
-	sub, err := fs.Sub(cnst.AssetFS, "assets")
-	if err != nil {
-		panic(err)
-	}
-
-	http.Serve(ln, http.FileServer(http.FS(sub)))
-}
-
-func Run() {
-	mustChrome()
-	go serve()
-	config = DI.LoadConfig()
-
-	defer func() {
-
-	}()
-	runNotifyIcon()
 }
 
 func runNotifyIcon() {
@@ -78,12 +48,7 @@ func runNotifyIcon() {
 	exitAction := walk.NewAction()
 	exitAction.SetText("Exit")
 
-	exitAction.Triggered().Attach(
-		func() {
-			ui.Close()
-			walk.App().Exit(0)
-		},
-	)
+	exitAction.Triggered().Attach(exit)
 
 	notifyIcon.ContextMenu().Actions().Add(exitAction)
 	err = notifyIcon.SetVisible(true)
@@ -91,4 +56,9 @@ func runNotifyIcon() {
 		panic(err)
 	}
 	mainWindow.Run()
+}
+
+func exit() {
+	ui.Close()
+	os.Exit(0)
 }

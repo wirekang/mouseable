@@ -57,17 +57,22 @@ func Init() {
 		lg.Logf("winapi.DI.OnKey(%d, %v) %v", keyCode, isDown, preventDefault)
 		return
 	}
-	view.DI.LoadConfig = func() (config def.Config) {
-		config = io.LoadConfig()
-		lg.Logf("view.DI.LoadConfig() %+v", config)
+	view.DI.LoadConfig = func() (config def.Config, err error) {
+		config, err = io.LoadConfig()
+		lg.Logf("view.DI.LoadConfig() %+v %+v", config, err)
 		return
 	}
-	view.DI.SaveConfig = func(config def.Config) {
-		io.SaveConfig(config)
-		lg.Logf("view.DI.SaveConfig(%+v)", config)
+	view.DI.SaveConfig = func(config def.Config) (err error) {
+		err = io.SaveConfig(config)
+		lg.Logf("view.DI.SaveConfig(%+v) %+v", config, err)
+		return
 	}
 	io.DI.SetConfig = func(config def.Config) {
 		logic.SetConfig(config)
 		lg.Logf("io.DI.SetConfig(%+v)", config)
 	}
+
+	nkc := make(chan uint32)
+	logic.DI.NormalKeyChan = nkc
+	view.DI.NormalKeyChan = nkc
 }

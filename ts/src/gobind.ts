@@ -53,7 +53,7 @@ if (isDev) {
 
 export async function loadBind(): Promise<GoBind> {
   if (isDev) {
-    await new Promise((r) => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 100));
     return mock;
   }
   return window.__loadBind__();
@@ -62,9 +62,20 @@ export async function loadBind(): Promise<GoBind> {
 export async function changeFunction(name: string, key: FunctionKey): Promise<boolean> {
   if (isDev) {
     mock.functionNameKeyMap[name] = key;
-    await new Promise((r) => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 100));
     return true;
   }
 
   return window.__changeFunction__(name, key);
+}
+
+export async function getKeyCode(): Promise<number> {
+  if (isDev) {
+    await new Promise((r) => setTimeout(r, 100));
+    const v = Math.round(Math.random() * 40 + 48);
+    console.log("random keycode ", v.toString(16));
+    return v;
+  }
+
+  return window.__getKeyCode__();
 }

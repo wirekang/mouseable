@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { DataDefinition, FunctionDefinition, FunctionKey, GoBind, loadBind } from "./gobind";
+import { changeFunction, DataDefinition, FunctionDefinition, FunctionKey, GoBind, loadBind } from "./gobind";
 import { useAsync } from "react-use";
 import FunctionCategories from "./components/FunctionCategories";
 import FunctionKeyInput from "./components/FunctionKeyInput";
@@ -32,9 +32,10 @@ function App() {
     setKeyInputState({ isOpen: false, key: undefined, name: undefined });
   };
 
-  const changeFunctionKeyInput = async (name: string, fKey: FunctionKey) => {
-    const rst = await window.__changeFunction__(name, fKey);
+  const changeFunctionKeyInput = async (name: string, key: FunctionKey) => {
+    const rst = await changeFunction(name, key);
     if (rst) {
+      setKeyInputState({ isOpen: false });
       setRequesterCounter((v) => v + 1);
     }
   };
@@ -48,10 +49,9 @@ function App() {
       <div>
         <FunctionCategories def={goBind.functionDefinitions} record={goBind.functionNameKeyMap} />
 
-        {keyInputState.isOpen && (
-          <Background close={closeFunctionKeyInput}>
+        {keyInputState.isOpen && keyInputState.name && keyInputState.key && (
+          <Background onClick={closeFunctionKeyInput}>
             <FunctionKeyInput
-              close={closeFunctionKeyInput}
               name={keyInputState.name}
               fKey={keyInputState.key}
               change={changeFunctionKeyInput}

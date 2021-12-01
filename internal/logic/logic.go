@@ -20,6 +20,14 @@ func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
+	if isDown && true { // todo
+		select {
+		case <-DI.NormalKeyChan:
+			DI.NormalKeyChan <- keyCode
+		default:
+		}
+	}
+
 	return
 }
 

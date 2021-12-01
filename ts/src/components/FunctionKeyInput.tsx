@@ -1,22 +1,17 @@
-import React, { useRef, useState } from "react";
-import { useClickAway } from "react-use";
-import { FunctionDefinition, FunctionKey } from "../gobind";
+import React, { useState } from "react";
+import { FunctionKey } from "../gobind";
 import Checkbox from "./Checkbox";
 import { functionKeyToText } from "../util/function";
 import InputKeyCode from "./InputKeyCode";
 
 interface Props {
-  name?: string;
-  fKey?: FunctionKey;
-  close: () => void;
+  name: string;
+  fKey: FunctionKey;
   change: (name: string, fKey: FunctionKey) => void;
 }
 
 export default function FunctionKeyInput(props: Props): JSX.Element {
-  const [key, setKey] = useState(props.fKey!);
-  if (!props.name || !key) {
-    return <>ERROR</>;
-  }
+  const [bufferKey, setBufferKey] = useState(props.fKey);
 
   return (
     <div
@@ -41,8 +36,25 @@ export default function FunctionKeyInput(props: Props): JSX.Element {
         e.stopPropagation();
       }}
     >
-      <span style={{ fontSize: 24, fontWeight: "bold", marginTop: 6 }}>{props.name}</span>
-      <span style={{ fontSize: 12, margin: "15px 0" }}>{functionKeyToText(key)}</span>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          width: "90%",
+        }}
+      >
+        <span style={{ fontSize: 24, fontWeight: "bold", marginTop: 6 }}>{props.name}</span>
+        <button
+          onClick={() => {
+            props.change(props.name, bufferKey);
+          }}
+        >
+          Apply
+        </button>
+      </div>
+      <span style={{ fontSize: 12, margin: "15px 0" }}>{functionKeyToText(bufferKey)}</span>
       <div
         style={{
           display: "flex",
@@ -54,12 +66,13 @@ export default function FunctionKeyInput(props: Props): JSX.Element {
       >
         {(["IsWin", "IsControl", "IsAlt", "IsShift"] as const).map((k) => (
           <Checkbox
+            key={k}
             style={{
               fontSize: 16,
             }}
-            isChecked={key[k]}
+            isChecked={bufferKey[k]}
             onChange={(v) => {
-              setKey((p) => ({ ...p, [k]: v }));
+              setBufferKey((p) => ({ ...p, [k]: v }));
             }}
           >
             {k.replace("Is", "")}
@@ -76,14 +89,19 @@ export default function FunctionKeyInput(props: Props): JSX.Element {
           margin: "10px 0",
         }}
       >
-        <InputKeyCode keyCode={key.KeyCode} onChange={() => {}} />
+        <InputKeyCode
+          keyCode={bufferKey.KeyCode}
+          onChange={(KeyCode) => {
+            setBufferKey((p) => ({ ...p, KeyCode }));
+          }}
+        />
         <Checkbox
           style={{
             fontSize: 13,
           }}
-          isChecked={key.IsDouble}
+          isChecked={bufferKey.IsDouble}
           onChange={(IsDouble) => {
-            setKey((v) => ({ ...v, IsDouble }));
+            setBufferKey((p) => ({ ...p, IsDouble }));
           }}
         >
           Double Press

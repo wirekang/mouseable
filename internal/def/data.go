@@ -37,3 +37,13 @@ func (d DataValue) Bool() (r bool) {
 	r = strings.ToLower(strings.TrimSpace(string(d))) == "true"
 	return
 }
+
+func nD(name, desc string, t Type) (d *DataDefinition) {
+	d = new(DataDefinition)
+	d.Name = name
+	d.Description = desc
+	d.Type = t
+	DataDefinitions = append(DataDefinitions, d)
+	DataNameMap[name] = d
+	return
+}

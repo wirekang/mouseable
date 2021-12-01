@@ -3,13 +3,13 @@ import MyContext from "../MyContext";
 
 interface Props {
   children: React.ReactNode;
-  close: () => void;
+  onClick?: () => void;
 }
 
 export default function Background(props: Props): JSX.Element {
   return (
     <div
-      onClick={props.close}
+      onClick={props.onClick}
       style={{
         position: "absolute",
         left: 0,
