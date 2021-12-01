@@ -9,7 +9,8 @@ Mouseable now use [lorca](https://github.com/zserge/lorca) to draw GUI.
 * Added acceleration and friction to wheel.
 * Added 8 way Teleport.
 * Added horizontal and vertical data.
-* Rewrote logic to support double press and key combination.
+* Added double press support.
+* Added Win + Ctrl + Alt + Shift combination.
 
 ## Feature Updates
 
