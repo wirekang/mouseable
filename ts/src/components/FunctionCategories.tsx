@@ -2,6 +2,7 @@ import React from "react";
 import { FunctionDefinition, FunctionNameKeyRecord, When } from "../gobind";
 import Row from "./Row";
 import GroupBox from "./GroupBox";
+import KeyHolder from "./KeyHolder";
 
 interface Props {
   def: FunctionDefinition[];
@@ -18,7 +19,6 @@ export default function FunctionCategories(props: Props): JSX.Element {
       arr.push(fd);
     }
   });
-  console.log(categoryMap);
   return (
     <div>
       <GroupBox title="Function">
@@ -40,7 +40,7 @@ export default function FunctionCategories(props: Props): JSX.Element {
                   key={fd.Name}
                   name={fd.Name}
                   description={fd.Description}
-                  column2={<p>2</p>}
+                  column2={<KeyHolder name={fd.Name} functionKey={props.record[fd.Name]} />}
                   column3={
                     <span
                       style={{

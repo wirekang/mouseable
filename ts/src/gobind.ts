@@ -46,11 +46,25 @@ export interface GoBind {
   dataNameValueMap: DataNameValueRecord;
 }
 
+const isDev = process.env.NODE_ENV === "development";
+if (isDev) {
+  console.log("DEVELOPMENT MODE");
+}
+
 export async function loadBind(): Promise<GoBind> {
-  const f = (window as any).__loadBind;
-  if (!f) {
-    console.log("USE MOCK");
-    return Promise.resolve(mock);
+  if (isDev) {
+    await new Promise((r) => setTimeout(r, 1000));
+    return mock;
   }
-  return f();
+  return window.__loadBind__();
+}
+
+export async function changeFunction(name: string, key: FunctionKey): Promise<boolean> {
+  if (isDev) {
+    mock.functionNameKeyMap[name] = key;
+    await new Promise((r) => setTimeout(r, 1000));
+    return true;
+  }
+
+  return window.__changeFunction__(name, key);
 }
