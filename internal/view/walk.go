@@ -9,10 +9,7 @@ import (
 	"github.com/mat/besticon/ico"
 
 	"github.com/wirekang/mouseable/internal/cnst"
-	"github.com/wirekang/mouseable/internal/def"
 )
-
-var config def.Config
 
 func AlertError(msg string) {
 	w32.MessageBox(0, msg, "Mouseable", 0)

@@ -65,11 +65,9 @@ func initWindow() {
 		500, 500, 16, 16,
 		0, 0, 0, nil,
 	)
-	lg.Logf("Overlay HWND %d\n", hwnd)
 }
 
 func showWindow() {
-	lg.Logf("Show Overlay")
 	cursorWidth := w32.GetSystemMetrics(w32.SM_CXCURSOR)
 	cursorHeight := w32.GetSystemMetrics(w32.SM_CYCURSOR)
 	cursorX, cursorY, _ := w32.GetCursorPos()
@@ -81,7 +79,6 @@ func showWindow() {
 }
 
 func hideWindow() {
-	lg.Logf("Hide Overlay")
 	w32.ShowWindow(hwnd, w32.SW_HIDE)
 }
 

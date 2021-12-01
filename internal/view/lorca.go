@@ -49,7 +49,7 @@ func open() {
 	lg.Logf("Open: %s", url)
 
 	var err error
-	ui, err = lorca.New(url, "", 800, 800)
+	ui, err = lorca.New(url, "", 800, 800, "--disable-features=Translate")
 	if err != nil {
 		panic(err)
 	}

@@ -20,8 +20,8 @@ func SetCursorPos(x, y int) {
 	w32.SetCursorPos(x, y)
 }
 
-func AddCursorPos(dx, dy int32) {
-	sendMouseInput(dx, dy, 0, w32.MOUSEEVENTF_MOVE)
+func AddCursorPos(dx, dy int) {
+	sendMouseInput(int32(dx), int32(dy), 0, w32.MOUSEEVENTF_MOVE)
 }
 
 func GetCursorPos() (x, y int) {

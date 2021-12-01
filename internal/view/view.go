@@ -1,6 +1,8 @@
 package view
 
 import (
+	"sync"
+
 	"github.com/wirekang/mouseable/internal/def"
 )
 
@@ -10,14 +12,19 @@ var DI struct {
 	NormalKeyChan chan uint32
 }
 
+var configHolder struct {
+	sync.Mutex
+	def.Config
+}
+
 func Run() {
-	mustChrome()
-	go serveAndOpen()
 	var err error
-	config, err = DI.LoadConfig()
+	configHolder.Config, err = DI.LoadConfig()
 	if err != nil {
-		AlertError(err.Error())
+		panic(err)
 	}
 
+	mustChrome()
+	go serveAndOpen()
 	runNotifyIcon()
 }

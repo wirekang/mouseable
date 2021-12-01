@@ -1,8 +1,5 @@
-import React, { useRef, useState } from "react";
+import React from "react";
 import { FunctionKey } from "../gobind";
-import { useClickAway, useMouse } from "react-use";
-import ReactDOM from "react-dom";
-import FunctionKeyInput from "./FunctionKeyInput";
 import MyContext from "../MyContext";
 import { functionKeyToText } from "../util/function";
 

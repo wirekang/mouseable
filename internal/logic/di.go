@@ -2,7 +2,7 @@ package logic
 
 var DI struct {
 	SetCursorPos  func(x, y int)
-	AddCursorPos  func(dx, dy int32)
+	AddCursorPos  func(dx, dy int)
 	GetCursorPos  func() (x, y int)
 	MouseDown     func(button int)
 	MouseUp       func(button int)

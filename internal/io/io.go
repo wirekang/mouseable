@@ -27,9 +27,12 @@ type jsonHolder struct {
 	Data     dataNameValueMap
 }
 
-func Init() (err error) {
+func Init() {
 	lg.Logf("ConfigFile: %s", configFile)
 	config, err := LoadConfig()
+	if err != nil {
+		panic(err)
+	}
 	DI.SetConfig(config)
 	return
 }

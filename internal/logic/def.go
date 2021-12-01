@@ -8,12 +8,24 @@ import (
 )
 
 type logicState struct {
-	fixedSpeed         int
+	fixedSpeedH        int
+	fixedSpeedV        int
 	cursorDX, cursorDY float64
 	wheelDX, wheelDY   int
-	steppingLogics     []*logicDefinition
-	wasCursorMoving    bool
+	willActivate       bool
 	willDeactivate     bool
+}
+
+type keyState struct {
+	modInfo  modInfo
+	keyCodes []uint32
+}
+
+type modInfo struct {
+	isWin,
+	isControl,
+	isAlt,
+	isShift bool
 }
 
 type logicDefinition struct {
@@ -25,6 +37,12 @@ type logicDefinition struct {
 
 var logicDefinitions = []*logicDefinition{
 	{
+		function: def.Activate,
+		onStart: func(s *logicState) {
+			s.willActivate = true
+		},
+	},
+	{
 		function: def.Deactivate,
 		onStop: func(s *logicState) {
 			s.willDeactivate = true
@@ -33,57 +51,61 @@ var logicDefinitions = []*logicDefinition{
 	{
 		function: def.MoveRight,
 		onStep: func(s *logicState) {
-			s.cursorDX += cachedDataMap[def.CursorAcceleration].float
+			s.cursorDX += cachedDataMap[def.CursorAccelerationH].float
 		},
 	},
 	{
 		function: def.MoveUp,
 		onStep: func(s *logicState) {
-			s.cursorDY -= cachedDataMap[def.CursorAcceleration].float
+			s.cursorDY -= cachedDataMap[def.CursorAccelerationV].float
 		},
 	},
 	{
 		function: def.MoveLeft,
 		onStep: func(s *logicState) {
-			s.cursorDX -= cachedDataMap[def.CursorAcceleration].float
+			s.cursorDX -= cachedDataMap[def.CursorAccelerationH].float
 		},
 	},
 	{
 		function: def.MoveDown,
 		onStep: func(s *logicState) {
-			s.cursorDY += cachedDataMap[def.CursorAcceleration].float
+			s.cursorDY += cachedDataMap[def.CursorAccelerationV].float
 		},
 	},
 	{
 		function: def.MoveRightUp,
 		onStep: func(s *logicState) {
-			spd := cachedDataMap[def.CursorAcceleration].float / 1.41412
-			s.cursorDX += spd
-			s.cursorDY -= spd
+			hs := cachedDataMap[def.CursorAccelerationH].float / 1.4
+			vs := cachedDataMap[def.CursorAccelerationV].float / 1.4
+			s.cursorDX += hs
+			s.cursorDY -= vs
 		},
 	},
 	{
 		function: def.MoveLeftUp,
 		onStep: func(s *logicState) {
-			spd := cachedDataMap[def.CursorAcceleration].float / 1.41412
-			s.cursorDX -= spd
-			s.cursorDY -= spd
+			hs := cachedDataMap[def.CursorAccelerationH].float / 1.4
+			vs := cachedDataMap[def.CursorAccelerationV].float / 1.4
+			s.cursorDX -= hs
+			s.cursorDY -= vs
 		},
 	},
 	{
 		function: def.MoveRightDown,
 		onStep: func(s *logicState) {
-			spd := cachedDataMap[def.CursorAcceleration].float / 1.41412
-			s.cursorDX += spd
-			s.cursorDY += spd
+			hs := cachedDataMap[def.CursorAccelerationH].float / 1.4
+			vs := cachedDataMap[def.CursorAccelerationV].float / 1.4
+			s.cursorDX += hs
+			s.cursorDY += vs
 		},
 	},
 	{
 		function: def.MoveLeftDown,
 		onStep: func(s *logicState) {
-			spd := cachedDataMap[def.CursorAcceleration].float / 1.41412
-			s.cursorDX -= spd
-			s.cursorDY += spd
+			hs := cachedDataMap[def.CursorAccelerationH].float / 1.4
+			vs := cachedDataMap[def.CursorAccelerationV].float / 1.4
+			s.cursorDX -= hs
+			s.cursorDY += vs
 		},
 	},
 	{
@@ -116,34 +138,36 @@ var logicDefinitions = []*logicDefinition{
 	{
 		function: def.WheelUp,
 		onStep: func(s *logicState) {
-			s.wheelDY -= cachedDataMap[def.WheelAcceleration].int
+			s.wheelDY += cachedDataMap[def.WheelAccelerationV].int
 		},
 	},
 	{
 		function: def.WheelDown,
 		onStep: func(s *logicState) {
-			s.wheelDY += cachedDataMap[def.WheelAcceleration].int
+			s.wheelDY -= cachedDataMap[def.WheelAccelerationV].int
 		},
 	},
 	{
 		function: def.WheelRight,
 		onStep: func(s *logicState) {
-			s.wheelDX += cachedDataMap[def.WheelAcceleration].int
+			s.wheelDX -= cachedDataMap[def.WheelAccelerationH].int
 		},
 	},
 	{
 		function: def.WheelLeft,
 		onStep: func(s *logicState) {
-			s.wheelDX -= cachedDataMap[def.WheelAcceleration].int
+			s.wheelDX += cachedDataMap[def.WheelAccelerationH].int
 		},
 	},
 	{
 		function: def.SniperMode,
 		onStart: func(s *logicState) {
-			s.fixedSpeed = cachedDataMap[def.SniperModeSpeed].int
+			s.fixedSpeedH = cachedDataMap[def.SniperModeSpeedH].int
+			s.fixedSpeedV = cachedDataMap[def.SniperModeSpeedV].int
 		},
 		onStop: func(s *logicState) {
-			s.fixedSpeed = 0
+			s.fixedSpeedH = 0
+			s.fixedSpeedV = 0
 		},
 	},
 	{
@@ -152,12 +176,12 @@ var logicDefinitions = []*logicDefinition{
 			if math.Abs(s.cursorDX) < 0.5 && math.Abs(s.cursorDY) < 0.5 {
 				return
 			}
-			distance := cachedDataMap[def.TeleportDistance].int
-			var dx int32
-			var dy int32
+			distance := cachedDataMap[def.TeleportDistanceF].int
+			var dx int
+			var dy int
 			angle := math.Atan2(s.cursorDX, s.cursorDY)
-			dx = int32(math.Round(float64(distance) * math.Sin(angle)))
-			dy = int32(math.Round(float64(distance) * math.Cos(angle)))
+			dx = int(math.Round(float64(distance) * math.Sin(angle)))
+			dy = int(math.Round(float64(distance) * math.Cos(angle)))
 			winapi.AddCursorPos(dx, dy)
 		},
 	},

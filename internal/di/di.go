@@ -20,7 +20,7 @@ func Init() {
 		lg.Logf("logic.DI.GetCursorPos() (%d, %d)", x, y)
 		return
 	}
-	logic.DI.AddCursorPos = func(dx, dy int32) {
+	logic.DI.AddCursorPos = func(dx, dy int) {
 		winapi.AddCursorPos(dx, dy)
 		lg.Logf("logic.DI.AddCursorPos(%d, %d)", dx, dy)
 	}
@@ -34,7 +34,7 @@ func Init() {
 	}
 	logic.DI.Wheel = func(amount int, isHorizontal bool) {
 		winapi.Wheel(amount, isHorizontal)
-		lg.Logf("logic.DI.Whell(%d, %v)", amount, isHorizontal)
+		lg.Logf("logic.DI.Wheel(%d, %v)", amount, isHorizontal)
 	}
 	logic.DI.OnCursorMove = func() {
 		overlay.OnCursorMove()
@@ -54,7 +54,7 @@ func Init() {
 	}
 	winapi.DI.OnKey = func(keyCode uint32, isDown bool) (preventDefault bool) {
 		preventDefault = logic.OnKey(keyCode, isDown)
-		lg.Logf("winapi.DI.OnKey(%d, %v) %v", keyCode, isDown, preventDefault)
+		lg.Logf("winapi.DI.OnKey(%d(0x%X), %v) %v", keyCode, keyCode, isDown, preventDefault)
 		return
 	}
 	view.DI.LoadConfig = func() (config def.Config, err error) {

@@ -37,12 +37,6 @@ export default function InputKeyCode(props: Props): JSX.Element {
     doRequest();
   };
 
-  const onKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
-    if (state.loading) {
-      setText(e.key);
-    }
-  };
-
   const onChange = (c: number) => {
     props.onChange(c);
   };
@@ -54,7 +48,7 @@ export default function InputKeyCode(props: Props): JSX.Element {
         flexDirection: "row",
       }}
     >
-      <input ref={ref} autoFocus readOnly value={text} size={14} onFocus={request} onKeyDown={onKeyDown} />
+      <input ref={ref} autoFocus readOnly value={text} size={14} onFocus={request} />
       <button
         onClick={() => {
           onChange(0);
