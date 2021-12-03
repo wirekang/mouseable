@@ -26,27 +26,25 @@ and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 
    Writing... (Please contribute)
 
-# Install
-
-***Requires Chrome or Edge because Mouseable
-use [lorca](https://github.com/zserge/lorca) to draw GUI.***
+## Install
 
 Download installer or portable executable file
-at [Releases](https://github.com/wirekang/mouseable/releases).
+at **[Releases](https://github.com/wirekang/mouseable/releases)**.
 
-# Limitations
+
+*Requires Chrome or Edge because Mouseable
+use [lorca](https://github.com/zserge/lorca) to draw GUI.*
+
+## Limitations
 
 * Windows Only
 
-# Known Issues
+## Known Issues
 
 * Should run Mouseable as administrator otherwise Mouseable won't work with
-  system programs such as Task Manager.
-* When activation key does not change, please terminate mouseable from taskbar
-  and restart it.
-* Using [WIN + ?] is not recommended because sometimes it may not work.
+  other administrator program such as Task Manager.
 
-# Contributing
+## Contributing
 
 * Project Name
 
@@ -62,8 +60,9 @@ at [Releases](https://github.com/wirekang/mouseable/releases).
 
   This project needs image assets such as icon, social preview image.
 
-# Roadmap
+## Roadmap
 
 * Readme: Video demo
+* Readme: Detail explanation
 
-# [Release Notes](release-notes.md)
+## [Release Notes](release-notes.md)
