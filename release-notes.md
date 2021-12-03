@@ -1,3 +1,9 @@
+# v1.0.11
+
+## Bug Fixes
+
+* Fixed a bug where horizontal scrolling was not working.
+
 # v1.0.10
 
 ## Brand New UI

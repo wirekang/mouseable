@@ -322,7 +322,7 @@ func moveCursor() {
 
 func rotateWheel() {
 	if lState.wheelDX != 0 {
-		go DI.Wheel(lState.wheelDY, true)
+		go DI.Wheel(lState.wheelDX, true)
 	}
 
 	if lState.wheelDY != 0 {

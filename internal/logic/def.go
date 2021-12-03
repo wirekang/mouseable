@@ -149,13 +149,13 @@ var logicDefinitions = []*logicDefinition{
 	{
 		function: def.WheelRight,
 		onStep: func(s *logicState) {
-			s.wheelDX -= cachedDataMap[def.WheelAccelerationH].int
+			s.wheelDX += cachedDataMap[def.WheelAccelerationH].int
 		},
 	},
 	{
 		function: def.WheelLeft,
 		onStep: func(s *logicState) {
-			s.wheelDX += cachedDataMap[def.WheelAccelerationH].int
+			s.wheelDX -= cachedDataMap[def.WheelAccelerationH].int
 		},
 	},
 	{
