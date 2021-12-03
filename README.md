@@ -9,10 +9,9 @@ and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 
 1. **Productivity**
 
-   When you use your mouse during programming? Does it necessary? Most tasks you
-   do with the mouse are inefficient. Every single actions in IDE have
-   shortcuts. If you become skilled at doing everything by keyboard, your
-   productivity will increase a lot.
+   When you use your mouse during programming? Does it necessary? Most tasks you do with the mouse are
+   inefficient. Every single actions in IDE have shortcuts. If you become skilled at doing everything by
+   keyboard, your productivity will increase a lot.
 
     * In IDE, use vim plugin and shortcuts.
     * In Browser,
@@ -31,18 +30,13 @@ and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 Download installer or portable executable file
 at **[Releases](https://github.com/wirekang/mouseable/releases)**.
 
-
-*Requires Chrome or Edge because Mouseable
-use [lorca](https://github.com/zserge/lorca) to draw GUI.*
+*Requires Chrome or Edge because Mouseable use [lorca](https://github.com/zserge/lorca) to draw GUI.*
 
 ## Limitations
 
 * Windows Only
-
-## Known Issues
-
-* Should run Mouseable as administrator otherwise Mouseable won't work with
-  other administrator program such as Task Manager.
+* Should run Mouseable as administrator otherwise Mouseable won't work with other administrator program such
+  as Task Manager.
 
 ## Contributing
 
@@ -62,6 +56,7 @@ use [lorca](https://github.com/zserge/lorca) to draw GUI.*
 
 ## Roadmap
 
+* Install: Kill Mouseable automatically if it's running during install.
 * Readme: Video demo
 * Readme: Detail explanation
 
