@@ -38,8 +38,7 @@ at **[Releases](https://github.com/wirekang/mouseable/releases)**.
 ## Limitations
 
 * Windows Only
-* It is a must to run Mouseable with administrator privileges, otherwise Mouseable will not work on system software such
-  as Task Manager.
+* Mouseable must be run with administrator privileges, otherwise it will not work on system software such as Task Manager.
 
 ## Contributing
 
