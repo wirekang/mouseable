@@ -5,6 +5,19 @@ This program was inspired by
 [Windows built-in function](https://support.microsoft.com/en-us/windows/use-mouse-keys-to-move-the-mouse-pointer-9e0c72c8-b882-7918-8e7b-391fd62adf33)
 and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 
+## Features
+* Full mouse access.
+* Quick switch between mouse/keyboard mode.
+
+
+## Install
+
+Download installer or portable executable file
+at **[Releases](https://github.com/wirekang/mouseable/releases)**.
+
+*Requires Chrome or Edge because Mouseable use [lorca](https://github.com/zserge/lorca) to draw GUI.*
+
+
 ## Reasons why to stop using mouse
 
 1. **Productivity**
@@ -24,13 +37,6 @@ and [NeatMouse](https://github.com/neatdecisions/neatmouse).
    Using a mouse puts strain on your wrist.
 
    Writing... (Please contribute)
-
-## Install
-
-Download installer or portable executable file
-at **[Releases](https://github.com/wirekang/mouseable/releases)**.
-
-*Requires Chrome or Edge because Mouseable use [lorca](https://github.com/zserge/lorca) to draw GUI.*
 
 ## Limitations
 
