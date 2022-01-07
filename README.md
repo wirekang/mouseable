@@ -1,7 +1,7 @@
 # Mouseable
 
 This program was inspired by
-[Ultimate Hacking Keyboard Demo](https://youtu.be/4rjnkHqnA3s?t=20),  
+[Ultimate Hacking Keyboard Demo](https://youtu.be/4rjnkHqnA3s?t=20),
 [Windows built-in function](https://support.microsoft.com/en-us/windows/use-mouse-keys-to-move-the-mouse-pointer-9e0c72c8-b882-7918-8e7b-391fd62adf33)
 and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 
@@ -10,7 +10,6 @@ and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 * Access mouse features without real mouse.
 * Fully customizable hotkeys.
 * Convenient features helping move cursor quickly.
-
 
 ## Install
 
@@ -36,10 +35,12 @@ at **[Releases](https://github.com/wirekang/mouseable/releases)**.
 
 2. **Health**
 
-   Using a mouse puts strain on your wrist.
+   Using a mouse puts strain on your wrist. Fix your wrist in front of your keyboard!
 
-   Writing... (Please contribute)
+3. **Space Saving**
 
+   A large space is required to use the mouse. Keep your desk clean by putting away your mouse!
+   
 ## Limitations
 
 * Windows Only
@@ -48,15 +49,9 @@ at **[Releases](https://github.com/wirekang/mouseable/releases)**.
 
 ## Contributing
 
-* Project Name
-
-  Mouseable is good name, but if you come up with a good name, let me know!
-
-
-* English
+* Readme
 
   If you find any awkward sentence, please PR! I'm not good at english.
-
 
 * Graphic
 
@@ -64,8 +59,8 @@ at **[Releases](https://github.com/wirekang/mouseable/releases)**.
 
 ## Roadmap
 
-* Install: Kill Mouseable automatically if it's running during install.
-* Readme: Video demo
-* Readme: Detail explanation
+* Kill Mouseable automatically if it's running during install.
+* Add video demo.
+* Launch Mouseable automatically when startup.
 
 ## [Release Notes](release-notes.md)
