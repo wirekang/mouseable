@@ -6,8 +6,10 @@ This program was inspired by
 and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 
 ## Features
-* Full mouse access.
-* Quick switch between mouse/keyboard mode.
+
+* Access mouse features without real mouse.
+* Fully customizable hotkeys.
+* Convenient features helping move cursor quickly.
 
 
 ## Install
