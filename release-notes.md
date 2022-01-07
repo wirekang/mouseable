@@ -1,3 +1,7 @@
+# v1.0.13
+
+* Fixed a bug where mouseable not launched.
+
 # v1.0.12
 
 ## Bug Fixes
