@@ -5,6 +5,8 @@ This program was inspired by
 [Windows built-in function](https://support.microsoft.com/en-us/windows/use-mouse-keys-to-move-the-mouse-pointer-9e0c72c8-b882-7918-8e7b-391fd62adf33)
 and [NeatMouse](https://github.com/neatdecisions/neatmouse).
 
+https://user-images.githubusercontent.com/43294688/148503688-66ea2e4b-9212-4392-90a5-87cf240358e4.mp4
+
 ## Features
 
 * Access mouse features without real mouse.
