@@ -1,20 +1,22 @@
 # v1.0.13
 
+### Bug Fixes
+
 * Fixed a bug where mouseable not launched.
 
 # v1.0.12
 
-## Bug Fixes
+### Bug Fixes
 
 * Fixed a bug where horizontal scrolling was not working.
 
 # v1.0.10
 
-## Brand New UI
+### Brand New UI
 
 Mouseable now use [lorca](https://github.com/zserge/lorca) to draw GUI.
 
-## New Features
+### New Features
 
 * Added acceleration and friction to wheel.
 * Added 8 way Teleport.
@@ -22,21 +24,21 @@ Mouseable now use [lorca](https://github.com/zserge/lorca) to draw GUI.
 * Added double press support.
 * Added Win + Ctrl + Alt + Shift combination.
 
-## Feature Updates
+### Feature Updates
 
 * Rename Flash to Teleport.
 
 # v1.0.9
 
-## New Features
+### New Features
 
 * You can no longer run multiple Mouseable at the same time.
 
-## Feature Updates
+### Feature Updates
 
 * Removed 'Save' button. Key changes now take effect immediately.
 
-## Bug Fixes
+### Bug Fixes
 
 * Fixed a bug where hotkeys could not be set.
 * Fixed a bug where the window get cut off.
