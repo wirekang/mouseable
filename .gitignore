@@ -1,5 +1,4 @@
 build/
 tmp/
 githubtoken
-.idea/workspace.xml
-.idea/tasks.xml
+.idea/
