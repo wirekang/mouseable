@@ -6,14 +6,15 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/wirekang/mouseable/internal/cnst"
 	"github.com/wirekang/mouseable/internal/def"
 	"github.com/wirekang/mouseable/internal/lg"
 )
 
 const configVersion = "1"
 
-var configDir = os.Getenv("APPDATA") + "\\mouseable"
-var configFile = configDir + "\\config_v" + configVersion + ".json"
+var configDir string
+var configFile string
 
 var DI struct {
 	SetConfig func(config def.Config)
@@ -28,6 +29,12 @@ type jsonHolder struct {
 }
 
 func Init() {
+	configDir = os.Getenv("APPDATA") + "\\mouseable"
+	if cnst.IsDev {
+		configDir += "_dev"
+	}
+	_ = os.Mkdir(configDir, os.ModeDir)
+	configFile = configDir + "\\config_v" + configVersion + ".json"
 	lg.Logf("ConfigFile: %s", configFile)
 	config, err := LoadConfig()
 	if err != nil {
