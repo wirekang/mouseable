@@ -1,3 +1,10 @@
+# v1.0.14
+
+### Bug Fixes
+
+* Fixed a bug where window not open.
+*
+
 # v1.0.13
 
 ### Bug Fixes

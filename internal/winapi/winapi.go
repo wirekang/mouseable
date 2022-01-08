@@ -116,3 +116,10 @@ var hookProc w32.HOOKPROC = func(
 
 	return w32.CallNextHookEx(0, code, wParam, lParam)
 }
+
+func GetKeyText(scanCode uint32) (txt string, ok bool) {
+	// todo
+	// Change all keyCodes to scanCodes
+	txt, ok = w32.GetKeyNameText(scanCode, false, false)
+	return
+}

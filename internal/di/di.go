@@ -71,6 +71,11 @@ func Init() {
 		logic.SetConfig(config)
 		lg.Logf("io.DI.SetConfig(%+v)", config)
 	}
+	view.DI.GetKeyText = func(keyCode uint32) (string, bool) {
+		txt, ok := winapi.GetKeyText(keyCode)
+		lg.Logf("view.DI.GetKeyText(%s, %v)", txt, ok)
+		return txt, ok
+	}
 
 	nkc := make(chan uint32)
 	logic.DI.NormalKeyChan = nkc

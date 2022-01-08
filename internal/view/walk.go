@@ -31,31 +31,29 @@ func runNotifyIcon() {
 	notifyIcon, _ := walk.NewNotifyIcon(mainWindow)
 	defer notifyIcon.Dispose()
 
-	notifyIcon.SetIcon(icon)
-	notifyIcon.SetToolTip("ToolTip")
+	_ = notifyIcon.SetIcon(icon)
 
 	notifyIcon.MouseDown().Attach(
 		func(x, y int, button walk.MouseButton) {
 			if button == walk.LeftButton {
-				go open()
+				go openUI()
 			}
 		},
 	)
 
 	exitAction := walk.NewAction()
-	exitAction.SetText("Exit")
+	_ = exitAction.SetText("Exit")
 
-	exitAction.Triggered().Attach(exit)
+	exitAction.Triggered().Attach(
+		func() {
+			os.Exit(0)
+		},
+	)
 
-	notifyIcon.ContextMenu().Actions().Add(exitAction)
+	_ = notifyIcon.ContextMenu().Actions().Add(exitAction)
 	err = notifyIcon.SetVisible(true)
 	if err != nil {
 		panic(err)
 	}
 	mainWindow.Run()
-}
-
-func exit() {
-	ui.Close()
-	os.Exit(0)
 }

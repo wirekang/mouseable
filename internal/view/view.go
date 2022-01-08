@@ -10,6 +10,7 @@ var DI struct {
 	LoadConfig    func() (def.Config, error)
 	SaveConfig    func(def.Config) error
 	NormalKeyChan chan uint32
+	GetKeyText    func(keyCode uint32) (string, bool)
 }
 
 var configHolder struct {
@@ -25,6 +26,6 @@ func Run() {
 	}
 
 	mustChrome()
-	go serveAndOpen()
+	go openUI()
 	runNotifyIcon()
 }

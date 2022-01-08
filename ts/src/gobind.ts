@@ -6,7 +6,7 @@ declare global {
     __getKeyCode__: () => Promise<number>;
     __changeFunction__: (name: string, key: FunctionKey) => Promise<boolean>;
     __changeData__: (name: string, value: string) => Promise<boolean>;
-    __openGitHub__: () => Promise<void>;
+    __openLink__: (url: string) => Promise<void>;
   }
 }
 
@@ -101,10 +101,10 @@ export async function getKeyCode(): Promise<number> {
   return window.__getKeyCode__();
 }
 
-export async function openGitHub(): Promise<void> {
+export async function openLink(url: string): Promise<void> {
   if (isDev) {
     return;
   }
 
-  return window.__openGitHub__();
+  return window.__openLink__(url);
 }

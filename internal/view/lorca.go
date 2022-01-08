@@ -13,85 +13,68 @@ import (
 	"github.com/wirekang/mouseable/internal/lg"
 )
 
-var isOpened bool
-var host string
-var ui lorca.UI
+var isOpen = false
 
 func mustChrome() {
 	if lorca.LocateChrome() == "" {
 		AlertError("Chromium browser not found. Mouseable can't render GUI. Please install Chrome or Edge.")
+		lorca.PromptDownload()
 		os.Exit(1)
 	}
 }
 
-func serveAndOpen() {
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
+func openUI() {
+	if isOpen {
+		lg.Logf("Window is already open.")
+		return
+	}
+
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		panic(err)
 	}
-	host = ln.Addr().String()
-	go open()
-	defer ln.Close()
+
 	sub, err := fs.Sub(cnst.AssetFS, "assets")
 	if err != nil {
 		panic(err)
 	}
 
-	http.Serve(ln, http.FileServer(http.FS(sub)))
-}
-
-func open() {
-	if isOpened {
-		return
-	}
-
-	url := "http://" + host
-	lg.Logf("Open: %s", url)
-
-	var err error
-	ui, err = lorca.New(url, "", 800, 800, "--disable-features=Translate")
-	if err != nil {
-		panic(err)
-	}
-
-	isOpened = true
-	defer func() {
-		isOpened = false
-		ui.Close()
-		lg.Logf("Close")
+	go func() {
+		err = http.Serve(listener, http.FileServer(http.FS(sub)))
+		if err != nil {
+			lg.Errorf("http.Serve: %v", err)
+		}
 	}()
 
-	err = ui.Bind("__loadBind__", __loadBind__)
+	host := "http://" + listener.Addr().String()
+	ui, err := lorca.New(host, "", 800, 800, "--disable-features=Translate")
 	if err != nil {
 		panic(err)
 	}
 
-	err = ui.Bind("__getKeyCode__", __getKeyCode__)
+	err = bindLorca(ui)
 	if err != nil {
 		panic(err)
 	}
 
-	err = ui.Bind("__changeFunction__", __changeFunction__)
-	if err != nil {
-		panic(err)
-	}
-
-	err = ui.Bind("__changeData__", __changeData__)
-	if err != nil {
-		panic(err)
-	}
-
-	err = ui.Bind("__openGitHub__", __openGitHub__)
-	if err != nil {
-		panic(err)
-	}
-
+	isOpen = true
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt)
 	select {
 	case <-sigChan:
-		exit()
+		os.Exit(0)
 	case <-ui.Done():
 	}
-	return
+
+	err = listener.Close()
+	if err != nil {
+		lg.Errorf("listener.Close(): %v", err)
+	}
+
+	isOpen = false
+	err = ui.Close()
+	if err != nil {
+		lg.Errorf("ui.Close(): %v", err)
+	}
+	lg.Logf("Close UI")
 }
