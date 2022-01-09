@@ -7,10 +7,9 @@ import (
 )
 
 var DI struct {
-	LoadConfig    func() (def.Config, error)
-	SaveConfig    func(def.Config) error
-	NormalKeyChan chan uint32
-	GetKeyText    func(keyCode uint32) (string, bool)
+	LoadConfig     func() (def.Config, error)
+	SaveConfigJSON func(string) error
+	GetKeyText     func(keyCode uint32) (string, bool)
 }
 
 var configHolder struct {

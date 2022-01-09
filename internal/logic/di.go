@@ -9,5 +9,4 @@ var DI struct {
 	Wheel         func(amount int, hor bool)
 	OnActivated   func()
 	OnDeactivated func()
-	NormalKeyChan chan uint32
 }

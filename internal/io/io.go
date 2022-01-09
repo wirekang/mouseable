@@ -45,7 +45,7 @@ func Init() {
 }
 
 func SaveConfig(config def.Config) (err error) {
-	err = saveData(config)
+	err = saveConfig(config)
 	if err != nil {
 		err = errors.WithStack(err)
 		return
@@ -55,7 +55,23 @@ func SaveConfig(config def.Config) (err error) {
 	return
 }
 
-func saveData(config def.Config) (err error) {
+func SaveConfigJSON(json string) (err error) {
+	c, err := loadConfig([]byte(json))
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	err = saveConfig(c)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	return
+}
+
+func saveConfig(config def.Config) (err error) {
 	DI.SetConfig(config)
 	_ = os.MkdirAll(configDir, os.ModeDir)
 	jh := jsonHolder{
@@ -78,7 +94,13 @@ func saveData(config def.Config) (err error) {
 }
 
 func LoadConfig() (config def.Config, err error) {
-	config, err = loadConfig()
+	bytes, err := os.ReadFile(configFile)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	config, err = loadConfig(bytes)
 	if err != nil {
 		err = errors.WithStack(err)
 		return
@@ -87,8 +109,7 @@ func LoadConfig() (config def.Config, err error) {
 	return
 }
 
-func loadConfig() (config def.Config, err error) {
-	bytes, err := os.ReadFile(configFile)
+func loadConfig(bytes []byte) (config def.Config, err error) {
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			err = nil
@@ -115,43 +136,5 @@ func loadConfig() (config def.Config, err error) {
 		DataMap:     dataMapFromNameMap(nameConfig.Data),
 	}
 
-	return
-}
-
-func functionMapToNameMap(m def.FunctionMap) (rst functionNameKeyMap) {
-	rst = make(functionNameKeyMap, len(m))
-	for fnc := range m {
-		rst[fnc.Name] = m[fnc]
-	}
-	return
-}
-
-func dataMapToNameMap(m def.DataMap) (rst dataNameValueMap) {
-	rst = make(dataNameValueMap, len(m))
-	for data := range m {
-		rst[data.Name] = m[data]
-	}
-	return
-}
-
-func functionMapFromNameMap(m functionNameKeyMap) (rst def.FunctionMap) {
-	rst = make(def.FunctionMap, len(def.FunctionDefinitions))
-	for name, key := range m {
-		rst[def.FunctionNameMap[name]] = key
-	}
-	for i := range def.FunctionDefinitions {
-		_, ok := rst[def.FunctionDefinitions[i]]
-		if !ok {
-			rst[def.FunctionDefinitions[i]] = def.FunctionKey{}
-		}
-	}
-	return
-}
-
-func dataMapFromNameMap(m dataNameValueMap) (rst map[*def.DataDefinition]def.DataValue) {
-	rst = def.DefaultConfig.DataMap
-	for name, value := range m {
-		rst[def.DataNameMap[name]] = value
-	}
 	return
 }

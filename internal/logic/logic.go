@@ -41,8 +41,6 @@ func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
 		preventDefault = preventDefault || r
 	}
 	kState = updateKeyState(keyCode, isDown, kState)
-
-	preventDefault = preventDefault || procNormal(keyCode, isDown)
 	return
 }
 
@@ -214,25 +212,6 @@ func isModOk(key def.FunctionKey, mi modInfo) (ok bool) {
 	}
 
 	ok = true
-	return
-}
-
-func procNormal(keyCode uint32, isDown bool) (preventDefault bool) {
-	mi := makeModInfo(keyCode)
-	if isDown && !(mi.isWin || mi.isAlt || mi.isControl || mi.isShift) {
-		select {
-		case <-DI.NormalKeyChan:
-			DI.NormalKeyChan <- keyCode
-			lastNormalKeyCode = keyCode
-			preventDefault = true
-		default:
-		}
-	}
-
-	if !isDown && lastNormalKeyCode == keyCode {
-		lastNormalKeyCode = 0
-		preventDefault = true
-	}
 	return
 }
 
@@ -419,3 +398,7 @@ func clampInt(v, r int) int {
 	}
 	return v
 }
+
+// todo
+// Rewrite logic to use string from GetKeyNameText instead of keyCode.
+// Rewrite logic to treat mod keys as string with above logic. "S-Q" "C-Z"

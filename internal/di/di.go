@@ -58,9 +58,9 @@ func Init() {
 		lg.Logf("view.DI.LoadConfig() %+v %+v", config, err)
 		return
 	}
-	view.DI.SaveConfig = func(config def.Config) (err error) {
-		err = io.SaveConfig(config)
-		lg.Logf("view.DI.SaveConfig(%+v) %+v", config, err)
+	view.DI.SaveConfigJSON = func(json string) (err error) {
+		err = io.SaveConfigJSON(json)
+		lg.Logf("view.DI.SaveConfigJSON(%s) %+v", json, err)
 		return
 	}
 	io.DI.SetConfig = func(config def.Config) {
@@ -73,8 +73,4 @@ func Init() {
 		lg.Logf("view.DI.GetKeyText(%s, %v)", txt, ok)
 		return txt, ok
 	}
-
-	nkc := make(chan uint32)
-	logic.DI.NormalKeyChan = nkc
-	view.DI.NormalKeyChan = nkc
 }
