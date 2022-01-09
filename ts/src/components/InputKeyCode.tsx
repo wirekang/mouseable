@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAsyncFn } from "react-use";
-import { getKeyCode } from "../gobind";
-import { fromVKCode } from "win-vk";
+import { getKeyCode, getKeyText } from "../gobind";
 
 interface Props {
   keyCode: number;
@@ -9,8 +8,9 @@ interface Props {
 }
 
 export default function InputKeyCode(props: Props): JSX.Element {
-  const [text, setText] = useState(fromVKCode(props.keyCode) ?? `${props.keyCode}`);
-  const [state, doRequest] = useAsyncFn(getKeyCode);
+  const [keyTextState, requestKeyText] = useAsyncFn(getKeyText.bind(null, props.keyCode));
+  const [text, setText] = useState("");
+  const [keyCodeState, requestKeyCode] = useAsyncFn(getKeyCode);
   const [isSent, setIsSent] = useState(false);
   const ref = useRef<HTMLInputElement>(null);
 
@@ -19,22 +19,25 @@ export default function InputKeyCode(props: Props): JSX.Element {
       return;
     }
 
-    if (state.loading || !state.value) {
+    if (keyCodeState.loading || !keyCodeState.value) {
       setText("...");
       return;
     }
 
-    props.onChange(state.value);
+    props.onChange(keyCodeState.value);
     ref.current?.blur();
-    const key = fromVKCode(state.value);
-    if (key) {
-      setText(key);
+    requestKeyText();
+  }, [keyCodeState.loading, props.onChange, requestKeyText, isSent, keyCodeState.value]);
+
+  useEffect(() => {
+    if (keyTextState.value !== undefined) {
+      setText(keyTextState.value);
     }
-  }, [state.loading]);
+  }, [keyTextState.loading, setText, keyCodeState.value]);
 
   const request = () => {
     setIsSent(true);
-    doRequest();
+    requestKeyCode();
   };
 
   const onChange = (c: number) => {

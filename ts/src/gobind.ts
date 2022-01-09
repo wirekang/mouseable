@@ -8,6 +8,7 @@ declare global {
     __changeData__: (name: string, value: string) => Promise<boolean>;
     __openLink__: (url: string) => Promise<void>;
     __terminate__: () => Promise<void>;
+    __getKeyText__: (keyCode: number) => Promise<string>;
   }
 }
 
@@ -118,4 +119,12 @@ export async function terminate(): Promise<void> {
   window.__terminate__();
   window.close();
   return;
+}
+
+export async function getKeyText(keyCode: number): Promise<string> {
+  if (isDev){
+    return `n${keyCode}`;
+  }
+
+  return window.__getKeyText__(keyCode);
 }

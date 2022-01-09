@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FunctionKey } from "../gobind";
 import Checkbox from "./Checkbox";
 import { functionKeyToText } from "../util/function";
 import InputKeyCode from "./InputKeyCode";
+import { useAsyncFn } from "react-use";
 
 interface Props {
   name: string;
@@ -12,6 +13,12 @@ interface Props {
 
 export default function FunctionKeyInput(props: Props): JSX.Element {
   const [bufferKey, setBufferKey] = useState(props.fKey);
+
+  const [keyTextState, requestKeyText] = useAsyncFn(functionKeyToText.bind(null, bufferKey));
+
+  useEffect(() => {
+    requestKeyText();
+  }, [bufferKey, requestKeyText]);
 
   return (
     <div
@@ -68,7 +75,7 @@ export default function FunctionKeyInput(props: Props): JSX.Element {
           Apply
         </button>
       </div>
-      <span style={{ fontSize: 12, margin: "15px 0" }}>{functionKeyToText(bufferKey)}</span>
+      <span style={{ fontSize: 12, margin: "15px 0" }}>{keyTextState.value}</span>
       <div
         style={{
           display: "flex",

@@ -1,7 +1,6 @@
-import { FunctionKey } from "../gobind";
-import { fromVKCode } from "win-vk";
+import { FunctionKey, getKeyText } from "../gobind";
 
-export function functionKeyToText(k: FunctionKey): string {
+export async function functionKeyToText(k: FunctionKey): Promise<string> {
   let s = "";
 
   if (k.IsWin) {
@@ -21,7 +20,7 @@ export function functionKeyToText(k: FunctionKey): string {
   }
 
   if (k.KeyCode !== 0) {
-    s += fromVKCode(k.KeyCode);
+    s += await getKeyText(k.KeyCode);
   } else {
     s = s.substring(0, s.length - 3);
   }

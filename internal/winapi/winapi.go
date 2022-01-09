@@ -110,10 +110,9 @@ func sendMouseInput(dx, dy int32, mouseData uint32, flags ...uint32) {
 	w32.SendInput(input)
 }
 
-func GetKeyText(scanCode uint32) (txt string, ok bool) {
-	// todo
-	// Change all keyCodes to scanCodes
-	txt, ok = w32.GetKeyNameText(scanCode, false, false)
+func GetKeyText(keyCode uint32) (txt string, ok bool) {
+	scanCode := w32.MapVirtualKeyEx(uint(keyCode), w32.MAPVK_VK_TO_VSC, 0)
+	txt, ok = w32.GetKeyNameText(uint32(scanCode), false, false)
 	return
 }
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { changeFunction, DataDefinition, FunctionDefinition, FunctionKey, GoBind, loadBind } from "./gobind";
+import { changeFunction, FunctionKey, loadBind } from "./gobind";
 import { useAsync } from "react-use";
 import FunctionGroupBox from "./components/FunctionGroupBox";
 import FunctionKeyInput from "./components/FunctionKeyInput";

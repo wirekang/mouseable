@@ -1,6 +1,5 @@
 import React from "react";
 import GroupBox from "./GroupBox";
-import { openLink } from "../gobind";
 import GitHubButton from "./GitHubButton";
 import TerminateButton from "./TerminateButton";
 

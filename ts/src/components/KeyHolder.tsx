@@ -2,6 +2,7 @@ import React from "react";
 import { FunctionKey } from "../gobind";
 import MyContext from "../MyContext";
 import { functionKeyToText } from "../util/function";
+import { useAsync } from "react-use";
 
 interface Props {
   name: string;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function KeyHolder(props: Props): JSX.Element {
+  const text = useAsync(functionKeyToText.bind(null, props.functionKey));
   return (
     <MyContext.Consumer>
       {(v) => (
@@ -29,7 +31,7 @@ export default function KeyHolder(props: Props): JSX.Element {
             v.requestChangeFunctionKey(props.name);
           }}
         >
-          {functionKeyToText(props.functionKey)}
+          {text.value}
         </div>
       )}
     </MyContext.Consumer>
