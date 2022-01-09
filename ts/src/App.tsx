@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import { loadBind } from "./gobind";
 import { useAsync } from "react-use";
-import GitHubButton from "./components/GitHubButton";
-import TerminateButton from "./components/TerminateButton";
+import MyEditor from "./components/MyEditor";
+import TopRow from "./components/TopRow";
+import { editor } from "monaco-editor";
 
 function App() {
   const [requesterCounter, setRequesterCounter] = useState(0);
   const goBindState = useAsync(loadBind, [requesterCounter]);
+  const [value, setValue] = useState<string>();
+  const [editor, setEditor] = useState<editor.IStandaloneCodeEditor | null>(null);
 
   if (goBindState.loading || !goBindState.value) {
     return <h4>Loading...</h4>;
@@ -15,20 +18,9 @@ function App() {
   const goBind = goBindState.value!;
 
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          margin: 3,
-        }}
-      >
-        <span>Version: {goBind.version}</span>
-        <GitHubButton />
-        <TerminateButton />
-      </div>
+    <div style={{ height: "100%" }}>
+      <TopRow version={goBind.version} />
+      <MyEditor value={value} onChange={setValue} onMount={setEditor} />
     </div>
   );
 }

@@ -24,7 +24,7 @@ export default function GitHubButton(props: Props): JSX.Element {
       }}
       onClick={onClick}
     >
-      <span>GitHub</span>
+      <span>GitHub </span>
       <img alt="github" src="github.png" width={20} height={20} />
     </a>
   );
