@@ -25,7 +25,6 @@ var willStartLogics = []*logicDefinition{}
 var willStopLogics = []*logicDefinition{}
 var lastOkMap = map[*logicDefinition]int64{}
 var isActivated bool
-var wasCursorMoving bool
 
 var winKeys = []uint32{0x5b, 0x5c}
 var controlKeys = []uint32{0x11, 0xa2, 0xa3}
@@ -292,38 +291,39 @@ func stopFunctions() {
 }
 
 func moveCursor() {
-	ix := int(math.Round(lState.cursorDX))
-	iy := int(math.Round(lState.cursorDY))
-	if ix != 0 || iy != 0 {
-		if lState.fixedSpeedH != 0 && lState.fixedSpeedV != 0 {
-			if ix > 0 {
-				ix = lState.fixedSpeedH
-			} else if ix < 0 {
-				ix = -lState.fixedSpeedH
-			}
-			if iy > 0 {
-				iy = lState.fixedSpeedV
-			} else if iy < 0 {
-				iy = -lState.fixedSpeedV
-			}
-			lState.cursorDX = float64(ix)
-			lState.cursorDY = float64(iy)
-		}
-		DI.AddCursorPos(ix, iy)
-		if !wasCursorMoving {
-			wasCursorMoving = true
-		}
-	} else if wasCursorMoving {
-		wasCursorMoving = false
+	dx := int(math.Round(lState.cursorDX))
+	dy := int(math.Round(lState.cursorDY))
+
+	if lState.fixedSpeedH != 0 {
+		dx = clampInt(dx, lState.fixedSpeedH)
+		lState.cursorDX = float64(dx)
+	}
+	if lState.fixedSpeedV != 0 {
+		dy = clampInt(dy, lState.fixedSpeedV)
+		lState.cursorDY = float64(dy)
+	}
+
+	if dx != 0 || dy != 0 {
+		DI.AddCursorPos(dx, dy)
 	}
 }
 
 func rotateWheel() {
-	if lState.wheelDX != 0 {
-		go DI.Wheel(lState.wheelDX, true)
+	dx := lState.wheelDX
+	dy := lState.wheelDY
+	if lState.fixedWheelSpeedH != 0 {
+		dx = clampInt(dx, lState.fixedWheelSpeedH)
+		lState.wheelDX = dx
+	}
+	if lState.fixedWheelSpeedV != 0 {
+		dy = clampInt(dy, lState.fixedWheelSpeedV)
+		lState.wheelDY = dy
 	}
 
-	if lState.wheelDY != 0 {
+	if dx != 0 {
+		go DI.Wheel(lState.wheelDX, true)
+	}
+	if dy != 0 {
 		go DI.Wheel(lState.wheelDY, false)
 	}
 }
@@ -405,4 +405,17 @@ func procActivate() {
 		steppingLogics = []*logicDefinition{}
 		go DI.OnDeactivated()
 	}
+}
+
+func clampInt(v, r int) int {
+	if v > 0 {
+		if v > r {
+			return r
+		}
+	} else {
+		if v < -r {
+			return -r
+		}
+	}
+	return v
 }

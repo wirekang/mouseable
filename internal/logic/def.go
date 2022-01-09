@@ -7,12 +7,12 @@ import (
 )
 
 type logicState struct {
-	fixedSpeedH        int
-	fixedSpeedV        int
-	cursorDX, cursorDY float64
-	wheelDX, wheelDY   int
-	willActivate       bool
-	willDeactivate     bool
+	fixedSpeedH, fixedSpeedV           int
+	fixedWheelSpeedH, fixedWheelSpeedV int
+	cursorDX, cursorDY                 float64
+	wheelDX, wheelDY                   int
+	willActivate                       bool
+	willDeactivate                     bool
 }
 
 type keyState struct {
@@ -167,6 +167,17 @@ var logicDefinitions = []*logicDefinition{
 		onStop: func(s *logicState) {
 			s.fixedSpeedH = 0
 			s.fixedSpeedV = 0
+		},
+	},
+	{
+		function: def.SniperModeWheel,
+		onStart: func(s *logicState) {
+			s.fixedWheelSpeedH = cachedDataMap[def.SniperModeWheelSpeedH].int
+			s.fixedWheelSpeedV = cachedDataMap[def.SniperModeWheelSpeedV].int
+		},
+		onStop: func(s *logicState) {
+			s.fixedWheelSpeedH = 0
+			s.fixedWheelSpeedV = 0
 		},
 	},
 	{
