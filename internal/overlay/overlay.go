@@ -59,7 +59,6 @@ func initWindow() {
 	windowName, _ := syscall.UTF16PtrFromString("TestWindowName")
 
 	var class w32.WNDCLASSEX
-	class.Style = w32.CS_HREDRAW | w32.CS_VREDRAW
 	class.Background = createSolidBrush()
 	class.ClassName = className
 	class.Size = uint32(unsafe.Sizeof(class))
@@ -76,7 +75,6 @@ func initWindow() {
 }
 
 func showWindow() {
-
 	w32.ShowWindow(hwnd, w32.SW_SHOWNORMAL)
 }
 
