@@ -69,6 +69,7 @@ func Init() {
 	}
 	io.DI.SetConfig = func(config def.Config) {
 		logic.SetConfig(config)
+		overlay.SetConfig(config)
 		lg.Logf("io.DI.SetConfig(%+v)", config)
 	}
 	view.DI.GetKeyText = func(keyCode uint32) (string, bool) {

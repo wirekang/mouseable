@@ -64,4 +64,5 @@ var (
 	TeleportDistanceF   = nD("TeleportDistanceF", "TeleportForward distance", Int)
 	TeleportDistanceH   = nD("TeleportDistanceH", "Teleport horizontal distance", Int)
 	TeleportDistanceV   = nD("TeleportDistanceV", "Teleport vertical distance", Int)
+	ShowOverlay         = nD("ShowOverlay", "Show overlay near the cursor when Mouseable activated", Bool)
 )

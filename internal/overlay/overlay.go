@@ -7,13 +7,21 @@ import (
 
 	"github.com/JamesHovious/w32"
 
+	"github.com/wirekang/mouseable/internal/def"
 	"github.com/wirekang/mouseable/internal/lg"
 )
+
+func SetConfig(config def.Config) {
+	state.Lock()
+	state.isEnabled = config.DataMap[def.ShowOverlay].Bool()
+	state.Unlock()
+}
 
 var hwnd w32.HWND
 var state struct {
 	sync.Mutex
 	isActivating bool
+	isEnabled    bool
 }
 
 func OnCursorMove() {
@@ -22,7 +30,7 @@ func OnCursorMove() {
 
 func OnCursorStop() {
 	state.Lock()
-	if state.isActivating {
+	if state.isEnabled && state.isActivating {
 		showWindow()
 	}
 	state.Unlock()
@@ -31,8 +39,10 @@ func OnCursorStop() {
 func OnActivated() {
 	state.Lock()
 	state.isActivating = true
+	if state.isEnabled {
+		showWindow()
+	}
 	state.Unlock()
-	showWindow()
 }
 
 func OnDeactivated() {

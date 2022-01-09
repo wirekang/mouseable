@@ -34,5 +34,6 @@ var DefaultConfig = Config{
 		TeleportDistanceF:   "300",
 		TeleportDistanceH:   "300",
 		TeleportDistanceV:   "300",
+		ShowOverlay:         "true",
 	},
 }
