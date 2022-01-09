@@ -62,6 +62,7 @@ func openUI() {
 	signal.Notify(sigChan, os.Interrupt)
 	select {
 	case <-sigChan:
+		_ = ui.Close()
 		os.Exit(0)
 	case <-ui.Done():
 	}

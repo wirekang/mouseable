@@ -2,6 +2,7 @@ import React from "react";
 import GroupBox from "./GroupBox";
 import { openLink } from "../gobind";
 import GitHubButton from "./GitHubButton";
+import TerminateButton from "./TerminateButton";
 
 interface Props {
   version: string;
@@ -21,6 +22,7 @@ export default function InfoGroupBox(props: Props): JSX.Element {
       >
         <span>{props.version}</span>
         <GitHubButton />
+        <TerminateButton />
       </div>
     </GroupBox>
   );

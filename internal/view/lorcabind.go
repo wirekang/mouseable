@@ -1,6 +1,7 @@
 package view
 
 import (
+	"os"
 	"os/exec"
 
 	"github.com/pkg/errors"
@@ -83,6 +84,14 @@ func bindLorca(ui lorca.UI) (err error) {
 				return "<ERROR>"
 			}
 			return s
+		},
+	)
+
+	a(
+		"terminate",
+		func() {
+			ui.Close()
+			os.Exit(0)
 		},
 	)
 	return

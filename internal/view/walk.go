@@ -2,7 +2,6 @@ package view
 
 import (
 	"bytes"
-	"os"
 
 	"github.com/JamesHovious/w32"
 	"github.com/lxn/walk"
@@ -41,16 +40,6 @@ func runNotifyIcon() {
 		},
 	)
 
-	exitAction := walk.NewAction()
-	_ = exitAction.SetText("Exit")
-
-	exitAction.Triggered().Attach(
-		func() {
-			os.Exit(0)
-		},
-	)
-
-	_ = notifyIcon.ContextMenu().Actions().Add(exitAction)
 	err = notifyIcon.SetVisible(true)
 	if err != nil {
 		panic(err)

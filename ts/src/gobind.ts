@@ -7,6 +7,7 @@ declare global {
     __changeFunction__: (name: string, key: FunctionKey) => Promise<boolean>;
     __changeData__: (name: string, value: string) => Promise<boolean>;
     __openLink__: (url: string) => Promise<void>;
+    __terminate__: () => Promise<void>;
   }
 }
 
@@ -107,4 +108,14 @@ export async function openLink(url: string): Promise<void> {
   }
 
   return window.__openLink__(url);
+}
+
+export async function terminate(): Promise<void> {
+  if (isDev) {
+    window.close();
+    return;
+  }
+  window.__terminate__();
+  window.close();
+  return;
 }
