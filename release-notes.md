@@ -3,7 +3,12 @@
 ### Bug Fixes
 
 * Fixed a bug where window not open.
-*
+* Added option to turn off overlay.
+* Changed overlay behavior to always follow cursor.
+
+### New Features
+
+* Added Terminate button to GUI.
 
 # v1.0.13
 
