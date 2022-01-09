@@ -27,9 +27,9 @@ var state struct {
 }
 
 func OnCursorMove(x, y int) {
-	// todo
-	// can't lock state because performance issue.
+	state.Lock()
 	w32.SetWindowPos(hwnd, 0, x+state.cursorWidth-8, y+state.cursorHeight-8, 8, 8, 0)
+	state.Unlock()
 }
 
 func OnActivated() {
