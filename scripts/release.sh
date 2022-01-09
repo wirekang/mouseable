@@ -20,7 +20,7 @@ rm -f version
 echo "$VERSION" >>version
 echo "new: $VERSION"
 git add version
-git commit -m "Increase version"
+git commit -m "Increase version to $VERSION"
 git push origin main
 
 scripts/_build.sh || exit 1
