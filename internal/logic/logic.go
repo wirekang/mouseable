@@ -312,11 +312,9 @@ func moveCursor() {
 		DI.AddCursorPos(ix, iy)
 		if !wasCursorMoving {
 			wasCursorMoving = true
-			go DI.OnCursorMove()
 		}
 	} else if wasCursorMoving {
 		wasCursorMoving = false
-		go DI.OnCursorStop()
 	}
 }
 

@@ -19,8 +19,12 @@ github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5Cc
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/thoas/go-funk v0.9.1 h1:O549iLZqPpTUQ10ykd26sZhzD+rmR5pWhuElrhbC20M=
 github.com/thoas/go-funk v0.9.1/go.mod h1:+IWnUfUmFO1+WVYQWQtIJHeRRdaIyyYglZN7xzUPe4Q=
-github.com/wirekang/w32 v1.2.1-0.20220108095827-0d963aebb660 h1:x6SG/0DBabdQvWDBQ6hEGxIwod4FlYvEuTGuIgk0kcY=
-github.com/wirekang/w32 v1.2.1-0.20220108095827-0d963aebb660/go.mod h1:L6LTHMKvhtpGUkIYGTo4U9PKancYKpGS/+naYtTs8Ys=
+github.com/wirekang/w32 v1.2.0 h1:/XpEMa5u5gbkcAT7CbWFz7ZmkQ8tXh1Vz/K3xHkUHN0=
+github.com/wirekang/w32 v1.2.0/go.mod h1:L6LTHMKvhtpGUkIYGTo4U9PKancYKpGS/+naYtTs8Ys=
+github.com/wirekang/w32 v1.2.1-0.20220109044641-8ac947183347 h1:YmrQmHaB4dJ/icuVcGZFbJAT//CesKszkAvi0otleGE=
+github.com/wirekang/w32 v1.2.1-0.20220109044641-8ac947183347/go.mod h1:L6LTHMKvhtpGUkIYGTo4U9PKancYKpGS/+naYtTs8Ys=
+github.com/wirekang/w32 v1.2.1-0.20220109051044-e6d7dabffcd3 h1:zZnRCKOLXiJZdsxlW9TbvpoBKaGKTjcj2iAblVdbnVw=
+github.com/wirekang/w32 v1.2.1-0.20220109051044-e6d7dabffcd3/go.mod h1:L6LTHMKvhtpGUkIYGTo4U9PKancYKpGS/+naYtTs8Ys=
 github.com/zserge/lorca v0.1.10 h1:f/xBJ3D3ipcVRCcvN8XqZnpoKcOXV8I4vwqlFyw7ruc=
 github.com/zserge/lorca v0.1.10/go.mod h1:bVmnIbIRlOcoV285KIRSe4bUABKi7R7384Ycuum6e4A=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=

@@ -22,23 +22,21 @@ var state struct {
 	sync.Mutex
 	isActivating bool
 	isEnabled    bool
+	cursorWidth  int
+	cursorHeight int
 }
 
-func OnCursorMove() {
-	hideWindow()
-}
-
-func OnCursorStop() {
-	state.Lock()
-	if state.isEnabled && state.isActivating {
-		showWindow()
-	}
-	state.Unlock()
+func OnCursorMove(x, y int) {
+	// todo
+	// can't lock state because performance issue.
+	w32.SetWindowPos(hwnd, 0, x+state.cursorWidth-8, y+state.cursorHeight-8, 8, 8, 0)
 }
 
 func OnActivated() {
 	state.Lock()
 	state.isActivating = true
+	state.cursorWidth = w32.GetSystemMetrics(w32.SM_CXCURSOR)
+	state.cursorHeight = w32.GetSystemMetrics(w32.SM_CYCURSOR)
 	if state.isEnabled {
 		showWindow()
 	}
@@ -78,13 +76,7 @@ func initWindow() {
 }
 
 func showWindow() {
-	cursorWidth := w32.GetSystemMetrics(w32.SM_CXCURSOR)
-	cursorHeight := w32.GetSystemMetrics(w32.SM_CYCURSOR)
-	cursorX, cursorY, _ := w32.GetCursorPos()
-	w32.SetWindowPos(
-		hwnd, 0, cursorX+cursorWidth-8, cursorY+cursorHeight-8, 16, 16,
-		w32.SWP_NOSIZE|w32.SWP_NOACTIVATE,
-	)
+
 	w32.ShowWindow(hwnd, w32.SW_SHOWNORMAL)
 }
 

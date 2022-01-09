@@ -1,19 +1,36 @@
 package winapi
 
 import (
+	"fmt"
 	"unsafe"
 
 	"github.com/JamesHovious/w32"
 )
 
-var hHook w32.HHOOK
+var DI struct {
+	OnKey        func(keyCode uint32, isDown bool) (preventDefault bool)
+	OnCursorMove func(x, y int)
+}
+
+var hHooks []w32.HHOOK
 
 func Hook() {
-	hHook = w32.SetWindowsHookEx(w32.WH_KEYBOARD_LL, hookProc, 0, 0)
+	f := func(idHook int, lpfn w32.HOOKPROC) {
+		hhook := w32.SetWindowsHookEx(idHook, lpfn, 0, 0)
+		if hhook == 0 {
+			panic(fmt.Sprintf("Hook failed. id: %d, lastErrorCode: %d", idHook, w32.GetLastError()))
+		}
+
+		hHooks = append(hHooks, hhook)
+	}
+	f(w32.WH_KEYBOARD_LL, keyboardProc)
+	f(w32.WH_MOUSE_LL, mouseProc)
 }
 
 func UnHook() {
-	w32.UnhookWindowsHookEx(hHook)
+	for i := range hHooks {
+		w32.UnhookWindowsHookEx(hHooks[i])
+	}
 }
 
 func SetCursorPos(x, y int) {
@@ -93,20 +110,23 @@ func sendMouseInput(dx, dy int32, mouseData uint32, flags ...uint32) {
 	w32.SendInput(input)
 }
 
-var hookProc w32.HOOKPROC = func(
-	code int, wParam w32.WPARAM, lParam w32.LPARAM,
-) w32.LRESULT {
+func GetKeyText(scanCode uint32) (txt string, ok bool) {
+	// todo
+	// Change all keyCodes to scanCodes
+	txt, ok = w32.GetKeyNameText(scanCode, false, false)
+	return
+}
+
+var keyboardProc w32.HOOKPROC = func(code int, wParam w32.WPARAM, lParam w32.LPARAM) w32.LRESULT {
 	data := *(*w32.KBDLLHOOKSTRUCT)(unsafe.Pointer(lParam))
-	flagMap := map[string]w32.DWORD{
-		"Extended":      data.Flags & (w32.KF_EXTENDED >> 8),
-		"LowerInjected": data.Flags & 0x00000002,
-		"Injected":      data.Flags & 0x00000010,
-		"AltDown":       data.Flags & (w32.KF_ALTDOWN >> 8),
-		"Up":            data.Flags & (w32.KF_UP >> 8),
-	}
+	// fExtended := data.Flags & (w32.KF_EXTENDED >> 8)
+	// fLowerInjected := data.Flags & 0x00000002
+	// fInjected := data.Flags & 0x00000010
+	// fAltDown := data.Flags & (w32.KF_ALTDOWN >> 8)
+	fUp := data.Flags & (w32.KF_UP >> 8)
 
 	if DI.OnKey != nil {
-		isDown := flagMap["Up"] == 0
+		isDown := fUp == 0
 		preventDefault := DI.OnKey(uint32(data.VkCode), isDown)
 
 		if preventDefault {
@@ -117,9 +137,10 @@ var hookProc w32.HOOKPROC = func(
 	return w32.CallNextHookEx(0, code, wParam, lParam)
 }
 
-func GetKeyText(scanCode uint32) (txt string, ok bool) {
-	// todo
-	// Change all keyCodes to scanCodes
-	txt, ok = w32.GetKeyNameText(scanCode, false, false)
-	return
+var mouseProc w32.HOOKPROC = func(code int, wParam w32.WPARAM, lParam w32.LPARAM) w32.LRESULT {
+	data := *(*w32.MSLLHOOKSTRUCT)(unsafe.Pointer(lParam))
+	if DI.OnCursorMove != nil {
+		go DI.OnCursorMove(int(data.Pt.X), int(data.Pt.Y))
+	}
+	return w32.CallNextHookEx(0, code, wParam, lParam)
 }

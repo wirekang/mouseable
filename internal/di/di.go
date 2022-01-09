@@ -36,14 +36,6 @@ func Init() {
 		winapi.Wheel(amount, isHorizontal)
 		lg.Logf("logic.DI.Wheel(%d, %v)", amount, isHorizontal)
 	}
-	logic.DI.OnCursorMove = func() {
-		overlay.OnCursorMove()
-		lg.Logf("logic.DI.OnCursorMove()")
-	}
-	logic.DI.OnCursorStop = func() {
-		overlay.OnCursorStop()
-		lg.Logf("logic.DI.OnCursorStop()")
-	}
 	logic.DI.OnActivated = func() {
 		overlay.OnActivated()
 		lg.Logf("logic.DI.OnActivated()")
@@ -56,6 +48,10 @@ func Init() {
 		preventDefault = logic.OnKey(keyCode, isDown)
 		lg.Logf("winapi.DI.OnKey(%d(0x%X), %v) %v", keyCode, keyCode, isDown, preventDefault)
 		return
+	}
+	winapi.DI.OnCursorMove = func(x, y int) {
+		overlay.OnCursorMove(x, y)
+		lg.Logf("winapi.DI.OnCursorMove(%d, %d)", x, y)
 	}
 	view.DI.LoadConfig = func() (config def.Config, err error) {
 		config, err = io.LoadConfig()
