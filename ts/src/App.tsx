@@ -1,28 +1,29 @@
-import React, { useState } from "react";
-import { loadBind } from "./gobind";
-import { useAsync } from "react-use";
+import React, { useEffect, useState } from "react";
 import MyEditor from "./components/MyEditor";
 import TopRow from "./components/TopRow";
 import { editor } from "monaco-editor";
 import EditorHelp from "./components/EditorHelp";
+import TMI from "./components/TMI";
+import { useAsyncFn, useInterval } from "react-use";
+import { ping } from "./gobind";
+import DelayedNotRunning from "./components/DelayedNotRunning";
 
 function App() {
-  const [requesterCounter, setRequesterCounter] = useState(0);
-  const goBindState = useAsync(loadBind, [requesterCounter]);
-  const [value, setValue] = useState<string>();
+  const [pingState, requestPing] = useAsyncFn(ping);
+  const [jsonValue, setJsonValue] = useState<string>();
   const [editor, setEditor] = useState<editor.IStandaloneCodeEditor | null>(null);
 
-  if (goBindState.loading || !goBindState.value) {
-    return <h4>Loading...</h4>;
-  }
-
-  const goBind = goBindState.value!;
+  useInterval(() => {
+    requestPing();
+  }, 2000);
 
   return (
     <div style={{ height: "100%" }}>
-      <TopRow version={goBind.version} />
+      {pingState.loading && <DelayedNotRunning delay={1000} />}
+      <TopRow version={""} />
       <EditorHelp />
-      <MyEditor value={value} onChange={setValue} onMount={setEditor} />
+      <MyEditor value={jsonValue} onChange={setJsonValue} onMount={setEditor} schema={"{}"} />
+      <TMI />
     </div>
   );
 }

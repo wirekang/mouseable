@@ -6,6 +6,7 @@ interface Props {
   value?: string;
   onChange: (v?: string) => void;
   onMount: (e: editor.IStandaloneCodeEditor) => void;
+  schema?: string;
 }
 
 export default function MyEditor(props: Props): JSX.Element {
@@ -18,15 +19,7 @@ export default function MyEditor(props: Props): JSX.Element {
       schemas: [
         {
           uri: "a://b/foo.json",
-          schema: {
-            type: "object",
-            properties: {
-              myKey: {
-                type: "integer",
-                description: "My DESCROsjdflk ajsd;lfk ja;slkdfjalskdjflaksdjf;laksdjflkj",
-              },
-            },
-          },
+          schema: JSON.parse(props.schema ?? "{}"),
           fileMatch: [modelUri.toString()],
         },
       ],
@@ -53,6 +46,19 @@ export default function MyEditor(props: Props): JSX.Element {
       value={props.value}
       onChange={props.onChange}
       onMount={onMount}
+      overrideServices={{
+        storageService: {
+          get() {},
+          getNumber() {},
+          getBoolean(key: any) {
+            return key === "expandSuggestionDocs";
+          },
+          remove() {},
+          store() {},
+          onDidChangeStorage() {},
+          onWillSaveState() {},
+        },
+      }}
     />
   );
 }

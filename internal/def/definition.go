@@ -1,66 +1,65 @@
 // Package def declares types for prevent circular dependencies.
 package def
 
-type FunctionMap map[*FunctionDefinition]FunctionKey
-type DataMap map[*DataDefinition]DataValue
+import (
+	"github.com/wirekang/mouseable/internal/typ"
+)
 
-type Config struct {
-	FunctionMap FunctionMap
-	DataMap     DataMap
+func New() typ.DefinitionManager {
+	m := &manager{
+		cmdOrderMap:        map[typ.CommandName]int{},
+		cmdWhenMap:         map[typ.CommandName]typ.When{},
+		cmdDescriptionMap:  map[typ.CommandName]string{},
+		dataTypeMap:        map[typ.DataName]typ.DataType{},
+		dataDescriptionMap: map[typ.DataName]string{},
+		nextFuncOrder:      0,
+	}
+	m.nc("Activate", "Activate Mouseable", typ.Deactivated)
+	m.nc("Deactivate", "Deactivate Mouseable", typ.Activated)
+	m.nc("MoveRight", "Move cursor →", typ.Activated)
+	m.nc("MoveRightUp", "Move cursor ↗", typ.Activated)
+	m.nc("MoveUp", "Move cursor ↑", typ.Activated)
+	m.nc("MoveLeftUp", "Move cursor ↖", typ.Activated)
+	m.nc("MoveLeft", "Move cursor ←", typ.Activated)
+	m.nc("MoveLeftDown", "Move cursor ↙", typ.Activated)
+	m.nc("MoveDown", "Move cursor ↓", typ.Activated)
+	m.nc("MoveRightDown", "Move cursor ↘", typ.Activated)
+	m.nc("SniperMode", "Slow down to increase accuracy", typ.Activated)
+	m.nc("SniperModeWheel", "Slow down to increase accuracy (Wheel)", typ.Activated)
+	m.nc("ClickLeft", "Click left mouse button", typ.Activated)
+	m.nc("ClickRight", "Click right mouse button", typ.Activated)
+	m.nc("ClickMiddle", "Click middle mouse button", typ.Activated)
+	m.nc("WheelUp", "Wheel ↑", typ.Activated)
+	m.nc("WheelDown", "Wheel ↓", typ.Activated)
+	m.nc("WheelRight", "Wheel →", typ.Activated)
+	m.nc("WheelLeft", "Wheel ←", typ.Activated)
+	m.nc("TeleportForward", "Teleport cursor to the direction it is moving", typ.Activated)
+	m.nc("TeleportRight", "Teleport cursor →", typ.Activated)
+	m.nc("TeleportRightUp", "Teleport cursor ↗", typ.Activated)
+	m.nc("TeleportUp", "Teleport cursor ↑", typ.Activated)
+	m.nc("TeleportLeftUp", "Teleport cursor ↖", typ.Activated)
+	m.nc("TeleportLeft", "Teleport cursor ←", typ.Activated)
+	m.nc("TeleportLeftDown", "Teleport cursor ↙", typ.Activated)
+	m.nc("TeleportDown", "Teleport cursor ↓", typ.Activated)
+	m.nc("TeleportRightDown", "Teleport cursor ↘", typ.Activated)
+
+	m.nd("DoublePressSpeed", "Double press speed in ms", typ.Int)
+	m.nd("CursorAccelerationH", "Cursor horizontal acceleration", typ.Float)
+	m.nd("CursorAccelerationV", "Cursor vertical acceleration", typ.Float)
+	m.nd("CursorFrictionH", "Cursor horizontal friction", typ.Float)
+	m.nd("CursorFrictionV", "Cursor vertical friction", typ.Float)
+	m.nd("WheelAccelerationH", "Wheel horizontal acceleration", typ.Int)
+	m.nd("WheelAccelerationV", "Wheel vertical acceleration", typ.Int)
+	m.nd("WheelFrictionH", "Wheel horizontal friction", typ.Int)
+	m.nd("WheelFrictionV", "Wheel vertical friction", typ.Int)
+	m.nd("SniperModeSpeedH", "Sniper mode horizontal speed", typ.Int)
+	m.nd("SniperModeSpeedV", "Sniper mode vertical speed", typ.Int)
+	m.nd("SniperModeWheelSpeedH", "Sniper mode horizontal speed (Wheel)", typ.Int)
+	m.nd("SniperModeWheelSpeedV", "Sniper mode vertical speed (Wheel)", typ.Int)
+	m.nd("TeleportDistanceF", "TeleportForward distance", typ.Int)
+	m.nd("TeleportDistanceH", "Teleport horizontal distance", typ.Int)
+	m.nd("TeleportDistanceV", "Teleport vertical distance", typ.Int)
+	m.nd("ShowOverlay", "Show overlay when Mouseable activated", typ.Bool)
+
+	return m
 }
-
-var FunctionDefinitions []*FunctionDefinition
-var DataDefinitions []*DataDefinition
-var FunctionNameMap = map[string]*FunctionDefinition{}
-var DataNameMap = map[string]*DataDefinition{}
-
-var (
-	Activate          = nF("System", "Activate", "Activate Mouseable", Deactivated)
-	Deactivate        = nF("System", "Deactivate", "Deactivate Mouseable")
-	MoveRight         = nF("Move", "MoveRight", "Move cursor →")
-	MoveRightUp       = nF("Move", "MoveRightUp", "Move cursor ↗")
-	MoveUp            = nF("Move", "MoveUp", "Move cursor ↑")
-	MoveLeftUp        = nF("Move", "MoveLeftUp", "Move cursor ↖")
-	MoveLeft          = nF("Move", "MoveLeft", "Move cursor ←")
-	MoveLeftDown      = nF("Move", "MoveLeftDown", "Move cursor ↙")
-	MoveDown          = nF("Move", "MoveDown", "Move cursor ↓")
-	MoveRightDown     = nF("Move", "MoveRightDown", "Move cursor ↘")
-	SniperMode        = nF("Move", "SniperMode", "Slow down to increase accuracy")
-	SniperModeWheel   = nF("Move", "SniperModeWheel", "Slow down to increase accuracy (Wheel)")
-	ClickLeft         = nF("Button", "ClickLeft", "Click left mouse button")
-	ClickRight        = nF("Button", "ClickRight", "Click right mouse button")
-	ClickMiddle       = nF("Button", "ClickMiddle", "Click middle mouse button")
-	WheelUp           = nF("Button", "WheelUp", "Wheel ↑")
-	WheelDown         = nF("Button", "WheelDown", "Wheel ↓")
-	WheelRight        = nF("Button", "WheelRight", "Wheel →")
-	WheelLeft         = nF("Button", "WheelLeft", "Wheel ←")
-	TeleportForward   = nF("Teleport", "TeleportForward", "Teleport cursor to the direction it is moving")
-	TeleportRight     = nF("Teleport", "TeleportRight", "Teleport cursor →")
-	TeleportRightUp   = nF("Teleport", "TeleportRightUp", "Teleport cursor ↗")
-	TeleportUp        = nF("Teleport", "TeleportUp", "Teleport cursor ↑")
-	TeleportLeftUp    = nF("Teleport", "TeleportLeftUp", "Teleport cursor ↖")
-	TeleportLeft      = nF("Teleport", "TeleportLeft", "Teleport cursor ←")
-	TeleportLeftDown  = nF("Teleport", "TeleportLeftDown", "Teleport cursor ↙")
-	TeleportDown      = nF("Teleport", "TeleportDown", "Teleport cursor ↓")
-	TeleportRightDown = nF("Teleport", "TeleportRightDown", "Teleport cursor ↘")
-)
-
-var (
-	DoublePressSpeed      = nD("DoublePressSpeed", "Double press speed in ms", Int)
-	CursorAccelerationH   = nD("CursorAccelerationH", "Cursor horizontal acceleration", Float)
-	CursorAccelerationV   = nD("CursorAccelerationV", "Cursor vertical acceleration", Float)
-	CursorFrictionH       = nD("CursorFrictionH", "Cursor horizontal friction", Float)
-	CursorFrictionV       = nD("CursorFrictionV", "Cursor vertical friction", Float)
-	WheelAccelerationH    = nD("WheelAccelerationH", "Wheel horizontal acceleration", Int)
-	WheelAccelerationV    = nD("WheelAccelerationV", "Wheel vertical acceleration", Int)
-	WheelFrictionH        = nD("WheelFrictionH", "Wheel horizontal friction", Int)
-	WheelFrictionV        = nD("WheelFrictionV", "Wheel vertical friction", Int)
-	SniperModeSpeedH      = nD("SniperModeSpeedH", "Sniper mode horizontal speed", Int)
-	SniperModeSpeedV      = nD("SniperModeSpeedV", "Sniper mode vertical speed", Int)
-	SniperModeWheelSpeedH = nD("SniperModeWheelSpeedH", "Sniper mode horizontal speed (Wheel)", Int)
-	SniperModeWheelSpeedV = nD("SniperModeWheelSpeedV", "Sniper mode vertical speed (Wheel)", Int)
-	TeleportDistanceF     = nD("TeleportDistanceF", "TeleportForward distance", Int)
-	TeleportDistanceH     = nD("TeleportDistanceH", "Teleport horizontal distance", Int)
-	TeleportDistanceV     = nD("TeleportDistanceV", "Teleport vertical distance", Int)
-	ShowOverlay           = nD("ShowOverlay", "Show overlay near the cursor when Mouseable activated", Bool)
-)

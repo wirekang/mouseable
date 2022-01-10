@@ -20,7 +20,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build && rm -rf ../assets/* && mv build/* ../assets/",
+    "build": "react-scripts build && rm -rf ../assets/front/* && mv build/* ../assets/front/",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

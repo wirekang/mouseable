@@ -19,7 +19,7 @@ func printf(prefix string, format string, v ...interface{}) {
 	logger.Printf(format, v...)
 }
 
-func Logf(format string, v ...interface{}) {
+func Printf(format string, v ...interface{}) {
 	printf("LOG", format, v...)
 }
 

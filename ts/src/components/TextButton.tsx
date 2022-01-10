@@ -11,7 +11,7 @@ export default function TextButton(props: Props): JSX.Element {
     <span
       style={{
         cursor: "pointer",
-        textShadow: "1px 1px 1px #ccc",
+        textShadow: "1px 1px 1px #ddd",
         ...props.style,
       }}
       onClick={props.onClick}

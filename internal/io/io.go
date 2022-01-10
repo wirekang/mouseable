@@ -1,140 +1,93 @@
 package io
 
 import (
-	"encoding/json"
+	"fmt"
+	"io/fs"
+	"io/ioutil"
 	"os"
+	"path/filepath"
+	"runtime"
 
+	"github.com/juju/fslock"
 	"github.com/pkg/errors"
 
 	"github.com/wirekang/mouseable/internal/cnst"
-	"github.com/wirekang/mouseable/internal/def"
-	"github.com/wirekang/mouseable/internal/lg"
+	"github.com/wirekang/mouseable/internal/typ"
 )
 
-const configVersion = "1"
-
-var configDir string
-var configFile string
-
-var DI struct {
-	SetConfig func(config def.Config)
-}
-
-type functionNameKeyMap map[string]def.FunctionKey
-type dataNameValueMap map[string]def.DataValue
-
-type jsonHolder struct {
-	Function functionNameKeyMap
-	Data     dataNameValueMap
-}
-
-func Init() {
-	configDir = os.Getenv("APPDATA") + "\\mouseable"
-	if cnst.IsDev {
-		configDir += "_dev"
+func New() typ.IOManager {
+	dataDir := getDataDir()
+	return &manager{
+		dataDir: dataDir,
 	}
-	_ = os.Mkdir(configDir, os.ModeDir)
-	configFile = configDir + "\\config_v" + configVersion + ".json"
-	lg.Logf("ConfigFile: %s", configFile)
-	config, err := LoadConfig()
+}
+
+type manager struct {
+	dataDir string
+	lock    *fslock.Lock
+}
+
+func (i *manager) LoadNames() (rst []string) {
+	rst = make([]string, 0)
+	infos, err := ioutil.ReadDir(i.dataDir)
 	if err != nil {
-		panic(err)
+		return
 	}
-	DI.SetConfig(config)
+
+	for _, info := range infos {
+		if info.IsDir() {
+			continue
+		}
+		rst = append(rst, info.Name())
+	}
 	return
 }
 
-func SaveConfig(config def.Config) (err error) {
-	err = saveConfig(config)
+func (i *manager) Save(name typ.ConfigName, data typ.ConfigJSON) (err error) {
+	err = ioutil.WriteFile(filepath.Join(i.dataDir, string(name)), []byte(data), fs.ModePerm)
 	if err != nil {
 		err = errors.WithStack(err)
-		return
 	}
-
-	DI.SetConfig(config)
 	return
 }
 
-func SaveConfigJSON(json string) (err error) {
-	c, err := loadConfig([]byte(json))
+func (i *manager) Load(name typ.ConfigName) (data typ.ConfigJSON, err error) {
+	bytes, err := ioutil.ReadFile(filepath.Join(i.dataDir, string(name)))
 	if err != nil {
 		err = errors.WithStack(err)
 		return
 	}
 
-	err = saveConfig(c)
-	if err != nil {
-		err = errors.WithStack(err)
-		return
-	}
-
+	data = typ.ConfigJSON(bytes)
 	return
 }
 
-func saveConfig(config def.Config) (err error) {
-	DI.SetConfig(config)
-	_ = os.MkdirAll(configDir, os.ModeDir)
-	jh := jsonHolder{
-		Function: functionMapToNameMap(config.FunctionMap),
-		Data:     dataMapToNameMap(config.DataMap),
-	}
-	bytes, err := json.MarshalIndent(jh, "", "    ")
+func (i *manager) Lock() {
+	lockFile := i.dataDir + "\\lockfile"
+	i.lock = fslock.New(lockFile)
+	err := i.lock.TryLock()
 	if err != nil {
-		err = errors.WithStack(err)
-		return
-	}
-
-	err = os.WriteFile(configFile, bytes, 0755)
-	if err != nil {
-		err = errors.WithStack(err)
-		return
-	}
-
-	return
-}
-
-func LoadConfig() (config def.Config, err error) {
-	bytes, err := os.ReadFile(configFile)
-	if err != nil {
-		err = errors.WithStack(err)
-		return
-	}
-
-	config, err = loadConfig(bytes)
-	if err != nil {
-		err = errors.WithStack(err)
-		return
-	}
-
-	return
-}
-
-func loadConfig(bytes []byte) (config def.Config, err error) {
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			err = nil
-			config = def.Config{
-				FunctionMap: functionMapFromNameMap(functionMapToNameMap(def.DefaultConfig.FunctionMap)),
-				DataMap:     dataMapFromNameMap(dataMapToNameMap(def.DefaultConfig.DataMap)),
-			}
-			return
+		if errors.Is(err, fslock.ErrLocked) {
+			panic("Mouseable is already running. Please check tray icon.")
 		}
 
-		err = errors.WithStack(err)
-		return
-	}
-
-	var nameConfig jsonHolder
-	err = json.Unmarshal(bytes, &nameConfig)
-	if err != nil {
-		err = errors.WithStack(err)
-		return
-	}
-
-	config = def.Config{
-		FunctionMap: functionMapFromNameMap(nameConfig.Function),
-		DataMap:     dataMapFromNameMap(nameConfig.Data),
+		panic(err)
 	}
 
 	return
+}
+
+func (i *manager) Unlock() {
+	_ = i.lock.Unlock()
+}
+
+func getDataDir() (dataDir string) {
+	if runtime.GOOS == "windows" {
+		dataDir = filepath.Join(os.Getenv("APPDATA"), "mouseable")
+		if cnst.IsDev {
+			dataDir += "_dev"
+		}
+		return
+	}
+	panic(fmt.Sprintf("%s not supported.", runtime.GOOS))
 }

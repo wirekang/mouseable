@@ -1,130 +1,107 @@
-import mock from "./mock";
-
 declare global {
   interface Window {
-    __loadBind__: () => Promise<GoBind>;
-    __getKeyCode__: () => Promise<number>;
-    __changeFunction__: (name: string, key: FunctionKey) => Promise<boolean>;
-    __changeData__: (name: string, value: string) => Promise<boolean>;
-    __openLink__: (url: string) => Promise<void>;
+    __ping__: () => Promise<number>;
+    __getVersion__: () => Promise<string>;
+    __getSchema__: () => Promise<string>;
     __terminate__: () => Promise<void>;
-    __getKeyText__: (keyCode: number) => Promise<string>;
+    __openLink__: (url: string) => Promise<void>;
+    __getConfigNames__: () => Promise<string[]>;
+    __getConfig__: (name: string) => Promise<string>;
+    __saveConfig__: (json: string) => Promise<void>;
   }
 }
-
-export interface FunctionDefinition {
-  Name: string;
-  Category: string;
-  Description: string;
-  When: When;
-  Order: number;
-}
-
-export interface FunctionKey {
-  IsDouble: boolean;
-  IsAlt: boolean;
-  IsControl: boolean;
-  IsShift: boolean;
-  IsWin: boolean;
-  KeyCode: number;
-}
-
-export interface DataDefinition {
-  Name: string;
-  Description: string;
-  Type: DataType;
-}
-
-export enum DataType {
-  Int = 0,
-  Float = 1,
-  Bool = 2,
-  String = 3,
-}
-
-export enum When {
-  Activated = 0,
-  Deactivated = 1,
-  Any = 2,
-}
-
-export type FunctionNameKeyRecord = Record<string, FunctionKey>;
-export type DataNameValueRecord = Record<string, string>;
-
-export interface GoBind {
-  functionDefinitions: FunctionDefinition[];
-  dataDefinitions: DataDefinition[];
-  functionNameKeyMap: FunctionNameKeyRecord;
-  dataNameValueMap: DataNameValueRecord;
-  version: string;
-}
-
 const isDev = process.env.NODE_ENV === "development";
 if (isDev) {
   console.log("DEVELOPMENT MODE");
 }
 
-export async function loadBind(): Promise<GoBind> {
+export async function ping(): Promise<boolean> {
+  console.log("ping");
   if (isDev) {
-    await new Promise((r) => setTimeout(r, 100));
-    return mock;
-  }
-  return window.__loadBind__();
-}
-
-export async function changeFunction(name: string, key: FunctionKey): Promise<boolean> {
-  if (isDev) {
-    mock.functionNameKeyMap[name] = key;
-    await new Promise((r) => setTimeout(r, 100));
+    await new Promise((r) => {
+      setTimeout(r, 100);
+    });
     return true;
   }
 
-  return window.__changeFunction__(name, key);
+  const r = await window.__ping__();
+  console.log(r);
+  return !!r;
 }
 
-export async function changeData(name: string, value: string): Promise<boolean> {
-  if (isDev) {
-    mock.dataNameValueMap[name] = value;
-    await new Promise((r) => setTimeout(r, 100));
-    return true;
-  }
-
-  return window.__changeData__(name, value);
-}
-
-export async function getKeyCode(): Promise<number> {
-  if (isDev) {
-    await new Promise((r) => setTimeout(r, 100));
-    const v = Math.round(Math.random() * 40 + 48);
-    console.log("random keycode ", v.toString(16));
-    return v;
-  }
-
-  return window.__getKeyCode__();
-}
-
-export async function openLink(url: string): Promise<void> {
-  if (isDev) {
-    return;
-  }
-
-  return window.__openLink__(url);
-}
-
-export async function terminate(): Promise<void> {
+export function terminate() {
+  console.log("terminate");
   if (isDev) {
     window.close();
     return;
   }
-  window.__terminate__();
-  window.close();
+
+  window.__terminate__().then(window.close);
   return;
 }
 
-export async function getKeyText(keyCode: number): Promise<string> {
-  if (isDev){
-    return `n${keyCode}`;
+export async function getVersion(): Promise<string> {
+  console.log("getVersion");
+  if (isDev) {
+    return "d.e.v";
   }
 
-  return window.__getKeyText__(keyCode);
+  const r = await window.__getVersion__();
+  console.log(r);
+  return r;
+}
+
+export async function openLink(url: string): Promise<void> {
+  console.log(`openLink ${url}`);
+  if (isDev) {
+    return;
+  }
+
+  const r = await window.__openLink__(url);
+  console.log(r);
+  return r;
+}
+
+export async function getConfigNames(): Promise<string[]> {
+  console.log("getConfigNames");
+  if (isDev) {
+    return ["config-1.json", "my-config.json", "your-config.json"];
+  }
+
+  const r = await window.__getConfigNames__();
+  console.log(r);
+  return r;
+}
+
+export async function getConfig(name: string): Promise<string> {
+  console.log(`getConfig ${name}`);
+  if (isDev) {
+    return `{"text":"thsi is test"}`;
+  }
+
+  const r = await window.__getConfig__(name);
+  console.log(r);
+  return r;
+}
+
+export async function getSchema(): Promise<string> {
+  console.log("getSchema");
+  if (isDev) {
+    return "{}";
+  }
+
+  const r = await window.__getSchema__();
+  console.log(r);
+  return r;
+}
+
+export async function saveConfig(json: string): Promise<void> {
+  console.log(`saveConfig ${json}`);
+  if (isDev) {
+    return;
+  }
+
+  const r = await window.__saveConfig__(json);
+  console.log(r);
+  return r;
 }

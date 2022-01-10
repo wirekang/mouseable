@@ -11,7 +11,7 @@ export default function EditorHelp(props: Props): JSX.Element {
         marginLeft: 10,
       }}
     >
-      <p>Press F1 and any key to insert.</p>
+      <p>Press F1 to insert key.</p>
     </div>
   );
 }
