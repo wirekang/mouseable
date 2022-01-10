@@ -4,12 +4,12 @@ import TopRow from "./components/TopRow";
 import { editor } from "monaco-editor";
 import EditorHelp from "./components/EditorHelp";
 import TMI from "./components/TMI";
-import { useAsyncFn, useInterval } from "react-use";
-import { ping } from "./gobind";
+import { useAsync, useAsyncFn, useInterval } from "react-use";
 import DelayedNotRunning from "./components/DelayedNotRunning";
 
 function App() {
-  const [pingState, requestPing] = useAsyncFn(ping);
+  const [pingState, requestPing] = useAsyncFn(window.__ping__);
+  const schemaState = useAsync(window.__getSchema__);
   const [jsonValue, setJsonValue] = useState<string>();
   const [editor, setEditor] = useState<editor.IStandaloneCodeEditor | null>(null);
 
@@ -22,7 +22,9 @@ function App() {
       {pingState.loading && <DelayedNotRunning delay={1000} />}
       <TopRow version={""} />
       <EditorHelp />
-      <MyEditor value={jsonValue} onChange={setJsonValue} onMount={setEditor} schema={"{}"} />
+      {schemaState.value && (
+        <MyEditor value={jsonValue} onChange={setJsonValue} onMount={setEditor} schema={schemaState.value} />
+      )}
       <TMI />
     </div>
   );

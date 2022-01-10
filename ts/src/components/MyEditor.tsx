@@ -6,7 +6,7 @@ interface Props {
   value?: string;
   onChange: (v?: string) => void;
   onMount: (e: editor.IStandaloneCodeEditor) => void;
-  schema?: string;
+  schema: string;
 }
 
 export default function MyEditor(props: Props): JSX.Element {
@@ -19,7 +19,7 @@ export default function MyEditor(props: Props): JSX.Element {
       schemas: [
         {
           uri: "a://b/foo.json",
-          schema: JSON.parse(props.schema ?? "{}"),
+          schema: JSON.parse(props.schema),
           fileMatch: [modelUri.toString()],
         },
       ],

@@ -13,20 +13,8 @@ declare global {
 const isDev = process.env.NODE_ENV === "development";
 if (isDev) {
   console.log("DEVELOPMENT MODE");
-}
-
-export async function ping(): Promise<boolean> {
-  console.log("ping");
-  if (isDev) {
-    await new Promise((r) => {
-      setTimeout(r, 100);
-    });
-    return true;
-  }
-
-  const r = await window.__ping__();
-  console.log(r);
-  return !!r;
+  window.__ping__ = () => Promise.resolve(1);
+  window.__getSchema__ = () => Promise.resolve("{}");
 }
 
 export function terminate() {
@@ -36,7 +24,8 @@ export function terminate() {
     return;
   }
 
-  window.__terminate__().then(window.close);
+  window.__terminate__();
+  window.close();
   return;
 }
 
@@ -80,17 +69,6 @@ export async function getConfig(name: string): Promise<string> {
   }
 
   const r = await window.__getConfig__(name);
-  console.log(r);
-  return r;
-}
-
-export async function getSchema(): Promise<string> {
-  console.log("getSchema");
-  if (isDev) {
-    return "{}";
-  }
-
-  const r = await window.__getSchema__();
   console.log(r);
   return r;
 }

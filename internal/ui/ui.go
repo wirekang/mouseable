@@ -65,7 +65,7 @@ func (m *manager) SetJSONSchema(schema typ.ConfigJSONSchema) {
 }
 
 func (m *manager) Open() {
-	go m.openUI()
+	m.openUI()
 }
 
 func mustChrome() {
@@ -151,6 +151,7 @@ func (m *manager) bindLorca(lorcaUI lorca.UI) {
 	f(
 		"ping",
 		func() int {
+			lg.Printf("Ping")
 			return 1
 		},
 	)

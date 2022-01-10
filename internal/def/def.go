@@ -2,6 +2,7 @@ package def
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/wirekang/mouseable/internal/typ"
 )
@@ -36,17 +37,45 @@ func (m *manager) DataType(name typ.DataName) typ.DataType {
 }
 
 func (m *manager) JSONSchema() typ.ConfigJSONSchema {
-	root := map[string]interface{}{}
-	root["type"] = "object"
-	properties := map[typ.CommandName]interface{}{}
+	command := map[string]interface{}{}
+	command["type"] = "object"
+	cmdProperties := map[typ.CommandName]interface{}{}
 	for _, cmdName := range m.cmdNames {
-		properties[cmdName] = map[string]string{
-			"type":        "string",
-			"description": m.cmdDescriptionMap[cmdName],
+		cmdProperties[cmdName] = map[string]string{
+			"type": "string",
+			"description": fmt.Sprintf(
+				"%s \n\n when: %s , order: %d",
+				m.cmdDescriptionMap[cmdName],
+				whenToString(m.cmdWhenMap[cmdName]),
+				m.cmdOrderMap[cmdName],
+			),
 		}
 	}
+	command["properties"] = cmdProperties
 
-	root["properties"] = properties
+	data := map[string]interface{}{}
+	data["type"] = "object"
+	dataProperties := map[typ.DataName]interface{}{}
+	for _, dataName := range m.dataNames {
+		dataProperties[dataName] = map[string]string{
+			"type": dataTypeToString(m.dataTypeMap[dataName]),
+			"description": fmt.Sprintf(
+				"%s \n\n type: %s",
+				m.dataDescriptionMap[dataName],
+				dataTypeToString(m.dataTypeMap[dataName]),
+			),
+		}
+	}
+	data["properties"] = dataProperties
+
+	root := map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"command": command,
+			"data":    data,
+		},
+	}
+
 	s, err := json.Marshal(root)
 	if err != nil {
 		return typ.ConfigJSONSchema(err.Error())
@@ -71,4 +100,33 @@ func (m *manager) nc(name, desc string, when typ.When) {
 	m.cmdOrderMap[cn] = m.nextFuncOrder
 	m.cmdDescriptionMap[cn] = desc
 	m.cmdWhenMap[cn] = when
+}
+
+func whenToString(when typ.When) string {
+	switch when {
+	case typ.Activated:
+		return "Activated"
+
+	case typ.Deactivated:
+		return "Deactivated"
+
+	case typ.Any:
+		return "Any"
+	}
+
+	return "?"
+}
+
+func dataTypeToString(dt typ.DataType) string {
+	switch dt {
+	case typ.Int:
+		return "integer"
+	case typ.Float:
+		return "number"
+	case typ.Bool:
+		return "boolean"
+	case typ.String:
+		return "string"
+	}
+	return "?"
 }
