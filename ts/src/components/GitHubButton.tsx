@@ -1,11 +1,10 @@
 import React from "react";
-import { openLink } from "../gobind";
 
 interface Props {}
 
 export default function GitHubButton(props: Props): JSX.Element {
   const onClick = () => {
-    openLink("https://github.com/wirekang/mouseable");
+    window.__openLink__("https://github.com/wirekang/mouseable");
   };
 
   return (
@@ -24,8 +23,7 @@ export default function GitHubButton(props: Props): JSX.Element {
       }}
       onClick={onClick}
     >
-      <span>GitHub </span>
-      <img alt="github" src="github.png" width={20} height={20} />
+      <img alt="github" src="github.png" width={50} height={20} />
     </a>
   );
 }

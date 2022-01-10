@@ -1,11 +1,11 @@
 import React from "react";
-import { terminate } from "../gobind";
 
 interface Props {}
 
 export default function TerminateButton(props: Props): JSX.Element {
   const onClick = () => {
-    terminate();
+    window.__terminate__();
+    window.close();
   };
   return (
     <div style={{ fontSize: 10 }}>

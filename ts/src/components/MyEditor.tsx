@@ -1,6 +1,7 @@
 import React from "react";
 import Editor, { OnMount } from "@monaco-editor/react";
-import { editor, Uri } from "monaco-editor";
+import { editor } from "monaco-editor";
+import toast from "react-simple-toasts";
 
 interface Props {
   value?: string;
@@ -26,6 +27,13 @@ export default function MyEditor(props: Props): JSX.Element {
     });
     editor.setModel(model);
     props.onMount(editor);
+    editor.addCommand(monaco.KeyCode.F1, () => {
+      console.log("F1!!");
+    });
+    editor.addCommand(monaco.KeyCode.F2, () => {
+      editor.trigger("anyString", "editor.action.formatDocument", null);
+      toast("Saved.");
+    });
   };
 
   return (

@@ -3,11 +3,11 @@ import MyEditor from "./components/MyEditor";
 import TopRow from "./components/TopRow";
 import { editor } from "monaco-editor";
 import EditorHelp from "./components/EditorHelp";
-import TMI from "./components/TMI";
 import { useAsync, useAsyncFn, useInterval } from "react-use";
 import DelayedNotRunning from "./components/DelayedNotRunning";
 
 function App() {
+  const versionState = useAsync(window.__getVersion__);
   const [pingState, requestPing] = useAsyncFn(window.__ping__);
   const schemaState = useAsync(window.__getSchema__);
   const [jsonValue, setJsonValue] = useState<string>();
@@ -25,7 +25,6 @@ function App() {
       {schemaState.value && (
         <MyEditor value={jsonValue} onChange={setJsonValue} onMount={setEditor} schema={schemaState.value} />
       )}
-      <TMI />
     </div>
   );
 }
