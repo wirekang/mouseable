@@ -28,8 +28,6 @@ type state struct {
 
 func (s *state) run() {
 	s.initListeners()
-	schema := s.definitionManager.JSONSchema()
-	s.uiManager.SetJSONSchema(schema)
 	s.hookManager.Install()
 	go s.loop()
 	s.uiManager.StartBackground()
@@ -46,8 +44,10 @@ func (s *state) initListeners() {
 	s.hookManager.SetOnCursorListener(s.onCursor)
 	s.uiManager.SetOnTerminateListener(s.onTerminate)
 	s.uiManager.SetOnGetNextKeyListener(s.onGetNextKey)
-	s.uiManager.SetOnSaveConfigListener(s.onSave)
-	s.uiManager.SetOnLoadConfigListener(s.onLoadConfig)
+	s.uiManager.SetOnSaveConfigListener(s.ioManager.SaveConfig)
+	s.uiManager.SetOnLoadConfigListener(s.ioManager.LoadConfig)
+	s.uiManager.SetOnLoadConfigSchemaListener(s.definitionManager.JSONSchema)
+	s.uiManager.SetOnLoadConfigNamesListener(s.ioManager.LoadConfigNames)
 }
 
 func (s *state) onKey(key typ.Key, isDown bool) (preventDefault bool) {
@@ -66,8 +66,6 @@ func (s *state) onGetNextKey() (key typ.Key) {
 	return
 }
 
-func (s *state) onSave(json typ.ConfigJSON) {}
-
 func (s *state) loop() {
 	for _ = range time.Tick(time.Millisecond * time.Duration(20)) {
 		s.Lock()
@@ -76,15 +74,6 @@ func (s *state) loop() {
 		s.hookManager.Wheel(s.procCursorDY(), false)
 		s.Unlock()
 	}
-}
-
-func (s *state) onLoadConfig(name typ.ConfigName) typ.ConfigJSON {
-	data, err := s.ioManager.Load(name)
-	if err != nil {
-		return typ.ConfigJSON(err.Error())
-	}
-
-	return data
 }
 
 func logKey(key typ.Key, isDown bool) {

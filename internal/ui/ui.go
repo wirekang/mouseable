@@ -21,14 +21,21 @@ func New() typ.UIManager {
 }
 
 type manager struct {
-	onGetNextKeyListener func() typ.Key
-	onTerminateListener  func()
-	onSaveConfigListener func(json typ.ConfigJSON)
-	onLoadConfigListener func(typ.ConfigName) typ.ConfigJSON
-	isOpen               bool
-	configName           typ.ConfigName
-	configNames          []typ.ConfigName
-	jsonSchema           typ.ConfigJSONSchema
+	onGetNextKeyListener       func() typ.Key
+	onTerminateListener        func()
+	onSaveConfigListener       func(typ.ConfigName, typ.ConfigJSON) error
+	onLoadConfigListener       func(typ.ConfigName) (typ.ConfigJSON, error)
+	onLoadConfigSchemaListener func() typ.ConfigJSONSchema
+	onLoadConfigNamesListener  func() []typ.ConfigName
+	isOpen                     bool
+}
+
+func (m *manager) SetOnLoadConfigSchemaListener(f func() typ.ConfigJSONSchema) {
+	m.onLoadConfigSchemaListener = f
+}
+
+func (m *manager) SetOnLoadConfigNamesListener(f func() []typ.ConfigName) {
+	m.onLoadConfigNamesListener = f
 }
 
 func (m *manager) SetOnGetNextKeyListener(f func() typ.Key) {
@@ -39,16 +46,12 @@ func (m *manager) SetOnTerminateListener(f func()) {
 	m.onTerminateListener = f
 }
 
-func (m *manager) SetOnSaveConfigListener(f func(typ.ConfigJSON)) {
+func (m *manager) SetOnSaveConfigListener(f func(typ.ConfigName, typ.ConfigJSON) error) {
 	m.onSaveConfigListener = f
 }
 
-func (m *manager) SetOnLoadConfigListener(f func(typ.ConfigName) typ.ConfigJSON) {
+func (m *manager) SetOnLoadConfigListener(f func(typ.ConfigName) (typ.ConfigJSON, error)) {
 	m.onLoadConfigListener = f
-}
-
-func (m *manager) SetConfigNames(names []typ.ConfigName) {
-	m.configNames = names
 }
 
 func (m *manager) ShowAlert(s string) {
@@ -57,10 +60,6 @@ func (m *manager) ShowAlert(s string) {
 
 func (m *manager) ShowError(s string) {
 	showError(s)
-}
-
-func (m *manager) SetJSONSchema(schema typ.ConfigJSONSchema) {
-	m.jsonSchema = schema
 }
 
 func (m *manager) Open() {
@@ -136,73 +135,19 @@ func (m *manager) bindLorca(lorcaUI lorca.UI) {
 			panic(err)
 		}
 	}
+	f("terminate", m.onTerminateListener)
+	f("getConfigNames", m.onLoadConfigNamesListener)
+	f("getConfig", m.onLoadConfigListener)
+	f("saveConfig", m.onSaveConfigListener)
+	f("getSchema", m.onLoadConfigSchemaListener)
 
+	f("ping", func() int { return 1 })
+	f("getVersion", func() string { return cnst.VERSION })
 	f(
-		"ping",
-		func() int {
-			lg.Printf("Ping")
-			return 1
-		},
-	)
-
-	f(
-		"getVersion",
-		func() string {
-			fmt.Println("Call GetVersion")
-			r := cnst.VERSION
-			fmt.Println("Return GetVersion")
-			return r
-		},
-	)
-
-	f(
-		"getSchema",
-		func() string {
-			fmt.Println("Call GetScehm")
-			r := string(m.jsonSchema)
-			fmt.Println("Return GetScDS")
-			return r
-		},
-	)
-
-	f(
-		"openLink",
-		func(url string) {
+		"openLink", func(url string) {
 			_ = exec.Command(
 				"rundll32", "url.dll,FileProtocolHandler", "https://github.com/wirekang/mouseable",
 			).Start()
-		},
-	)
-
-	f(
-		"terminate",
-		func() {
-			m.onTerminateListener()
-		},
-	)
-
-	f(
-		"getConfigNames",
-		func() []string {
-			r := make([]string, len(m.configNames))
-			for i := range m.configNames {
-				r[i] = string(m.configNames[i])
-			}
-			return r
-		},
-	)
-
-	f(
-		"getConfig",
-		func(name string) string {
-			return string(m.onLoadConfigListener(typ.ConfigName(name)))
-		},
-	)
-
-	f(
-		"saveConfig",
-		func(json string) {
-			m.onSaveConfigListener(typ.ConfigJSON(json))
 		},
 	)
 }

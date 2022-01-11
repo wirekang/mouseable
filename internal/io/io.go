@@ -31,8 +31,8 @@ type manager struct {
 	lock      *fslock.Lock
 }
 
-func (i *manager) LoadConfigNames() (rst []string) {
-	rst = make([]string, 0)
+func (i *manager) LoadConfigNames() (rst []typ.ConfigName) {
+	rst = make([]typ.ConfigName, 0)
 	infos, err := ioutil.ReadDir(i.configDir)
 	if err != nil {
 		return
@@ -42,12 +42,12 @@ func (i *manager) LoadConfigNames() (rst []string) {
 		if info.IsDir() {
 			continue
 		}
-		rst = append(rst, info.Name())
+		rst = append(rst, typ.ConfigName(info.Name()))
 	}
 	return
 }
 
-func (i *manager) Save(name typ.ConfigName, data typ.ConfigJSON) (err error) {
+func (i *manager) SaveConfig(name typ.ConfigName, data typ.ConfigJSON) (err error) {
 	err = ioutil.WriteFile(filepath.Join(i.configDir, string(name)), []byte(data), fs.ModePerm)
 	if err != nil {
 		err = errors.WithStack(err)
@@ -55,7 +55,7 @@ func (i *manager) Save(name typ.ConfigName, data typ.ConfigJSON) (err error) {
 	return
 }
 
-func (i *manager) Load(name typ.ConfigName) (data typ.ConfigJSON, err error) {
+func (i *manager) LoadConfig(name typ.ConfigName) (data typ.ConfigJSON, err error) {
 	bytes, err := ioutil.ReadFile(filepath.Join(i.configDir, string(name)))
 	if err != nil {
 		err = errors.WithStack(err)

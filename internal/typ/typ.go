@@ -74,9 +74,9 @@ type Config interface {
 }
 
 type IOManager interface {
-	Save(name ConfigName, data ConfigJSON) error
-	Load(name ConfigName) (data ConfigJSON, err error)
-	LoadConfigNames() []string
+	SaveConfig(ConfigName, ConfigJSON) error
+	LoadConfig(ConfigName) (ConfigJSON, error)
+	LoadConfigNames() []ConfigName
 	Lock()
 	Unlock()
 }
@@ -93,9 +93,9 @@ type UIManager interface {
 	ShowError(string)
 	SetOnGetNextKeyListener(func() Key)
 	SetOnTerminateListener(func())
-	SetOnSaveConfigListener(func(ConfigJSON))
-	SetOnLoadConfigListener(func(ConfigName) ConfigJSON)
-	SetJSONSchema(ConfigJSONSchema)
-	SetConfigNames([]ConfigName)
+	SetOnSaveConfigListener(func(ConfigName, ConfigJSON) error)
+	SetOnLoadConfigListener(func(ConfigName) (ConfigJSON, error))
+	SetOnLoadConfigSchemaListener(func() ConfigJSONSchema)
+	SetOnLoadConfigNamesListener(func() []ConfigName)
 	Open()
 }
