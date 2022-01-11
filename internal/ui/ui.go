@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"io/fs"
 	"net"
 	"net/http"
 	"os"
@@ -85,18 +84,8 @@ func (m *manager) openUI() {
 		panic(err)
 	}
 
-	frontFS, err := fs.Sub(cnst.AssetFS, "assets")
-	if err != nil {
-		panic(err)
-	}
-
-	frontFS, err = fs.Sub(frontFS, "front")
-	if err != nil {
-		panic(err)
-	}
-
 	go func() {
-		err = http.Serve(listener, http.FileServer(http.FS(frontFS)))
+		err = http.Serve(listener, http.FileServer(http.FS(cnst.FrontFS)))
 		if err != nil {
 			lg.Errorf("http.Serve: %v", err)
 		}

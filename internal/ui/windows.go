@@ -3,8 +3,6 @@
 package ui
 
 import (
-	"bytes"
-
 	"github.com/JamesHovious/w32"
 	"github.com/lxn/walk"
 	"github.com/mat/besticon/ico"
@@ -25,12 +23,11 @@ func showError(msg string) {
 }
 
 func (m *manager) runNotifyIcon() {
-	bs, err := cnst.AssetFS.ReadFile("assets/front/favicon.ico")
+	br, err := cnst.FrontFS.Open("favicon.ico")
 	if err != nil {
 		panic(err)
 	}
 
-	br := bytes.NewReader(bs)
 	img, err := ico.Decode(br)
 	if err != nil {
 		panic(err)

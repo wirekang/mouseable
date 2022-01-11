@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"io/fs"
 	"os"
 
 	"github.com/wirekang/mouseable/internal/cnst"
@@ -14,7 +15,7 @@ var VERSION = "x.x.x"
 
 func main() {
 	cnst.VERSION = VERSION
-	cnst.AssetFS = Asset
+	initFS()
 
 	// checking -dev.exe instead of -dev is due to bug of air.
 	// https://github.com/cosmtrek/air/issues/207
@@ -23,4 +24,22 @@ func main() {
 	}
 
 	logic.Run()
+}
+
+func initFS() {
+	var err error
+	assetFS, err := fs.Sub(Asset, "assets")
+	if err != nil {
+		panic(err)
+	}
+
+	cnst.FrontFS, err = fs.Sub(assetFS, "front")
+	if err != nil {
+		panic(err)
+	}
+
+	cnst.DefaultConfigsFS, err = fs.Sub(assetFS, "defaultConfigs")
+	if err != nil {
+		panic(err)
+	}
 }

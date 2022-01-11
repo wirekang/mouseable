@@ -1,9 +1,10 @@
 package cnst
 
 import (
-	"embed"
+	"io/fs"
 )
 
 var VERSION string
 var IsDev bool
-var AssetFS embed.FS
+var FrontFS fs.FS
+var DefaultConfigsFS fs.FS

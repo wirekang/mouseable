@@ -2,6 +2,7 @@ package io
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
 	"io/ioutil"
 	"os"
@@ -12,24 +13,27 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/wirekang/mouseable/internal/cnst"
+	"github.com/wirekang/mouseable/internal/lg"
 	"github.com/wirekang/mouseable/internal/typ"
 )
 
 func New() typ.IOManager {
-	dataDir := getDataDir()
+	rd, cd := initDirs()
 	return &manager{
-		dataDir: dataDir,
+		rootDir:   rd,
+		configDir: cd,
 	}
 }
 
 type manager struct {
-	dataDir string
-	lock    *fslock.Lock
+	rootDir   string
+	configDir string
+	lock      *fslock.Lock
 }
 
-func (i *manager) LoadNames() (rst []string) {
+func (i *manager) LoadConfigNames() (rst []string) {
 	rst = make([]string, 0)
-	infos, err := ioutil.ReadDir(i.dataDir)
+	infos, err := ioutil.ReadDir(i.configDir)
 	if err != nil {
 		return
 	}
@@ -44,7 +48,7 @@ func (i *manager) LoadNames() (rst []string) {
 }
 
 func (i *manager) Save(name typ.ConfigName, data typ.ConfigJSON) (err error) {
-	err = ioutil.WriteFile(filepath.Join(i.dataDir, string(name)), []byte(data), fs.ModePerm)
+	err = ioutil.WriteFile(filepath.Join(i.configDir, string(name)), []byte(data), fs.ModePerm)
 	if err != nil {
 		err = errors.WithStack(err)
 	}
@@ -52,7 +56,7 @@ func (i *manager) Save(name typ.ConfigName, data typ.ConfigJSON) (err error) {
 }
 
 func (i *manager) Load(name typ.ConfigName) (data typ.ConfigJSON, err error) {
-	bytes, err := ioutil.ReadFile(filepath.Join(i.dataDir, string(name)))
+	bytes, err := ioutil.ReadFile(filepath.Join(i.configDir, string(name)))
 	if err != nil {
 		err = errors.WithStack(err)
 		return
@@ -63,7 +67,7 @@ func (i *manager) Load(name typ.ConfigName) (data typ.ConfigJSON, err error) {
 }
 
 func (i *manager) Lock() {
-	lockFile := i.dataDir + "\\lockfile"
+	lockFile := i.rootDir + "\\lockfile"
 	i.lock = fslock.New(lockFile)
 	err := i.lock.TryLock()
 	if err != nil {
@@ -81,13 +85,60 @@ func (i *manager) Unlock() {
 	_ = i.lock.Unlock()
 }
 
-func getDataDir() (dataDir string) {
+func initDirs() (rootDir string, configDir string) {
 	if runtime.GOOS == "windows" {
-		dataDir = filepath.Join(os.Getenv("APPDATA"), "mouseable")
+		rootDir = filepath.Join(os.Getenv("APPDATA"), "mouseable")
 		if cnst.IsDev {
-			dataDir += "_dev"
+			rootDir += "_dev"
+		}
+		configDir = filepath.Join(rootDir, "configs")
+
+		if isNotExists(configDir) {
+			_ = os.MkdirAll(configDir, os.ModeDir)
+			initDefaultConfigs(configDir)
 		}
 		return
 	}
 	panic(fmt.Sprintf("%s not supported.", runtime.GOOS))
+}
+
+func isNotExists(dir string) bool {
+	_, err := os.Stat(dir)
+	return os.IsNotExist(err)
+}
+
+func initDefaultConfigs(configDir string) {
+	lg.Printf("Init default configs")
+
+	entries, err := fs.ReadDir(cnst.DefaultConfigsFS, ".")
+	if err != nil {
+		panic(err)
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			lg.Errorf("%s is directory", entry.Name())
+			continue
+		}
+
+		src, err := cnst.DefaultConfigsFS.Open(entry.Name())
+		if err != nil {
+			lg.Errorf("DefaultConfigsFS.Open: %v", err)
+			continue
+		}
+
+		dst, err := os.Create(filepath.Join(configDir, entry.Name()))
+		if err != nil {
+			lg.Errorf("os.Open: %v", err)
+			continue
+		}
+		_, err = io.Copy(dst, src)
+		if err != nil {
+			lg.Errorf("dst.Write: %v", err)
+			continue
+		}
+
+		src.Close()
+		dst.Close()
+	}
 }

@@ -76,7 +76,7 @@ type Config interface {
 type IOManager interface {
 	Save(name ConfigName, data ConfigJSON) error
 	Load(name ConfigName) (data ConfigJSON, err error)
-	LoadNames() []string
+	LoadConfigNames() []string
 	Lock()
 	Unlock()
 }
