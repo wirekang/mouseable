@@ -71,7 +71,6 @@ type ConfigJSON string
 type ConfigJSONSchema string
 
 type Config interface {
-	Name() ConfigName
 	SetCommandKey(name CommandName, key Key)
 	SetDataValue(name DataName, value DataValue)
 	CommandKey(name CommandName) Key
@@ -82,7 +81,9 @@ type Config interface {
 type IOManager interface {
 	SaveConfig(ConfigName, ConfigJSON) error
 	LoadConfig(ConfigName) (ConfigJSON, error)
-	LoadConfigNames() []ConfigName
+	LoadConfigNames() ([]ConfigName, error)
+	LoadCurrentConfigName() (ConfigName, error)
+	ApplyConfig(ConfigName) error
 	Lock()
 	Unlock()
 	SetOnConfigChangeListener(func(Config))
@@ -104,6 +105,6 @@ type UIManager interface {
 	SetOnSaveConfigListener(func(ConfigName, ConfigJSON) error)
 	SetOnLoadConfigListener(func(ConfigName) (ConfigJSON, error))
 	SetOnLoadConfigSchemaListener(func() ConfigJSONSchema)
-	SetOnLoadConfigNamesListener(func() []ConfigName)
+	SetOnLoadConfigNamesListener(func() ([]ConfigName, error))
 	Open()
 }

@@ -1,6 +1,7 @@
 package io
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -12,33 +13,81 @@ import (
 	"github.com/juju/fslock"
 	"github.com/pkg/errors"
 
+	"github.com/wirekang/mouseable/internal/cfg"
 	"github.com/wirekang/mouseable/internal/cnst"
 	"github.com/wirekang/mouseable/internal/lg"
 	"github.com/wirekang/mouseable/internal/typ"
 )
+
+var defaultConfigName typ.ConfigName = "default.json"
 
 func New() typ.IOManager {
 	rd, cd := initDirs()
 	return &manager{
 		rootDir:   rd,
 		configDir: cd,
+		metaPath:  filepath.Join(rd, "meta.json"),
 	}
 }
 
 type manager struct {
-	rootDir                  string
-	configDir                string
-	lock                     *fslock.Lock
-	onConfigChangedListeners func(typ.Config)
+	rootDir                 string
+	configDir               string
+	metaPath                string
+	lock                    *fslock.Lock
+	onConfigChangedListener func(typ.Config)
 }
 
-func (i *manager) SetOnConfigChangeListener(f func(typ.Config)) {
-	i.onConfigChangedListeners = f
+func (im *manager) LoadCurrentConfigName() (rst typ.ConfigName, err error) {
+	var m meta
+	m, err = im.loadMeta()
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	rst = m.currentConfigName
+	return
 }
 
-func (i *manager) LoadConfigNames() (rst []typ.ConfigName) {
+func (im *manager) ApplyConfig(name typ.ConfigName) (err error) {
+	var m meta
+	m, err = im.loadMeta()
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	m.currentConfigName = name
+	err = im.saveMeta(m)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	json, err := im.LoadConfig(name)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	cfg, err := cfg.New(json)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	im.onConfigChangedListener(cfg)
+	return
+}
+
+func (im *manager) SetOnConfigChangeListener(f func(typ.Config)) {
+	im.onConfigChangedListener = f
+}
+
+func (im *manager) LoadConfigNames() (rst []typ.ConfigName, err error) {
 	rst = make([]typ.ConfigName, 0)
-	infos, err := ioutil.ReadDir(i.configDir)
+	infos, err := ioutil.ReadDir(im.configDir)
 	if err != nil {
 		return
 	}
@@ -52,16 +101,27 @@ func (i *manager) LoadConfigNames() (rst []typ.ConfigName) {
 	return
 }
 
-func (i *manager) SaveConfig(name typ.ConfigName, data typ.ConfigJSON) (err error) {
-	err = ioutil.WriteFile(filepath.Join(i.configDir, string(name)), []byte(data), fs.ModePerm)
+func (im *manager) SaveConfig(name typ.ConfigName, data typ.ConfigJSON) (err error) {
+	err = ioutil.WriteFile(filepath.Join(im.configDir, string(name)), []byte(data), fs.ModePerm)
 	if err != nil {
 		err = errors.WithStack(err)
 	}
+
+	err = im.ApplyConfig(name)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
 	return
 }
 
-func (i *manager) LoadConfig(name typ.ConfigName) (data typ.ConfigJSON, err error) {
-	bytes, err := ioutil.ReadFile(filepath.Join(i.configDir, string(name)))
+func (im *manager) LoadConfig(name typ.ConfigName) (data typ.ConfigJSON, err error) {
+	if name == "" {
+		name = defaultConfigName
+	}
+	bytes, err := ioutil.ReadFile(filepath.Join(im.configDir, string(name)))
+
 	if err != nil {
 		err = errors.WithStack(err)
 		return
@@ -71,10 +131,10 @@ func (i *manager) LoadConfig(name typ.ConfigName) (data typ.ConfigJSON, err erro
 	return
 }
 
-func (i *manager) Lock() {
-	lockFile := i.rootDir + "\\lockfile"
-	i.lock = fslock.New(lockFile)
-	err := i.lock.TryLock()
+func (im *manager) Lock() {
+	lockFile := im.rootDir + "\\lockfile"
+	im.lock = fslock.New(lockFile)
+	err := im.lock.TryLock()
 	if err != nil {
 		if errors.Is(err, fslock.ErrLocked) {
 			panic("Mouseable is already running. Please check tray icon.")
@@ -86,8 +146,59 @@ func (i *manager) Lock() {
 	return
 }
 
-func (i *manager) Unlock() {
-	_ = i.lock.Unlock()
+func (im *manager) Unlock() {
+	_ = im.lock.Unlock()
+}
+
+func (im *manager) loadMeta() (m meta, err error) {
+	var bytes []byte
+	if isNotExists(im.metaPath) {
+		m = meta{currentConfigName: defaultConfigName}
+		bytes, err = json.Marshal(m)
+		if err != nil {
+			err = errors.WithStack(err)
+			return
+		}
+
+		err = ioutil.WriteFile(im.metaPath, bytes, os.ModePerm)
+		if err != nil {
+			err = errors.WithStack(err)
+			return
+		}
+
+		return
+	}
+
+	bytes, err = ioutil.ReadFile(im.metaPath)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	err = json.Unmarshal(bytes, &m)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	return
+}
+
+func (im *manager) saveMeta(m meta) (err error) {
+	var bytes []byte
+	bytes, err = json.Marshal(m)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	err = ioutil.WriteFile(im.metaPath, bytes, os.ModePerm)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	return
 }
 
 func initDirs() (rootDir string, configDir string) {
@@ -107,8 +218,8 @@ func initDirs() (rootDir string, configDir string) {
 	panic(fmt.Sprintf("%s not supported.", runtime.GOOS))
 }
 
-func isNotExists(dir string) bool {
-	_, err := os.Stat(dir)
+func isNotExists(path string) bool {
+	_, err := os.Stat(path)
 	return os.IsNotExist(err)
 }
 

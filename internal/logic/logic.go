@@ -3,6 +3,8 @@ package logic
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
+	"sync"
 
 	"github.com/pkg/errors"
 
@@ -14,6 +16,48 @@ import (
 	"github.com/wirekang/mouseable/internal/typ"
 	"github.com/wirekang/mouseable/internal/ui"
 )
+
+var emptyStruct = struct{}{}
+
+type logicState struct {
+	ioManager         typ.IOManager
+	hookManager       typ.HookManager
+	overlayManager    typ.OverlayManager
+	definitionManager typ.DefinitionManager
+	uiManager         typ.UIManager
+
+	configState  configState
+	cursorState  cursorState
+	keyChanState keyChanState
+
+	keyChan            chan typ.KeyInfo
+	preventDefaultChan chan bool
+	cursorChan         chan typ.CursorInfo
+}
+
+type cursorState struct {
+	sync.RWMutex
+	cursorSpeedX, cursorSpeedY int
+	cursorDX, cursorDY         float64
+	wheelSpeedX, wheelSpeedY   int
+	wheelDX, wheelDY           int
+	willActivate               bool
+	willDeactivate             bool
+}
+
+type keyChanState struct {
+	sync.RWMutex
+	downKeyMap      map[typ.Key]struct{}
+	pressingModKey  typ.Key
+	lastDownKey     typ.Key
+	lastDownKeyTime int64
+}
+
+type configState struct {
+	sync.RWMutex
+	doublePressSpeed int64
+	keyCmdMap        map[typ.Key]typ.CommandName
+}
 
 func Run() {
 	uiManager := ui.New()
@@ -31,7 +75,7 @@ func Run() {
 	definitionManager := def.New()
 	lg.Printf("DefinitionManager")
 
-	state := state{
+	logic := logicState{
 		ioManager:          ioManager,
 		hookManager:        hookManager,
 		overlayManager:     overlayManager,
@@ -40,23 +84,47 @@ func Run() {
 		keyChan:            make(chan typ.KeyInfo, 100),
 		preventDefaultChan: make(chan bool, 100),
 		cursorChan:         make(chan typ.CursorInfo, 100),
-		downKeyMap:         make(map[typ.Key]struct{}, 10),
+
+		keyChanState: keyChanState{
+			downKeyMap: make(map[typ.Key]struct{}, 10),
+		},
+		configState: configState{
+			keyCmdMap: make(map[typ.Key]typ.CommandName, 10),
+		},
 	}
 
-	state.run()
+	logic.run()
 }
 
 func recoverFn(uim typ.UIManager) {
-	err := recover()
-	if err != nil {
-		msg := fmt.Sprintf("panic: %v\n\n", err)
-		if st, ok := err.(interface {
-			StackTrace() errors.StackTrace
-		}); ok {
-			msg += fmt.Sprintf("StackTrace: \n%+v", st.StackTrace())
+	cause := recover()
+	if cause != nil {
+		message := fmt.Sprintf("%v", cause)
+		err, ok := cause.(error)
+		st := ""
+		if ok {
+			for {
+				stackTracer, ok := err.(interface {
+					StackTrace() errors.StackTrace
+				})
+				if ok {
+					st = fmt.Sprintf("%+v\n", stackTracer.StackTrace())
+					err = errors.Unwrap(err)
+					if err != nil {
+						continue
+					}
+				}
+
+				break
+			}
 		}
-		lg.Errorf(msg)
-		uim.ShowError(msg)
+		if st == "" {
+			st = string(debug.Stack())
+		}
+
+		text := fmt.Sprintf("%s\n\nStackTrace:\n%s", message, st)
+		lg.Errorf(text)
+		uim.ShowError(text)
 		os.Exit(1)
 	}
 }

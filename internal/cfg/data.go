@@ -1,21 +1,24 @@
 package cfg
 
-import (
-	"strconv"
-)
-
-type dataValue string
+type dataValue struct {
+	string                     string
+	bool                       bool
+	number                     float64
+	isNumber, isBool, isString bool
+}
 
 func (d dataValue) String() string {
-	return string(d)
+	return d.string
+}
+
+func (d dataValue) Bool() bool {
+	return d.bool
 }
 
 func (d dataValue) Int() int {
-	i, _ := strconv.ParseInt(string(d), 10, 32)
-	return int(i)
+	return int(d.number)
 }
 
 func (d dataValue) Float() float64 {
-	i, _ := strconv.ParseFloat(string(d), 64)
-	return i
+	return d.number
 }

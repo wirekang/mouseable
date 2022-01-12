@@ -26,7 +26,7 @@ type manager struct {
 	onSaveConfigListener       func(typ.ConfigName, typ.ConfigJSON) error
 	onLoadConfigListener       func(typ.ConfigName) (typ.ConfigJSON, error)
 	onLoadConfigSchemaListener func() typ.ConfigJSONSchema
-	onLoadConfigNamesListener  func() []typ.ConfigName
+	onLoadConfigNamesListener  func() ([]typ.ConfigName, error)
 	isOpen                     bool
 }
 
@@ -34,7 +34,7 @@ func (m *manager) SetOnLoadConfigSchemaListener(f func() typ.ConfigJSONSchema) {
 	m.onLoadConfigSchemaListener = f
 }
 
-func (m *manager) SetOnLoadConfigNamesListener(f func() []typ.ConfigName) {
+func (m *manager) SetOnLoadConfigNamesListener(f func() ([]typ.ConfigName, error)) {
 	m.onLoadConfigNamesListener = f
 }
 
