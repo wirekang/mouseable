@@ -2,14 +2,20 @@ package typ
 
 type Key string
 
-type OnKeyListener func(key Key, isDown bool) (preventDefault bool)
-type OnCursorListener func(x, y int)
+type KeyInfo struct {
+	Key    Key
+	IsDown bool
+}
+
+type CursorInfo struct {
+	X, Y int
+}
 
 type HookManager interface {
 	Install()
 	Uninstall()
-	SetOnKeyListener(listener OnKeyListener)
-	SetOnCursorListener(listener OnCursorListener)
+	SetKeyInfoChan(chan<- KeyInfo, <-chan bool)
+	SetCursorInfoChan(chan<- CursorInfo)
 	SetCursorPosition(x, y int)
 	AddCursorPosition(dx, dy int)
 	CursorPosition() (x, y int)
@@ -36,11 +42,11 @@ const (
 )
 
 type DataName string
-type DataValue struct {
-	int
-	float64
-	bool
-	string
+type DataValue interface {
+	Int() int
+	Float() float64
+	Bool() bool
+	String() string
 }
 
 type DataType int
@@ -79,16 +85,18 @@ type IOManager interface {
 	LoadConfigNames() []ConfigName
 	Lock()
 	Unlock()
+	SetOnConfigChangeListener(func(Config))
 }
 
 type OverlayManager interface {
 	SetVisibility(bool)
 	Show()
 	Hide()
+	SetPosition(x, y int)
 }
 
 type UIManager interface {
-	StartBackground()
+	Run()
 	ShowAlert(string)
 	ShowError(string)
 	SetOnGetNextKeyListener(func() Key)

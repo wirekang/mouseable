@@ -3,15 +3,12 @@ package logic
 import (
 	"os"
 	"sync"
-	"time"
 
-	"github.com/wirekang/mouseable/internal/cnst"
 	"github.com/wirekang/mouseable/internal/lg"
 	"github.com/wirekang/mouseable/internal/typ"
 )
 
 type state struct {
-	sync.Mutex
 	ioManager                  typ.IOManager
 	hookManager                typ.HookManager
 	overlayManager             typ.OverlayManager
@@ -24,13 +21,21 @@ type state struct {
 	wheelDX, wheelDY           int
 	willActivate               bool
 	willDeactivate             bool
+	keyChan                    chan typ.KeyInfo
+	preventDefaultChan         chan bool
+	cursorChan                 chan typ.CursorInfo
+	downKeyMap                 map[typ.Key]int64
+	sync.RWMutex
 }
 
 func (s *state) run() {
 	s.initListeners()
 	s.hookManager.Install()
-	go s.loop()
-	s.uiManager.StartBackground()
+	go s.keyChanLoop()
+	go s.cursorChanLoop()
+	go s.logicLoop()
+	go s.cursorLoop()
+	s.uiManager.Run()
 	defer func() {
 		s.ioManager.Unlock()
 		lg.Printf("Unlock")
@@ -40,51 +45,36 @@ func (s *state) run() {
 }
 
 func (s *state) initListeners() {
-	s.hookManager.SetOnKeyListener(s.onKey)
-	s.hookManager.SetOnCursorListener(s.onCursor)
+	s.hookManager.SetKeyInfoChan(s.keyChan, s.preventDefaultChan)
+	s.hookManager.SetCursorInfoChan(s.cursorChan)
 	s.uiManager.SetOnTerminateListener(s.onTerminate)
 	s.uiManager.SetOnGetNextKeyListener(s.onGetNextKey)
 	s.uiManager.SetOnSaveConfigListener(s.ioManager.SaveConfig)
 	s.uiManager.SetOnLoadConfigListener(s.ioManager.LoadConfig)
 	s.uiManager.SetOnLoadConfigSchemaListener(s.definitionManager.JSONSchema)
 	s.uiManager.SetOnLoadConfigNamesListener(s.ioManager.LoadConfigNames)
+	s.ioManager.SetOnConfigChangeListener(s.onConfigChange)
 }
 
-func (s *state) onKey(key typ.Key, isDown bool) (preventDefault bool) {
-	logKey(key, isDown)
-	return
+func (s *state) onGetNextKey() typ.Key {
+	return "Test-Qx2"
 }
 
-func (s *state) onCursor(x, y int) {
+func (s *state) onConfigChange(config typ.Config) {
+	s.Lock()
+	s.overlayManager.SetVisibility(config.DataValue("ShowOverlay").Bool())
+	s.Unlock()
 }
 
 func (s *state) onTerminate() {
 	os.Exit(0)
 }
 
-func (s *state) onGetNextKey() (key typ.Key) {
-	return
-}
-
-func (s *state) loop() {
-	for _ = range time.Tick(time.Millisecond * time.Duration(20)) {
-		s.Lock()
-		s.hookManager.AddCursorPosition(s.procCursorDX(), s.procCursorDY())
-		s.hookManager.Wheel(s.procCursorDX(), true)
-		s.hookManager.Wheel(s.procCursorDY(), false)
-		s.Unlock()
+func (s *state) cursorChanLoop() {
+	s.overlayManager.SetVisibility(true)
+	s.overlayManager.Show()
+	for {
+		cursorInfo := <-s.cursorChan
+		s.overlayManager.SetPosition(cursorInfo.X, cursorInfo.Y)
 	}
-}
-
-func logKey(key typ.Key, isDown bool) {
-	if !cnst.IsDev {
-		return
-	}
-
-	t := "Up"
-	if isDown {
-		t = "Down"
-	}
-	lg.Printf("'%s' %s\n", key, t)
-
 }

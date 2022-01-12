@@ -26,9 +26,14 @@ func New() typ.IOManager {
 }
 
 type manager struct {
-	rootDir   string
-	configDir string
-	lock      *fslock.Lock
+	rootDir                  string
+	configDir                string
+	lock                     *fslock.Lock
+	onConfigChangedListeners func(typ.Config)
+}
+
+func (i *manager) SetOnConfigChangeListener(f func(typ.Config)) {
+	i.onConfigChangedListeners = f
 }
 
 func (i *manager) LoadConfigNames() (rst []typ.ConfigName) {

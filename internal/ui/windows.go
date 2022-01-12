@@ -10,7 +10,7 @@ import (
 	"github.com/wirekang/mouseable/internal/cnst"
 )
 
-func (m *manager) StartBackground() {
+func (m *manager) Run() {
 	m.runNotifyIcon()
 }
 

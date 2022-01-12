@@ -49,6 +49,7 @@ func (m *manager) JSONSchema() typ.ConfigJSONSchema {
 				whenToString(m.cmdWhenMap[cmdName]),
 				m.cmdOrderMap[cmdName],
 			),
+			"pattern": "^((Ctrl|Shift|Alt)+)?[^+]+(x2)?$",
 		}
 	}
 	command["properties"] = cmdProperties

@@ -32,11 +32,15 @@ func Run() {
 	lg.Printf("DefinitionManager")
 
 	state := state{
-		ioManager:         ioManager,
-		hookManager:       hookManager,
-		overlayManager:    overlayManager,
-		definitionManager: definitionManager,
-		uiManager:         uiManager,
+		ioManager:          ioManager,
+		hookManager:        hookManager,
+		overlayManager:     overlayManager,
+		definitionManager:  definitionManager,
+		uiManager:          uiManager,
+		keyChan:            make(chan typ.KeyInfo, 100),
+		preventDefaultChan: make(chan bool, 100),
+		cursorChan:         make(chan typ.CursorInfo, 100),
+		downKeyMap:         make(map[typ.Key]struct{}, 10),
 	}
 
 	state.run()

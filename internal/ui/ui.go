@@ -140,6 +140,7 @@ func (m *manager) bindLorca(lorcaUI lorca.UI) {
 	f("getConfig", m.onLoadConfigListener)
 	f("saveConfig", m.onSaveConfigListener)
 	f("getSchema", m.onLoadConfigSchemaListener)
+	f("getNextKey", m.onGetNextKeyListener)
 
 	f("ping", func() int { return 1 })
 	f("getVersion", func() string { return cnst.VERSION })

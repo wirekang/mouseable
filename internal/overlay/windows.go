@@ -27,6 +27,12 @@ type manager struct {
 	hwnd         w32.HWND
 }
 
+func (m *manager) SetPosition(x, y int) {
+	if m.isVisible {
+		w32.MoveWindow(m.hwnd, x+m.cursorWidth, y+m.cursorHeight, 8, 8, true)
+	}
+}
+
 func (m *manager) SetVisibility(b bool) {
 	m.isVisible = b
 }
