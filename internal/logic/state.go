@@ -56,7 +56,6 @@ func (s *logicState) initListeners() {
 }
 
 func (s *logicState) onGetNextKey() typ.Key {
-	lg.Printf("onGetNextKey")
 	timoutChan := time.After(time.Second)
 	var key typ.Key
 Loop:
@@ -64,7 +63,6 @@ Loop:
 		select {
 		case s.needNextKeyChan <- emptyStruct:
 		case <-timoutChan:
-			lg.Printf("timeout")
 			select {
 			case <-s.nextKeyChan:
 			default:
@@ -72,13 +70,9 @@ Loop:
 
 			break Loop
 		case key = <-s.nextKeyChan:
-			lg.Printf("next key: %s", key)
 			continue
 		}
 	}
-
-	lg.Printf("final next key: %s", key)
-
 	return key
 }
 

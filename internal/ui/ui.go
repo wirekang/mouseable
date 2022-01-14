@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -139,7 +138,7 @@ func (m *manager) openUI() {
 
 func (m *manager) bindLorca(lorcaUI lorca.UI) {
 	f := func(name string, f interface{}) {
-		fmt.Println("bind", name)
+		lg.Printf("bind %s", name)
 		err := lorcaUI.Bind("__"+name, f)
 		if err != nil {
 			panic(err)
