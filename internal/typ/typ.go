@@ -82,7 +82,7 @@ type IOManager interface {
 	SaveConfig(ConfigName, ConfigJSON) error
 	LoadConfig(ConfigName) (ConfigJSON, error)
 	LoadConfigNames() ([]ConfigName, error)
-	LoadCurrentConfigName() (ConfigName, error)
+	LoadAppliedConfigName() (ConfigName, error)
 	ApplyConfig(ConfigName) error
 	Lock()
 	Unlock()
@@ -106,5 +106,7 @@ type UIManager interface {
 	SetOnLoadConfigListener(func(ConfigName) (ConfigJSON, error))
 	SetOnLoadConfigSchemaListener(func() ConfigJSONSchema)
 	SetOnLoadConfigNamesListener(func() ([]ConfigName, error))
+	SetOnLoadAppliedConfigNameListener(func() (ConfigName, error))
+	SetOnApplyConfigNameListener(func(name ConfigName) error)
 	Open()
 }

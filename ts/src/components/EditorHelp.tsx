@@ -7,14 +7,21 @@ export default function EditorHelp(props: Props): JSX.Element {
     <div
       style={{
         fontSize: 12,
-        marginTop: 10,
-        marginLeft: 10,
       }}
     >
       <ul>
-        <li>Press Ctrl-I to show suggestions.</li>
-        <li>Press F1 to insert key.</li>
-        <li>Press F2 to save.</li>
+        <li>
+          Press <b>Ctrl+I</b> to show suggestions.
+        </li>
+        <li>
+          Press <b>F1</b> to insert key.
+        </li>
+        <li>
+          Press <b>F2</b> to save.
+        </li>
+        <li>
+          Press <b>F3</b> to apply.
+        </li>
       </ul>
     </div>
   );

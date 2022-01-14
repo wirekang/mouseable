@@ -4,6 +4,6 @@ import (
 	"github.com/wirekang/mouseable/internal/typ"
 )
 
-type meta struct {
-	currentConfigName typ.ConfigName
+type metaHolder struct {
+	AppliedConfigName typ.ConfigName
 }

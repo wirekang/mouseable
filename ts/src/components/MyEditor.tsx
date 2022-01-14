@@ -1,9 +1,12 @@
 import React from "react";
 import Editor, { OnMount } from "@monaco-editor/react";
-import { registerHotkeys } from "../util/editor";
+import { editor } from "monaco-editor";
 
 interface Props {
+  value?: string;
+  onChange: (v?: string) => void;
   schema: string;
+  onMount: (e: editor.IStandaloneCodeEditor) => void;
 }
 
 export default function MyEditor(props: Props): JSX.Element {
@@ -22,11 +25,13 @@ export default function MyEditor(props: Props): JSX.Element {
       ],
     });
     editor.setModel(model);
-    registerHotkeys(editor, monaco);
+    props.onMount(editor);
   };
 
   return (
     <Editor
+      value={props.value}
+      onChange={props.onChange}
       height="80vh"
       options={{
         formatOnPaste: true,

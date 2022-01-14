@@ -38,27 +38,27 @@ type manager struct {
 	onConfigChangedListener func(typ.Config)
 }
 
-func (im *manager) LoadCurrentConfigName() (rst typ.ConfigName, err error) {
-	var m meta
+func (im *manager) LoadAppliedConfigName() (rst typ.ConfigName, err error) {
+	var m metaHolder
 	m, err = im.loadMeta()
 	if err != nil {
 		err = errors.WithStack(err)
 		return
 	}
 
-	rst = m.currentConfigName
+	rst = m.AppliedConfigName
 	return
 }
 
 func (im *manager) ApplyConfig(name typ.ConfigName) (err error) {
-	var m meta
+	var m metaHolder
 	m, err = im.loadMeta()
 	if err != nil {
 		err = errors.WithStack(err)
 		return
 	}
 
-	m.currentConfigName = name
+	m.AppliedConfigName = name
 	err = im.saveMeta(m)
 	if err != nil {
 		err = errors.WithStack(err)
@@ -106,13 +106,6 @@ func (im *manager) SaveConfig(name typ.ConfigName, data typ.ConfigJSON) (err err
 	if err != nil {
 		err = errors.WithStack(err)
 	}
-
-	err = im.ApplyConfig(name)
-	if err != nil {
-		err = errors.WithStack(err)
-		return
-	}
-
 	return
 }
 
@@ -150,23 +143,15 @@ func (im *manager) Unlock() {
 	_ = im.lock.Unlock()
 }
 
-func (im *manager) loadMeta() (m meta, err error) {
+func (im *manager) loadMeta() (m metaHolder, err error) {
 	var bytes []byte
 	if isNotExists(im.metaPath) {
-		m = meta{currentConfigName: defaultConfigName}
-		bytes, err = json.Marshal(m)
+		m = metaHolder{AppliedConfigName: defaultConfigName}
+		err = im.saveMeta(m)
 		if err != nil {
 			err = errors.WithStack(err)
 			return
 		}
-
-		err = ioutil.WriteFile(im.metaPath, bytes, os.ModePerm)
-		if err != nil {
-			err = errors.WithStack(err)
-			return
-		}
-
-		return
 	}
 
 	bytes, err = ioutil.ReadFile(im.metaPath)
@@ -184,7 +169,7 @@ func (im *manager) loadMeta() (m meta, err error) {
 	return
 }
 
-func (im *manager) saveMeta(m meta) (err error) {
+func (im *manager) saveMeta(m metaHolder) (err error) {
 	var bytes []byte
 	bytes, err = json.Marshal(m)
 	if err != nil {

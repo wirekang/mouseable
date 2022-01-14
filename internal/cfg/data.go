@@ -1,10 +1,9 @@
 package cfg
 
 type dataValue struct {
-	string                     string
-	bool                       bool
-	number                     float64
-	isNumber, isBool, isString bool
+	string string
+	bool   bool
+	number float64
 }
 
 func (d dataValue) String() string {

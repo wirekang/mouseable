@@ -4,7 +4,7 @@ interface Props {}
 
 export default function TerminateButton(props: Props): JSX.Element {
   const onClick = () => {
-    window.__terminate__();
+    window.__terminate();
     window.close();
   };
   return (

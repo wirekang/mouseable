@@ -21,13 +21,23 @@ func New() typ.UIManager {
 }
 
 type manager struct {
-	onGetNextKeyListener       func() typ.Key
-	onTerminateListener        func()
-	onSaveConfigListener       func(typ.ConfigName, typ.ConfigJSON) error
-	onLoadConfigListener       func(typ.ConfigName) (typ.ConfigJSON, error)
-	onLoadConfigSchemaListener func() typ.ConfigJSONSchema
-	onLoadConfigNamesListener  func() ([]typ.ConfigName, error)
-	isOpen                     bool
+	onGetNextKeyListener            func() typ.Key
+	onTerminateListener             func()
+	onSaveConfigListener            func(typ.ConfigName, typ.ConfigJSON) error
+	onLoadConfigListener            func(typ.ConfigName) (typ.ConfigJSON, error)
+	onLoadConfigSchemaListener      func() typ.ConfigJSONSchema
+	onLoadConfigNamesListener       func() ([]typ.ConfigName, error)
+	onLoadAppliedConfigNameListener func() (typ.ConfigName, error)
+	onApplyConfigListener           func(typ.ConfigName) error
+	isOpen                          bool
+}
+
+func (m *manager) SetOnApplyConfigNameListener(f func(name typ.ConfigName) error) {
+	m.onApplyConfigListener = f
+}
+
+func (m *manager) SetOnLoadAppliedConfigNameListener(f func() (typ.ConfigName, error)) {
+	m.onLoadAppliedConfigNameListener = f
 }
 
 func (m *manager) SetOnLoadConfigSchemaListener(f func() typ.ConfigJSONSchema) {
@@ -130,17 +140,19 @@ func (m *manager) openUI() {
 func (m *manager) bindLorca(lorcaUI lorca.UI) {
 	f := func(name string, f interface{}) {
 		fmt.Println("bind", name)
-		err := lorcaUI.Bind("__"+name+"__", f)
+		err := lorcaUI.Bind("__"+name, f)
 		if err != nil {
 			panic(err)
 		}
 	}
 	f("terminate", m.onTerminateListener)
-	f("getConfigNames", m.onLoadConfigNamesListener)
-	f("getConfig", m.onLoadConfigListener)
+	f("loadConfigNames", m.onLoadConfigNamesListener)
+	f("loadConfig", m.onLoadConfigListener)
 	f("saveConfig", m.onSaveConfigListener)
-	f("getSchema", m.onLoadConfigSchemaListener)
+	f("loadSchema", m.onLoadConfigSchemaListener)
 	f("getNextKey", m.onGetNextKeyListener)
+	f("loadAppliedConfigName", m.onLoadAppliedConfigNameListener)
+	f("applyConfig", m.onApplyConfigListener)
 
 	f("ping", func() int { return 1 })
 	f("getVersion", func() string { return cnst.VERSION })

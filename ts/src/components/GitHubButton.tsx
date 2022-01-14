@@ -4,7 +4,7 @@ interface Props {}
 
 export default function GitHubButton(props: Props): JSX.Element {
   const onClick = () => {
-    window.__openLink__("https://github.com/wirekang/mouseable");
+    window.__openLink("https://github.com/wirekang/mouseable");
   };
 
   return (

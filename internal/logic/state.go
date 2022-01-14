@@ -15,9 +15,9 @@ func (s *logicState) run() {
 	s.hookManager.Install()
 	go s.keyChanLoop()
 	go s.cursorChanLoop()
-	go s.cmdLoop()
 	go s.cursorLoop()
-	s.uiManager.Run()
+	go s.uiManager.Run()
+	s.cmdLoop()
 	defer func() {
 		s.ioManager.Unlock()
 		lg.Printf("Unlock")
@@ -27,7 +27,7 @@ func (s *logicState) run() {
 }
 
 func (s *logicState) initConfig() {
-	cn, err := s.ioManager.LoadCurrentConfigName()
+	cn, err := s.ioManager.LoadAppliedConfigName()
 	if err != nil {
 		err = errors.WithStack(err)
 		panic(err)
@@ -49,7 +49,10 @@ func (s *logicState) initListeners() {
 	s.uiManager.SetOnLoadConfigListener(s.ioManager.LoadConfig)
 	s.uiManager.SetOnLoadConfigSchemaListener(s.definitionManager.JSONSchema)
 	s.uiManager.SetOnLoadConfigNamesListener(s.ioManager.LoadConfigNames)
+	s.uiManager.SetOnLoadAppliedConfigNameListener(s.ioManager.LoadAppliedConfigName)
+	s.uiManager.SetOnApplyConfigNameListener(s.ioManager.ApplyConfig)
 	s.ioManager.SetOnConfigChangeListener(s.onConfigChange)
+
 }
 
 func (s *logicState) onGetNextKey() typ.Key {

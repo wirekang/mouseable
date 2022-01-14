@@ -31,15 +31,12 @@ func New(jsn typ.ConfigJSON) (cfg typ.Config, err error) {
 		dv := dataValue{}
 		switch vType := value.(type) {
 		case float64:
-			dv.isNumber = true
 			dv.number = value.(float64)
 
 		case bool:
-			dv.isBool = true
 			dv.bool = value.(bool)
 
 		case string:
-			dv.isString = true
 			dv.string = value.(string)
 
 		default:
@@ -69,16 +66,21 @@ func (c *config) SetDataValue(name typ.DataName, value typ.DataValue) {
 	c.dataValueMap[name] = value
 }
 
-func (c *config) CommandKey(name typ.CommandName) typ.Key {
-	return c.cmdKeyMap[name]
+func (c *config) CommandKey(name typ.CommandName) (key typ.Key) {
+	key = c.cmdKeyMap[name]
+	return
 }
 
-func (c *config) DataValue(name typ.DataName) typ.DataValue {
-	r := c.dataValueMap[name]
-	if r == nil {
-		panic(errors.WithStack(fmt.Errorf("data %s not exitst", name)))
+func (c *config) DataValue(name typ.DataName) (v typ.DataValue) {
+	v = c.dataValueMap[name]
+	if v == nil {
+		v = dataValue{
+			string: "",
+			bool:   false,
+			number: 0,
+		}
 	}
-	return r
+	return
 }
 
 func (c *config) JSON() typ.ConfigJSON {
