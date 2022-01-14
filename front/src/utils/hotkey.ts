@@ -35,7 +35,7 @@ async function getNextKey() {
 
   const range = new Range(line.lineNumber, line.column, line.lineNumber, line.column);
   const id = { major: 1, minor: 1 };
-  const op = { identifier: id, range: range, text: `"${key}"` };
+  const op = { identifier: id, range: range, text: key };
   store.editor!.executeEdits("my-source", [op]);
 }
 

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/wirekang/mouseable/internal/lg"
 	"github.com/wirekang/mouseable/internal/typ"
 )
 
@@ -38,10 +39,20 @@ func (s *logicState) keyChanLoop() {
 		}
 
 		s.updateDownKeyMap(originKey, isDown)
-		s.preventDefaultChan <- false
 
 		if isDown {
 			fmt.Println(editedKey)
+			select {
+			case <-s.needNextKeyChan:
+				lg.Printf("need next key")
+				s.nextKeyChan <- editedKey
+				s.preventDefaultChan <- true
+			default:
+				lg.Printf("not need next key")
+				s.preventDefaultChan <- false
+			}
+		} else {
+			s.preventDefaultChan <- false
 		}
 	}
 }

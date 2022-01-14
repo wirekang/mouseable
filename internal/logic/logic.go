@@ -33,6 +33,8 @@ type logicState struct {
 	keyChan            chan typ.KeyInfo
 	preventDefaultChan chan bool
 	cursorChan         chan typ.CursorInfo
+	needNextKeyChan    chan struct{}
+	nextKeyChan        chan typ.Key
 }
 
 type cursorState struct {
@@ -55,8 +57,24 @@ type keyChanState struct {
 
 type configState struct {
 	sync.RWMutex
-	doublePressSpeed int64
-	keyCmdMap        map[typ.Key]typ.CommandName
+	doublePressSpeed      int64
+	keyCmdMap             map[typ.Key]typ.CommandName
+	cursorAccelerationH   float64
+	cursorAccelerationV   float64
+	cursorFrictionH       float64
+	cursorFrictionV       float64
+	wheelAccelerationH    int
+	wheelAccelerationV    int
+	wheelFrictionH        int
+	wheelFrictionV        int
+	sniperModeSpeedH      int
+	sniperModeSpeedV      int
+	sniperModeWheelSpeedH int
+	sniperModeWheelSpeedV int
+	teleportDistanceF     int
+	teleportDistanceH     int
+	teleportDistanceV     int
+	showOverlay           bool
 }
 
 func Run() {
@@ -84,6 +102,8 @@ func Run() {
 		keyChan:            make(chan typ.KeyInfo, 100),
 		preventDefaultChan: make(chan bool, 100),
 		cursorChan:         make(chan typ.CursorInfo, 100),
+		needNextKeyChan:    make(chan struct{}),
+		nextKeyChan:        make(chan typ.Key),
 
 		keyChanState: keyChanState{
 			downKeyMap: make(map[typ.Key]struct{}, 10),
