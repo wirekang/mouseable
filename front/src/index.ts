@@ -1,4 +1,5 @@
 import "toastify-js/src/toastify.css";
+import "./style.css";
 import { showError } from "./utils/toast";
 import "./gobind";
 import { initHotkeys } from "./utils/hotkey";

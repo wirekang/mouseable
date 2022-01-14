@@ -3,7 +3,6 @@ const webpack = require("webpack");
 const HtmlWebPackPlugin = require("html-webpack-plugin");
 
 module.exports = {
-  mode: "development",
   entry: {
     app: "./src/index.ts",
     "editor.worker": "monaco-editor/esm/vs/editor/editor.worker.js",
@@ -43,7 +42,7 @@ module.exports = {
     ],
   },
   plugins: [
-    new HtmlWebPackPlugin({ template: "./public/index.html" }),
+    new HtmlWebPackPlugin({ template: "./public/index.html", favicon: "./public/favicon.ico" }),
     new webpack.ProvidePlugin({
       $: "jquery",
     }),

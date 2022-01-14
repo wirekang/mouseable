@@ -5,8 +5,8 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "webpack serve",
-    "build": "webpack build && rm -rf ../assets/front/* && mv dist/* ../assets/front/"
+    "start": "webpack serve --mode=development",
+    "build": "webpack build --mode=production && rm -rf ../assets/front/* && mv dist/* ../assets/front/"
   },
   "devDependencies": {
     "@types/jquery": "^3.5.13",
