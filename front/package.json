@@ -1,0 +1,31 @@
+{
+  "name": "mouseable-front",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "webpack serve",
+    "build": "webpack build && rm -rf ../assets/front/* && mv dist/* ../assets/front/"
+  },
+  "devDependencies": {
+    "@types/jquery": "^3.5.13",
+    "@types/node": "^17.0.8",
+    "@types/toastify-js": "^1.11.0",
+    "css-loader": "^6.5.1",
+    "file-loader": "^6.2.0",
+    "html-webpack-plugin": "^5.5.0",
+    "prettier": "^2.5.1",
+    "style-loader": "^3.3.1",
+    "ts-loader": "^9.2.6",
+    "typescript": "^4.5.4",
+    "webpack": "^5.66.0",
+    "webpack-cli": "^4.9.1",
+    "webpack-dev-server": "^4.7.3"
+  },
+  "dependencies": {
+    "jquery": "^3.6.0",
+    "monaco-editor": "^0.31.1",
+    "toastify-js": "^1.11.2"
+  }
+}
