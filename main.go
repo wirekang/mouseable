@@ -17,9 +17,7 @@ func main() {
 	cnst.VERSION = VERSION
 	initFS()
 
-	// checking -dev.exe instead of -dev is due to bug of air.
-	// https://github.com/cosmtrek/air/issues/207
-	if len(os.Args) == 2 && (os.Args[1] == "-dev.exe" || os.Args[1] == "-dev") {
+	if len(os.Args) == 2 && os.Args[1] == "-dev" {
 		cnst.IsDev = true
 	}
 

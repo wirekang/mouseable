@@ -3,6 +3,7 @@
 package overlay
 
 import (
+	"sync"
 	"syscall"
 	"unsafe"
 
@@ -21,6 +22,7 @@ func New() typ.OverlayManager {
 }
 
 type manager struct {
+	sync.RWMutex
 	isVisible    bool
 	cursorWidth  int
 	cursorHeight int
@@ -28,19 +30,25 @@ type manager struct {
 }
 
 func (m *manager) SetPosition(x, y int) {
+	m.RLock()
 	if m.isVisible {
 		w32.MoveWindow(m.hwnd, x+m.cursorWidth, y+m.cursorHeight, 8, 8, true)
 	}
+	m.RUnlock()
 }
 
 func (m *manager) SetVisibility(b bool) {
+	m.Lock()
 	m.isVisible = b
+	m.Unlock()
 }
 
 func (m *manager) Show() {
+	m.RLock()
 	if m.isVisible {
 		w32.ShowWindow(m.hwnd, w32.SW_SHOWNORMAL)
 	}
+	m.RUnlock()
 }
 
 func (m *manager) Hide() {

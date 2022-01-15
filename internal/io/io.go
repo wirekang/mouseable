@@ -77,7 +77,7 @@ func (im *manager) ApplyConfig(name typ.ConfigName) (err error) {
 		return
 	}
 
-	im.onConfigChangedListener(cfg)
+	go im.onConfigChangedListener(cfg)
 	return
 }
 

@@ -10,15 +10,14 @@ import (
 	"github.com/wirekang/mouseable/internal/typ"
 )
 
-func (s *logicState) run() {
+func (s *logicState) Run() {
 	s.initListeners()
-	s.initConfig()
 	s.hookManager.Install()
-	go s.keyChanLoop()
-	go s.cursorChanLoop()
-	go s.cursorLoop()
+	s.loadAndApplyConfig()
+	s.initKeyCombineLooper()
 	go s.uiManager.Run()
-	s.cmdLoop()
+	go s.cursorChanLoop()
+	s.mainLoop()
 	defer func() {
 		s.ioManager.Unlock()
 		lg.Printf("Unlock")
@@ -27,7 +26,60 @@ func (s *logicState) run() {
 	}()
 }
 
-func (s *logicState) initConfig() {
+func (s *logicState) mainLoop() {
+	for {
+		select {
+		case config := <-s.onConfigChangeChan:
+			s.changeConfig(config)
+			for _, configChan := range s.configChans {
+				configChan <- config
+			}
+		case keyInfo := <-s.internalKeyInfoChan:
+			_ = keyInfo
+			s.internalPreventDefaultChan <- false
+		}
+	}
+}
+
+func (s *logicState) onConfigChange(config typ.Config) {
+	lg.Printf("onConfigChange")
+	s.onConfigChangeChan <- config
+}
+
+func (s *logicState) changeConfig(config typ.Config) {
+	lg.Printf("changeConfig")
+	s.overlayManager.SetVisibility(config.DataValue("show-overlay").Bool())
+}
+
+func (s *logicState) initKeyCombineLooper() {
+	keyInfoChan := make(chan typ.KeyInfo)
+	preventDefaultChan := make(chan bool)
+	needNextKeyChan := make(chan struct{})
+	nextKeyChan := make(chan typ.Key)
+	internalKeyInfoChan := make(chan typ.KeyInfo)
+	internalPreventDefaultChan := make(chan bool)
+	configChan := make(chan typ.Config)
+
+	keyCombiner := keyCombiner{
+		preventKeyUpMap:            make(map[typ.Key]struct{}, 10),
+		keyInfoChan:                keyInfoChan,
+		preventDefaultChan:         preventDefaultChan,
+		needNextKeyChan:            needNextKeyChan,
+		nextKeyChan:                nextKeyChan,
+		internalKeyInfoChan:        internalKeyInfoChan,
+		internalPreventDefaultChan: internalPreventDefaultChan,
+		configChan:                 configChan,
+	}
+	s.configChans = append(s.configChans, configChan)
+	s.nextKeyChan = nextKeyChan
+	s.needNextKeyChan = needNextKeyChan
+	s.hookManager.SetKeyInfoChan(keyInfoChan, preventDefaultChan)
+	s.internalKeyInfoChan = internalKeyInfoChan
+	s.internalPreventDefaultChan = internalPreventDefaultChan
+	go keyCombiner.Run()
+}
+
+func (s *logicState) loadAndApplyConfig() {
 	cn, err := s.ioManager.LoadAppliedConfigName()
 	if err != nil {
 		err = errors.WithStack(err)
@@ -42,8 +94,10 @@ func (s *logicState) initConfig() {
 }
 
 func (s *logicState) initListeners() {
-	s.hookManager.SetKeyInfoChan(s.keyChan, s.preventDefaultChan)
-	s.hookManager.SetCursorInfoChan(s.cursorChan)
+	cursorInfoChan := make(chan typ.CursorInfo)
+	s.cursorInfoChan = cursorInfoChan
+	s.hookManager.SetCursorInfoChan(cursorInfoChan)
+
 	s.uiManager.SetOnTerminateListener(s.onTerminate)
 	s.uiManager.SetOnGetNextKeyListener(s.onGetNextKey)
 	s.uiManager.SetOnSaveConfigListener(s.ioManager.SaveConfig)
@@ -52,6 +106,7 @@ func (s *logicState) initListeners() {
 	s.uiManager.SetOnLoadConfigNamesListener(s.ioManager.LoadConfigNames)
 	s.uiManager.SetOnLoadAppliedConfigNameListener(s.ioManager.LoadAppliedConfigName)
 	s.uiManager.SetOnApplyConfigNameListener(s.ioManager.ApplyConfig)
+
 	s.ioManager.SetOnConfigChangeListener(s.onConfigChange)
 }
 
@@ -76,45 +131,13 @@ Loop:
 	return key
 }
 
-func (s *logicState) onConfigChange(config typ.Config) {
-	lg.Printf("Config changed: %+v", config)
-	s.overlayManager.SetVisibility(config.DataValue("show-overlay").Bool())
-
-	s.configState.Lock()
-	for _, commandName := range s.definitionManager.CommandNames() {
-		key := config.CommandKey(commandName)
-		if key == "" {
-			continue
-		}
-
-		s.configState.keyCmdMap[key] = commandName
-	}
-	s.configState.doublePressSpeed = int64(config.DataValue("double-press-speed").Int())
-	s.configState.cursorAccelerationH = config.DataValue("cursor-acceleration-h").Float()
-	s.configState.cursorAccelerationV = config.DataValue("cursor-acceleration-v").Float()
-	s.configState.cursorFrictionH = config.DataValue("cursor-friction-h").Float()
-	s.configState.cursorFrictionV = config.DataValue("cursor-friction-v").Float()
-	s.configState.wheelAccelerationH = config.DataValue("wheel-acceleration-h").Int()
-	s.configState.wheelAccelerationV = config.DataValue("wheel-acceleration-v").Int()
-	s.configState.wheelFrictionH = config.DataValue("wheel-friction-h").Int()
-	s.configState.wheelFrictionV = config.DataValue("wheel-friction-v").Int()
-	s.configState.sniperModeSpeedH = config.DataValue("sniper-mode-speed-h").Int()
-	s.configState.sniperModeSpeedV = config.DataValue("sniper-mode-speed-v").Int()
-	s.configState.sniperModeWheelSpeedH = config.DataValue("sniper-mode-wheel-speed-h").Int()
-	s.configState.sniperModeWheelSpeedV = config.DataValue("sniper-mode-wheel-speed-v").Int()
-	s.configState.teleportDistanceF = config.DataValue("teleport-distance-f").Int()
-	s.configState.teleportDistanceH = config.DataValue("teleport-distance-h").Int()
-	s.configState.teleportDistanceV = config.DataValue("teleport-distance-v").Int()
-	s.configState.Unlock()
-}
-
 func (s *logicState) onTerminate() {
 	os.Exit(0)
 }
 
 func (s *logicState) cursorChanLoop() {
 	for {
-		cursorInfo := <-s.cursorChan
+		cursorInfo := <-s.cursorInfoChan
 		s.overlayManager.SetPosition(cursorInfo.X, cursorInfo.Y)
 	}
 }

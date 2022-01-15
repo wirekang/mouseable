@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"runtime/debug"
-	"sync"
 
 	"github.com/pkg/errors"
 
@@ -26,55 +25,24 @@ type logicState struct {
 	definitionManager typ.DefinitionManager
 	uiManager         typ.UIManager
 
-	configState  configState
-	cursorState  cursorState
-	keyChanState keyChanState
+	cursorInfoChan <-chan typ.CursorInfo
 
-	keyChan            chan typ.KeyInfo
-	preventDefaultChan chan bool
-	cursorChan         chan typ.CursorInfo
-	needNextKeyChan    chan struct{}
-	nextKeyChan        chan typ.Key
-}
+	configChans []chan<- typ.Config
 
-type cursorState struct {
-	sync.RWMutex
 	cursorSpeedX, cursorSpeedY int
 	cursorDX, cursorDY         float64
 	wheelSpeedX, wheelSpeedY   int
 	wheelDX, wheelDY           int
 	willActivate               bool
 	willDeactivate             bool
-}
 
-type keyChanState struct {
-	sync.RWMutex
-	downKeyMap      map[typ.Key]struct{}
-	pressingModKey  typ.Key
-	lastDownKey     typ.Key
-	lastDownKeyTime int64
-}
+	onConfigChangeChan chan typ.Config
 
-type configState struct {
-	sync.RWMutex
-	doublePressSpeed      int64
-	keyCmdMap             map[typ.Key]typ.CommandName
-	cursorAccelerationH   float64
-	cursorAccelerationV   float64
-	cursorFrictionH       float64
-	cursorFrictionV       float64
-	wheelAccelerationH    int
-	wheelAccelerationV    int
-	wheelFrictionH        int
-	wheelFrictionV        int
-	sniperModeSpeedH      int
-	sniperModeSpeedV      int
-	sniperModeWheelSpeedH int
-	sniperModeWheelSpeedV int
-	teleportDistanceF     int
-	teleportDistanceH     int
-	teleportDistanceV     int
-	showOverlay           bool
+	needNextKeyChan chan<- struct{}
+	nextKeyChan     <-chan typ.Key
+
+	internalKeyInfoChan        <-chan typ.KeyInfo
+	internalPreventDefaultChan chan<- bool
 }
 
 func Run() {
@@ -99,21 +67,10 @@ func Run() {
 		overlayManager:     overlayManager,
 		definitionManager:  definitionManager,
 		uiManager:          uiManager,
-		keyChan:            make(chan typ.KeyInfo, 100),
-		preventDefaultChan: make(chan bool, 100),
-		cursorChan:         make(chan typ.CursorInfo, 100),
-		needNextKeyChan:    make(chan struct{}),
-		nextKeyChan:        make(chan typ.Key),
-
-		keyChanState: keyChanState{
-			downKeyMap: make(map[typ.Key]struct{}, 10),
-		},
-		configState: configState{
-			keyCmdMap: make(map[typ.Key]typ.CommandName, 10),
-		},
+		onConfigChangeChan: make(chan typ.Config),
 	}
 
-	logic.run()
+	logic.Run()
 }
 
 func recoverFn(uim typ.UIManager) {
@@ -148,3 +105,11 @@ func recoverFn(uim typ.UIManager) {
 		os.Exit(1)
 	}
 }
+
+// todo
+// 고루틴                                                                    참조 데이터
+// 1. 주기적으로 계속 커서 이동                                            커서 관련 정보
+// 2. 키보드 입력 하면 키 상태 변경 및 명령 실행, 종료 예약, 명령 키바인딩
+// isStepping 처리할 필요없음.
+// 해당 키가 명령키고 when이 맞는지만 확인하면 무조건 preventDefault
+// 3. 주기적으로 실행 예약 확인하면서 명령 begin - step - end 처리
