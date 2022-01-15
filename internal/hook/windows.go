@@ -16,19 +16,17 @@ func New() typ.HookManager {
 }
 
 type manager struct {
-	keyChan     chan<- typ.KeyInfo
-	preventChan <-chan bool
-	cursorChan  chan<- typ.CursorInfo
-	hhooks      []w32.HHOOK
+	hhooks               []w32.HHOOK
+	onKeyListener        func(typ.KeyInfo) bool
+	onCursorMoveListener func(info typ.CursorInfo)
 }
 
-func (m *manager) SetKeyInfoChan(keyChan chan<- typ.KeyInfo, preventChan <-chan bool) {
-	m.keyChan = keyChan
-	m.preventChan = preventChan
+func (m *manager) SetOnKeyListener(f func(typ.KeyInfo) bool) {
+	m.onKeyListener = f
 }
 
-func (m *manager) SetCursorInfoChan(cursorChan chan<- typ.CursorInfo) {
-	m.cursorChan = cursorChan
+func (m *manager) SetOnCursorMoveListener(f func(typ.CursorInfo)) {
+	m.onCursorMoveListener = f
 }
 
 func (m *manager) SetCursorPosition(x, y int) {
@@ -93,12 +91,12 @@ func (m *manager) keyboardProc(code int, wParam w32.WPARAM, lParam w32.LPARAM) w
 
 	isDown := fUp == 0
 	txt := getKey(uint32(data.ScanCode))
-	m.keyChan <- typ.KeyInfo{
-		Key:    typ.Key(txt),
-		IsDown: isDown,
-	}
-
-	if <-m.preventChan {
+	if m.onKeyListener(
+		typ.KeyInfo{
+			Key:    typ.Key(txt),
+			IsDown: isDown,
+		},
+	) {
 		return 1
 	}
 
@@ -107,10 +105,12 @@ func (m *manager) keyboardProc(code int, wParam w32.WPARAM, lParam w32.LPARAM) w
 
 func (m *manager) mouseProc(code int, wParam w32.WPARAM, lParam w32.LPARAM) w32.LRESULT {
 	data := *(*w32.MSLLHOOKSTRUCT)(unsafe.Pointer(lParam))
-	m.cursorChan <- typ.CursorInfo{
-		X: int(data.Pt.X),
-		Y: int(data.Pt.Y),
-	}
+	go m.onCursorMoveListener(
+		typ.CursorInfo{
+			X: int(data.Pt.X),
+			Y: int(data.Pt.Y),
+		},
+	)
 	return w32.CallNextHookEx(0, code, wParam, lParam)
 }
 

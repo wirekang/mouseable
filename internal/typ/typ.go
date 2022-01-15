@@ -14,8 +14,8 @@ type CursorInfo struct {
 type HookManager interface {
 	Install()
 	Uninstall()
-	SetKeyInfoChan(chan<- KeyInfo, <-chan bool)
-	SetCursorInfoChan(chan<- CursorInfo)
+	SetOnKeyListener(func(KeyInfo) bool)
+	SetOnCursorMoveListener(func(CursorInfo))
 	SetCursorPosition(x, y int)
 	AddCursorPosition(dx, dy int)
 	CursorPosition() (x, y int)

@@ -50,16 +50,11 @@ func Run() {
 	defer recoverFn(uiManager)
 
 	ioManager := io.New()
-	lg.Printf("IOManager")
 	ioManager.Lock()
-	lg.Printf("Lock complete")
 
 	hookManager := hook.New()
-	lg.Printf("HookManager")
 	overlayManager := overlay.New()
-	lg.Printf("OverlayManager")
 	definitionManager := def.New()
-	lg.Printf("DefinitionManager")
 
 	logic := logicState{
 		ioManager:          ioManager,
@@ -105,11 +100,3 @@ func recoverFn(uim typ.UIManager) {
 		os.Exit(1)
 	}
 }
-
-// todo
-// 고루틴                                                                    참조 데이터
-// 1. 주기적으로 계속 커서 이동                                            커서 관련 정보
-// 2. 키보드 입력 하면 키 상태 변경 및 명령 실행, 종료 예약, 명령 키바인딩
-// isStepping 처리할 필요없음.
-// 해당 키가 명령키고 when이 맞는지만 확인하면 무조건 preventDefault
-// 3. 주기적으로 실행 예약 확인하면서 명령 begin - step - end 처리

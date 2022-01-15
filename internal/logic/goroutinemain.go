@@ -16,7 +16,6 @@ func (s *logicState) Run() {
 	s.loadAndApplyConfig()
 	s.initKeyCombineLooper()
 	go s.uiManager.Run()
-	go s.cursorChanLoop()
 	s.mainLoop()
 	defer func() {
 		s.ioManager.Unlock()
@@ -27,28 +26,41 @@ func (s *logicState) Run() {
 }
 
 func (s *logicState) mainLoop() {
+	cursorTicker := time.NewTicker(time.Millisecond * 33)
+	cmdTicker := time.NewTicker(time.Millisecond * 100)
 	for {
 		select {
+		case <-cursorTicker.C:
+			s.procCursor()
+		case cursorInfo := <-s.cursorInfoChan:
+			s.onCursor(cursorInfo.X, cursorInfo.Y)
 		case config := <-s.onConfigChangeChan:
 			s.changeConfig(config)
-			for _, configChan := range s.configChans {
-				configChan <- config
-			}
 		case keyInfo := <-s.internalKeyInfoChan:
-			_ = keyInfo
-			s.internalPreventDefaultChan <- false
+			s.internalPreventDefaultChan <- s.procKeyInfo(keyInfo)
+		case <-cmdTicker.C:
+			s.procCmd()
 		}
 	}
 }
 
-func (s *logicState) onConfigChange(config typ.Config) {
-	lg.Printf("onConfigChange")
-	s.onConfigChangeChan <- config
+func (s *logicState) procCursor() {}
+
+func (s *logicState) procCmd() {}
+
+func (s *logicState) procKeyInfo(keyInfo typ.KeyInfo) (preventDefault bool) {
+	return false
 }
 
 func (s *logicState) changeConfig(config typ.Config) {
-	lg.Printf("changeConfig")
 	s.overlayManager.SetVisibility(config.DataValue("show-overlay").Bool())
+	for _, configChan := range s.configChans {
+		configChan <- config
+	}
+}
+
+func (s *logicState) onCursor(x, y int) {
+	s.overlayManager.SetPosition(x, y)
 }
 
 func (s *logicState) initKeyCombineLooper() {
@@ -73,7 +85,7 @@ func (s *logicState) initKeyCombineLooper() {
 	s.configChans = append(s.configChans, configChan)
 	s.nextKeyChan = nextKeyChan
 	s.needNextKeyChan = needNextKeyChan
-	s.hookManager.SetKeyInfoChan(keyInfoChan, preventDefaultChan)
+	s.hookManager.SetOnKeyListener(makeKeyChanListener(keyInfoChan, preventDefaultChan))
 	s.internalKeyInfoChan = internalKeyInfoChan
 	s.internalPreventDefaultChan = internalPreventDefaultChan
 	go keyCombiner.Run()
@@ -96,10 +108,10 @@ func (s *logicState) loadAndApplyConfig() {
 func (s *logicState) initListeners() {
 	cursorInfoChan := make(chan typ.CursorInfo)
 	s.cursorInfoChan = cursorInfoChan
-	s.hookManager.SetCursorInfoChan(cursorInfoChan)
+	s.hookManager.SetOnCursorMoveListener(makeCursorChanListener(cursorInfoChan))
 
-	s.uiManager.SetOnTerminateListener(s.onTerminate)
-	s.uiManager.SetOnGetNextKeyListener(s.onGetNextKey)
+	s.uiManager.SetOnGetNextKeyListener(makeOnGetNextKeyListener(s.needNextKeyChan, s.nextKeyChan))
+	s.uiManager.SetOnTerminateListener(onExit)
 	s.uiManager.SetOnSaveConfigListener(s.ioManager.SaveConfig)
 	s.uiManager.SetOnLoadConfigListener(s.ioManager.LoadConfig)
 	s.uiManager.SetOnLoadConfigSchemaListener(s.definitionManager.JSONSchema)
@@ -107,37 +119,9 @@ func (s *logicState) initListeners() {
 	s.uiManager.SetOnLoadAppliedConfigNameListener(s.ioManager.LoadAppliedConfigName)
 	s.uiManager.SetOnApplyConfigNameListener(s.ioManager.ApplyConfig)
 
-	s.ioManager.SetOnConfigChangeListener(s.onConfigChange)
+	s.ioManager.SetOnConfigChangeListener(makeConfigChanListener(s.onConfigChangeChan))
 }
 
-func (s *logicState) onGetNextKey() typ.Key {
-	timoutChan := time.After(time.Second)
-	var key typ.Key
-Loop:
-	for {
-		select {
-		case s.needNextKeyChan <- emptyStruct:
-		case <-timoutChan:
-			select {
-			case <-s.nextKeyChan:
-			default:
-			}
-
-			break Loop
-		case key = <-s.nextKeyChan:
-			continue
-		}
-	}
-	return key
-}
-
-func (s *logicState) onTerminate() {
+func onExit() {
 	os.Exit(0)
-}
-
-func (s *logicState) cursorChanLoop() {
-	for {
-		cursorInfo := <-s.cursorInfoChan
-		s.overlayManager.SetPosition(cursorInfo.X, cursorInfo.Y)
-	}
 }
