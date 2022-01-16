@@ -40,7 +40,6 @@ export async function initEditor() {
   const editor = monaco.editor.create(
     document.getElementById("my-monaco")!,
     {
-      fontFamily: "D2Coding",
       language: "json",
       formatOnPaste: true,
       formatOnType: true,

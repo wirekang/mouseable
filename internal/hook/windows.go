@@ -97,7 +97,7 @@ func (m *manager) keyboardProc(code int, wParam w32.WPARAM, lParam w32.LPARAM) w
 			IsDown: isDown,
 		},
 	) {
-		return 1
+		return 0
 	}
 
 	return w32.CallNextHookEx(0, code, wParam, lParam)

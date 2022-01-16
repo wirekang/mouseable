@@ -17,7 +17,10 @@ var cmdLogicMap = map[typ.CommandName]cmdLogic{
 		onBegin: func(s *logicState) {
 			s.when = typ.Activated
 		},
-		onStep: nop,
-		onEnd:  nop,
+	},
+	"deactivate": {
+		onBegin: func(s *logicState) {
+			s.when = typ.Deactivated
+		},
 	},
 }

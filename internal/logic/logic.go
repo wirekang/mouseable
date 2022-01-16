@@ -26,7 +26,7 @@ type logicState struct {
 	uiManager         typ.UIManager
 
 	keyCmdCacheMap             map[typ.Key]cmdCache
-	lastActivationChangedTime  int64
+	steppingCmdMap             map[typ.CommandName]struct{}
 	cursorSpeedX, cursorSpeedY int
 	cursorDX, cursorDY         float64
 	wheelSpeedX, wheelSpeedY   int
@@ -39,11 +39,22 @@ type logicState struct {
 
 	configChans []chan<- typ.Config
 
-	needNextKeyChan chan<- struct{}
-	nextKeyChan     <-chan typ.Key
+	downedOriginKeyMap   map[typ.Key]struct{}
+	downedCombinedKeyMap map[typ.Key]struct{}
+	originCombinedKeyMap map[typ.Key]typ.Key
+	preventKeyUpMap      map[typ.Key]struct{}
+	pressingModKey       typ.Key
+	lastDownKey          typ.Key
+	lastDownKeyTime      int64
 
-	internalKeyInfoChan        <-chan typ.KeyInfo
-	internalPreventDefaultChan chan<- bool
+	keyInfoChan        <-chan typ.KeyInfo
+	preventDefaultChan chan<- bool
+
+	needNextKeyChan  <-chan struct{}
+	nextKeyChan      chan<- typ.Key
+	doublePressSpeed int64
+
+	exitChan <-chan struct{}
 }
 
 type cmdCache struct {
@@ -63,14 +74,19 @@ func Run() {
 	definitionManager := def.New()
 
 	logic := logicState{
-		ioManager:          ioManager,
-		hookManager:        hookManager,
-		overlayManager:     overlayManager,
-		definitionManager:  definitionManager,
-		uiManager:          uiManager,
-		onConfigChangeChan: make(chan typ.Config),
-		keyCmdCacheMap:     make(map[typ.Key]cmdCache),
-		when:               typ.Deactivated,
+		ioManager:         ioManager,
+		hookManager:       hookManager,
+		overlayManager:    overlayManager,
+		definitionManager: definitionManager,
+		uiManager:         uiManager,
+		steppingCmdMap:    make(map[typ.CommandName]struct{}, 10),
+		when:              typ.Deactivated,
+
+		onConfigChangeChan:   make(chan typ.Config),
+		preventKeyUpMap:      make(map[typ.Key]struct{}, 10),
+		downedOriginKeyMap:   make(map[typ.Key]struct{}, 10),
+		downedCombinedKeyMap: make(map[typ.Key]struct{}, 10),
+		originCombinedKeyMap: make(map[typ.Key]typ.Key, 10),
 	}
 
 	logic.Run()
