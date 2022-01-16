@@ -25,6 +25,7 @@ type manager struct {
 	cursorWidth  int
 	cursorHeight int
 	hwnd         w32.HWND
+	isShowing    bool
 }
 
 func (m *manager) SetPosition(x, y int) {
@@ -38,13 +39,17 @@ func (m *manager) SetVisibility(b bool) {
 }
 
 func (m *manager) Show() {
-	if m.isVisible {
+	if m.isVisible && !m.isShowing {
+		m.isShowing = true
 		w32.ShowWindow(m.hwnd, w32.SW_SHOWNORMAL)
 	}
 }
 
 func (m *manager) Hide() {
-	w32.ShowWindow(m.hwnd, w32.SW_HIDE)
+	if m.isShowing {
+		m.isShowing = false
+		w32.ShowWindow(m.hwnd, w32.SW_HIDE)
+	}
 }
 
 func newWindow() w32.HWND {

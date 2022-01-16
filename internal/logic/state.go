@@ -86,7 +86,17 @@ func (s *logicState) mainLoop() {
 
 func (s *logicState) procCursor() {}
 
-func (s *logicState) procCmdStep() {}
+func (s *logicState) procCmdStep() {
+	for cmdName := range s.steppingCmdMap {
+		cmdLogicMap[cmdName].onStep(s)
+	}
+	switch s.when {
+	case typ.Activated:
+		s.overlayManager.Show()
+	case typ.Deactivated:
+		s.overlayManager.Hide()
+	}
+}
 
 func (s *logicState) procKeyInfo(keyInfo typ.KeyInfo) (preventDefault bool) {
 	originKey := keyInfo.Key
