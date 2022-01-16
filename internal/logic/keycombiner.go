@@ -66,6 +66,9 @@ func (k *keyCombiner) proc(originKey typ.Key, isDown bool) {
 		}
 
 		preventDefault = <-k.internalPreventDefaultChan || preventDefault
+		if preventDefault {
+			k.preventKeyUpMap[originKey] = emptyStruct
+		}
 		preventDefault = k.isNeedNextKey(combinedKey) || preventDefault
 	} else {
 		preventDefault = k.popPreventKeyUpMap(originKey) || preventDefault

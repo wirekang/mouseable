@@ -25,24 +25,30 @@ type logicState struct {
 	definitionManager typ.DefinitionManager
 	uiManager         typ.UIManager
 
-	cursorInfoChan <-chan typ.CursorInfo
-
-	configChans []chan<- typ.Config
-
+	keyCmdCacheMap             map[typ.Key]cmdCache
+	lastActivationChangedTime  int64
 	cursorSpeedX, cursorSpeedY int
 	cursorDX, cursorDY         float64
 	wheelSpeedX, wheelSpeedY   int
 	wheelDX, wheelDY           int
-	willActivate               bool
-	willDeactivate             bool
+	when                       typ.When
 
 	onConfigChangeChan chan typ.Config
+
+	cursorInfoChan <-chan typ.CursorInfo
+
+	configChans []chan<- typ.Config
 
 	needNextKeyChan chan<- struct{}
 	nextKeyChan     <-chan typ.Key
 
 	internalKeyInfoChan        <-chan typ.KeyInfo
 	internalPreventDefaultChan chan<- bool
+}
+
+type cmdCache struct {
+	name typ.CommandName
+	when typ.When
 }
 
 func Run() {
@@ -63,6 +69,8 @@ func Run() {
 		definitionManager:  definitionManager,
 		uiManager:          uiManager,
 		onConfigChangeChan: make(chan typ.Config),
+		keyCmdCacheMap:     make(map[typ.Key]cmdCache),
+		when:               typ.Deactivated,
 	}
 
 	logic.Run()

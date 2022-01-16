@@ -11,6 +11,7 @@ import (
 )
 
 func (s *logicState) Run() {
+	s.checkLogics()
 	s.initListeners()
 	s.hookManager.Install()
 	s.loadAndApplyConfig()
@@ -23,6 +24,30 @@ func (s *logicState) Run() {
 		s.hookManager.Uninstall()
 		lg.Printf("Hook uninstalled")
 	}()
+}
+
+func (s *logicState) checkLogics() {
+	cmdNames := s.definitionManager.CommandNames()
+	for nameInLogic := range cmdLogicMap {
+		for _, nameInNames := range cmdNames {
+			if nameInNames == nameInLogic {
+				break
+			}
+			lg.Errorf("No definition for logic %s", nameInLogic)
+		}
+	}
+
+	for _, cmdName := range cmdNames {
+		_, ok := cmdLogicMap[cmdName]
+		if !ok {
+			lg.Errorf("No logic for definition %s", cmdName)
+			cmdLogicMap[cmdName] = cmdLogic{
+				onBegin: nop,
+				onStep:  nop,
+				onEnd:   nop,
+			}
+		}
+	}
 }
 
 func (s *logicState) mainLoop() {
@@ -54,6 +79,18 @@ func (s *logicState) procKeyInfo(keyInfo typ.KeyInfo) (preventDefault bool) {
 
 func (s *logicState) changeConfig(config typ.Config) {
 	s.overlayManager.SetVisibility(config.DataValue("show-overlay").Bool())
+	for _, cmdName := range s.definitionManager.CommandNames() {
+		key := config.CommandKey(cmdName)
+		if key == "" {
+			continue
+		}
+
+		s.keyCmdCacheMap[key] = cmdCache{
+			name: cmdName,
+			when: s.definitionManager.CommandWhen(cmdName),
+		}
+	}
+
 	for _, configChan := range s.configChans {
 		configChan <- config
 	}
