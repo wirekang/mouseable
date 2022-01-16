@@ -17,15 +17,15 @@ func New() typ.HookManager {
 
 type manager struct {
 	hhooks               []w32.HHOOK
-	onKeyListener        func(typ.KeyInfo) bool
-	onCursorMoveListener func(info typ.CursorInfo)
+	onKeyListener        func(typ.KeyAndDown) bool
+	onCursorMoveListener func(info typ.Point)
 }
 
-func (m *manager) SetOnKeyListener(f func(typ.KeyInfo) bool) {
+func (m *manager) SetOnKeyListener(f func(typ.KeyAndDown) bool) {
 	m.onKeyListener = f
 }
 
-func (m *manager) SetOnCursorMoveListener(f func(typ.CursorInfo)) {
+func (m *manager) SetOnCursorMoveListener(f func(typ.Point)) {
 	m.onCursorMoveListener = f
 }
 
@@ -92,12 +92,12 @@ func (m *manager) keyboardProc(code int, wParam w32.WPARAM, lParam w32.LPARAM) w
 	isDown := fUp == 0
 	txt := getKey(uint32(data.ScanCode))
 	if m.onKeyListener(
-		typ.KeyInfo{
+		typ.KeyAndDown{
 			Key:    typ.Key(txt),
 			IsDown: isDown,
 		},
 	) {
-		return 0
+		return 1
 	}
 
 	return w32.CallNextHookEx(0, code, wParam, lParam)
@@ -106,7 +106,7 @@ func (m *manager) keyboardProc(code int, wParam w32.WPARAM, lParam w32.LPARAM) w
 func (m *manager) mouseProc(code int, wParam w32.WPARAM, lParam w32.LPARAM) w32.LRESULT {
 	data := *(*w32.MSLLHOOKSTRUCT)(unsafe.Pointer(lParam))
 	go m.onCursorMoveListener(
-		typ.CursorInfo{
+		typ.Point{
 			X: int(data.Pt.X),
 			Y: int(data.Pt.Y),
 		},

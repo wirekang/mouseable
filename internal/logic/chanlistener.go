@@ -1,7 +1,6 @@
 package logic
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"time"
@@ -17,39 +16,35 @@ func makeConfigChangeListener(c chan<- typ.Config) func(typ.Config) {
 	}
 }
 
-func makeCursorListener(c chan<- typ.CursorInfo) func(typ.CursorInfo) {
-	return func(info typ.CursorInfo) {
+func makeCursorListener(c chan<- typ.Point) func(typ.Point) {
+	return func(info typ.Point) {
 		c <- info
 	}
 }
 
-func makeKeyListener(c chan<- typ.KeyInfo, c2 <-chan bool) func(typ.KeyInfo) bool {
-	return func(info typ.KeyInfo) bool {
+func makeKeyListener(c chan<- typ.KeyAndDown, c2 <-chan bool) func(typ.KeyAndDown) bool {
+	return func(info typ.KeyAndDown) bool {
 		c <- info
 		return <-c2
 	}
 }
+
 func makeOnGetNextKeyListener(needNextKeyChan chan<- struct{}, nextKeyChan <-chan typ.Key) func() typ.Key {
 	return func() (key typ.Key) {
-		fmt.Println("Start")
 		needNextKeyChan <- emptyStruct
 		key = <-nextKeyChan
 		timoutChan := time.After(time.Second)
 		for {
 			select {
 			case <-timoutChan:
-				fmt.Println("Timeout")
 				select {
 				case <-nextKeyChan:
-					fmt.Println("Consume")
 				default:
-					fmt.Println("Return")
 					return
 				}
 
 			case needNextKeyChan <- emptyStruct:
 				key = <-nextKeyChan
-				fmt.Println("Key: ", key)
 			}
 		}
 	}

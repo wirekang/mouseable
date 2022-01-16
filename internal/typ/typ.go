@@ -2,20 +2,20 @@ package typ
 
 type Key string
 
-type KeyInfo struct {
+type KeyAndDown struct {
 	Key    Key
 	IsDown bool
 }
 
-type CursorInfo struct {
+type Point struct {
 	X, Y int
 }
 
 type HookManager interface {
 	Install()
 	Uninstall()
-	SetOnKeyListener(func(KeyInfo) bool)
-	SetOnCursorMoveListener(func(CursorInfo))
+	SetOnKeyListener(func(KeyAndDown) bool)
+	SetOnCursorMoveListener(func(Point))
 	SetCursorPosition(x, y int)
 	AddCursorPosition(dx, dy int)
 	CursorPosition() (x, y int)
@@ -36,8 +36,8 @@ type CommandName string
 type When uint
 
 const (
-	Activated   When = 0
-	Deactivated When = 1
+	Deactivated When = 0
+	Activated   When = 1
 	Any         When = 2
 )
 
@@ -64,6 +64,12 @@ type DefinitionManager interface {
 	DataNames() []DataName
 	DataType(name DataName) DataType
 	JSONSchema() ConfigJSONSchema
+}
+
+type KeyCombination struct {
+	Key      Key
+	IsDouble bool
+	ModKey   Key
 }
 
 type ConfigName string

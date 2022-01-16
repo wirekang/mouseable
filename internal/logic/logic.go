@@ -33,28 +33,23 @@ type logicState struct {
 	wheelDX, wheelDY           int
 	when                       typ.When
 
-	onConfigChangeChan chan typ.Config
+	channels struct {
+		configChange chan typ.Config
 
-	cursorInfoChan <-chan typ.CursorInfo
+		cursorMove <-chan typ.Point
 
-	configChans []chan<- typ.Config
+		configChanges []chan<- typ.Config
 
-	downedOriginKeyMap   map[typ.Key]struct{}
-	downedCombinedKeyMap map[typ.Key]struct{}
-	originCombinedKeyMap map[typ.Key]typ.Key
-	preventKeyUpMap      map[typ.Key]struct{}
-	pressingModKey       typ.Key
-	lastDownKey          typ.Key
-	lastDownKeyTime      int64
+		keyIn  <-chan typ.KeyAndDown
+		keyOut chan<- bool
 
-	keyInfoChan        <-chan typ.KeyInfo
-	preventDefaultChan chan<- bool
+		nextKeyIn  <-chan struct{}
+		nextKeyOut chan<- typ.Key
 
-	needNextKeyChan  <-chan struct{}
-	nextKeyChan      chan<- typ.Key
+		exit <-chan struct{}
+	}
+
 	doublePressSpeed int64
-
-	exitChan <-chan struct{}
 }
 
 type cmdCache struct {
@@ -79,14 +74,6 @@ func Run() {
 		overlayManager:    overlayManager,
 		definitionManager: definitionManager,
 		uiManager:         uiManager,
-		steppingCmdMap:    make(map[typ.CommandName]struct{}, 10),
-		when:              typ.Deactivated,
-
-		onConfigChangeChan:   make(chan typ.Config),
-		preventKeyUpMap:      make(map[typ.Key]struct{}, 10),
-		downedOriginKeyMap:   make(map[typ.Key]struct{}, 10),
-		downedCombinedKeyMap: make(map[typ.Key]struct{}, 10),
-		originCombinedKeyMap: make(map[typ.Key]typ.Key, 10),
 	}
 
 	logic.Run()

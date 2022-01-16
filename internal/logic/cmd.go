@@ -23,4 +23,12 @@ var cmdLogicMap = map[typ.CommandName]cmdLogic{
 			s.when = typ.Deactivated
 		},
 	},
+	"click-left": {
+		onBegin: func(s *logicState) {
+			go s.hookManager.MouseDown(typ.Left)
+		},
+		onEnd: func(s *logicState) {
+			go s.hookManager.MouseUp(typ.Left)
+		},
+	},
 }
