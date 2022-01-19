@@ -8,11 +8,11 @@ import (
 
 	"github.com/JamesHovious/w32"
 
+	"github.com/wirekang/mouseable/internal/di"
 	"github.com/wirekang/mouseable/internal/lg"
-	"github.com/wirekang/mouseable/internal/typ"
 )
 
-func New() typ.OverlayManager {
+func New() di.OverlayManager {
 	return &manager{
 		cursorWidth:  w32.GetSystemMetrics(w32.SM_CXCURSOR),
 		cursorHeight: w32.GetSystemMetrics(w32.SM_CYCURSOR),

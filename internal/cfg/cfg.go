@@ -3,28 +3,64 @@ package cfg
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 
-	"github.com/wirekang/mouseable/internal/typ"
+	"github.com/wirekang/mouseable/internal/di"
 )
 
-type cmdKeyMap map[typ.CommandName]typ.Key
-type dataValueMap map[typ.DataName]typ.DataValue
+func New() di.Config {
+	return &config{}
+}
 
-func New(jsn typ.ConfigJSON) (cfg typ.Config, err error) {
+type config struct {
+	cmdMap  map[di.CommandName]di.CommandKeyString
+	dataMap map[di.DataName]di.DataValue
+	pathMap map[di.CommandKeyString]struct{}
+}
+
+func (c *config) CommandKeyStringPathMap() map[di.CommandKeyString]struct{} {
+	return c.pathMap
+}
+
+func (c *config) CommandKeyString(name di.CommandName) di.CommandKeyString {
+	return c.cmdMap[name]
+}
+
+func (c *config) SetJSON(configJSON di.ConfigJSON) (err error) {
 	var holder jsonHolder
-	err = json.Unmarshal([]byte(jsn), &holder)
+	err = json.Unmarshal([]byte(configJSON), &holder)
 	if err != nil {
 		err = errors.WithStack(err)
 		return
 	}
 
-	cmdKeyMap := cmdKeyMap{}
-	dataValueMap := dataValueMap{}
+	c.cmdMap = map[di.CommandName]di.CommandKeyString{}
+	c.dataMap = map[di.DataName]di.DataValue{}
+	c.pathMap = map[di.CommandKeyString]struct{}{}
 
-	for cmd, key := range holder.Command {
-		cmdKeyMap[typ.CommandName(cmd)] = typ.Key(key)
+	for cmd := range holder.Command {
+		keyString := holder.Command[cmd]
+		c.cmdMap[di.CommandName(cmd)] = di.CommandKeyString(keyString)
+
+		for {
+			c.pathMap[di.CommandKeyString(keyString)] = struct{}{}
+			lastPlusIndex := strings.LastIndexByte(keyString, '+')
+			lastMinusIndex := strings.LastIndexByte(keyString, '-')
+			if lastPlusIndex == -1 && lastMinusIndex == -1 {
+				break
+			}
+			var cutIndex int
+			if lastMinusIndex > lastPlusIndex {
+				cutIndex = lastMinusIndex - 1
+			}
+			if lastPlusIndex > lastMinusIndex {
+				cutIndex = lastPlusIndex
+			}
+
+			keyString = keyString[:cutIndex]
+		}
 	}
 
 	for d, value := range holder.Data {
@@ -44,52 +80,24 @@ func New(jsn typ.ConfigJSON) (cfg typ.Config, err error) {
 			return
 		}
 
-		dataValueMap[typ.DataName(d)] = dv
+		c.dataMap[di.DataName(d)] = dv
 	}
 
-	return &config{
-		cmdKeyMap:    cmdKeyMap,
-		dataValueMap: dataValueMap,
-	}, err
-}
-
-type config struct {
-	cmdKeyMap    cmdKeyMap
-	dataValueMap dataValueMap
-}
-
-func (c *config) SetCommandKey(name typ.CommandName, key typ.Key) {
-	c.cmdKeyMap[name] = key
-}
-
-func (c *config) SetDataValue(name typ.DataName, value typ.DataValue) {
-	c.dataValueMap[name] = value
-}
-
-func (c *config) CommandKey(name typ.CommandName) (key typ.Key) {
-	key = c.cmdKeyMap[name]
 	return
 }
 
-func (c *config) DataValue(name typ.DataName) (v typ.DataValue) {
-	v = c.dataValueMap[name]
-	if v == nil {
-		v = dataValue{
-			string: "",
-			bool:   false,
-			number: 0,
-		}
-	}
+func (c *config) DataValue(name di.DataName) (v di.DataValue) {
+	v = c.dataMap[name]
 	return
 }
 
-func (c *config) JSON() typ.ConfigJSON {
+func (c *config) JSON() di.ConfigJSON {
 	cmdMap := map[string]string{}
 	dataMap := map[string]interface{}{}
-	for cmd, key := range c.cmdKeyMap {
+	for cmd, key := range c.cmdMap {
 		cmdMap[string(cmd)] = string(key)
 	}
-	for data, value := range c.dataValueMap {
+	for data, value := range c.dataMap {
 		dataMap[string(data)] = value
 	}
 
@@ -98,5 +106,5 @@ func (c *config) JSON() typ.ConfigJSON {
 		Data:    dataMap,
 	}
 	b, _ := json.Marshal(holder)
-	return typ.ConfigJSON(b)
+	return di.ConfigJSON(b)
 }

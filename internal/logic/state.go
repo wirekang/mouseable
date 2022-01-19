@@ -1,22 +1,23 @@
 package logic
 
 import (
-	"strings"
+	"fmt"
+	"math"
 	"time"
 
 	"github.com/pkg/errors"
 
+	"github.com/wirekang/mouseable/internal/di"
 	"github.com/wirekang/mouseable/internal/lg"
-	"github.com/wirekang/mouseable/internal/typ"
 )
 
 func (s *logicState) Run() {
-	s.checkLogics()
 	s.init()
-	s.hookManager.Install()
 	s.loadAndApplyConfig()
-	go s.uiManager.Run()
-	s.mainLoop()
+	s.initCommandTool()
+	s.hookManager.Install()
+	go s.mainLoop()
+	s.uiManager.Run()
 	defer func() {
 		s.ioManager.Unlock()
 		lg.Printf("Unlock")
@@ -25,101 +26,103 @@ func (s *logicState) Run() {
 	}()
 }
 
-func (s *logicState) checkLogics() {
-	cmdNames := s.definitionManager.CommandNames()
-Loop:
-	for nameInLogic := range cmdLogicMap {
-		for _, nameInNames := range cmdNames {
-			if nameInNames == nameInLogic {
-				continue Loop
-			}
-		}
-		lg.Errorf("No definition for logic %s", nameInLogic)
-	}
-
-	for _, cmdName := range cmdNames {
-		lgc, ok := cmdLogicMap[cmdName]
-		if !ok {
-			lg.Errorf("No logic for definition %s", cmdName)
-			cmdLogicMap[cmdName] = cmdLogic{
-				onBegin: nop,
-				onStep:  nop,
-				onEnd:   nop,
-			}
-		} else {
-			if lgc.onBegin == nil {
-				lgc.onBegin = nop
-			}
-			if lgc.onStep == nil {
-				lgc.onStep = nop
-			}
-			if lgc.onEnd == nil {
-				lgc.onEnd = nop
-			}
-			cmdLogicMap[cmdName] = lgc
-		}
-	}
-}
-
 func (s *logicState) mainLoop() {
 	cursorTicker := time.NewTicker(time.Millisecond * 33)
 	cmdStepTicker := time.NewTicker(time.Millisecond * 100)
 	for {
 		select {
-		case <-s.channels.exit:
+		case <-s.channel.exit:
 			lg.Printf("Exit mainLoop")
 			return
 		case <-cursorTicker.C:
 			s.onCursorTick()
-		case point := <-s.channels.cursorMove:
+		case point := <-s.channel.cursorMove:
 			s.onCursorMove(point.X, point.Y)
-		case config := <-s.channels.configChange:
+		case config := <-s.channel.configChange:
 			s.onConfigChange(config)
-		case keyAndDown := <-s.channels.keyIn:
-			s.channels.keyOut <- s.onKey(keyAndDown)
+		case keyInfo := <-s.channel.keyIn:
+			s.channel.keyOut <- s.onKey(keyInfo)
 		case <-cmdStepTicker.C:
 			s.onCmdTick()
 		}
 	}
 }
 
-func (s *logicState) onCursorTick() {}
+func (s *logicState) onCursorTick() {
+	var dx, dy int
+	if s.cursorState.cursorFixedSpeed == emptyPointInt {
+		dx = int(math.Round(s.cursorState.cursorSpeed.x))
+		dy = int(math.Round(s.cursorState.cursorSpeed.y))
+	} else {
+		dx = s.cursorState.cursorFixedSpeed.x
+		dy = s.cursorState.cursorFixedSpeed.y
+	}
+	s.hookManager.AddCursorPosition(dx, dy)
+
+	if s.cursorState.wheelFixedSpeed == emptyPointInt {
+		dx = s.cursorState.wheelFixedSpeed.x
+		dy = s.cursorState.wheelFixedSpeed.y
+	} else {
+		dx = s.cursorState.wheelSpeed.x
+		dy = s.cursorState.wheelSpeed.y
+	}
+	s.hookManager.MouseWheel(dx, true)
+	s.hookManager.MouseWheel(dy, false)
+
+	s.cursorState.cursorSpeed = frictionFloat(s.cursorState.cursorSpeed, s.configCache.cursorFriction)
+	s.cursorState.wheelSpeed = frictionInt(s.cursorState.wheelSpeed, s.configCache.wheelFriction)
+}
 
 func (s *logicState) onCmdTick() {
-	for cmdName := range s.steppingCmdMap {
-		cmdLogicMap[cmdName].onStep(s)
-	}
-	switch s.when {
-	case typ.Deactivated:
+	switch s.cmdState.when {
+	case di.WhenDeactivated:
 		s.overlayManager.Hide()
-	case typ.Activated:
+	case di.WhenActivated:
 		s.overlayManager.Show()
 	}
 }
 
-// todo
-func (s *logicState) onKey(keyAndDown typ.KeyAndDown) (preventDefault bool) {
-	return
-}
+func (s *logicState) onConfigChange(config di.Config) {
+	lg.Printf("onConfigChange")
+	getInt := s.makeDataGetterInt(config)
+	getFloat := s.makeDataGetterFloat(config)
+	getBool := s.makeDataGetterBool(config)
+	getString := s.makeDataGetterString(config)
+	_ = getString
 
-func (s *logicState) onConfigChange(config typ.Config) {
-	s.overlayManager.SetVisibility(config.DataValue("show-overlay").Bool())
-	s.doublePressSpeed = int64(config.DataValue("double-press-speed").Int())
-	s.keyCmdCacheMap = make(map[typ.Key]cmdCache, 20)
-	for _, cmdName := range s.definitionManager.CommandNames() {
-		key := config.CommandKey(cmdName)
-		if key == "" {
-			continue
-		}
-
-		s.keyCmdCacheMap[key] = cmdCache{
-			name: cmdName,
-			when: s.definitionManager.CommandWhen(cmdName),
-		}
+	s.overlayManager.SetVisibility(getBool("show-overlay"))
+	s.configCache.keyTimeout = int64(getInt("key-timeout"))
+	s.configCache.cursorFriction = pointFloat{
+		x: getFloat("cursor-friction-x"),
+		y: getFloat("cursor-friction-y"),
 	}
+	s.configCache.wheelFriction = pointInt{
+		x: getInt("wheel-friction-x"),
+		y: getInt("wheel-friction-y"),
+	}
+	s.configCache.cursorAcceleration = pointFloat{
+		x: getFloat("cursor-acceleration-x"),
+		y: getFloat("cursor-acceleration-y"),
+	}
+	s.configCache.wheelAcceleration = pointInt{
+		x: getInt("wheel-acceleration-x"),
+		y: getInt("wheel-acceleration-y"),
+	}
+	s.configCache.cursorSniperSpeed = pointInt{
+		x: getInt("cursor-sniper-speed-x"),
+		y: getInt("cursor-sniper-speed-y"),
+	}
+	s.configCache.wheelSniperSpeed = pointInt{
+		x: getInt("wheel-sniper-speed-x"),
+		y: getInt("wheel-sniper-speed-y"),
+	}
+	s.configCache.teleportDistanceF = getInt("teleport-distance-f")
+	s.configCache.teleportDistanceX = getInt("teleport-distance-x")
+	s.configCache.teleportDistanceY = getInt("teleport-distance-y")
 
-	for _, configChan := range s.channels.configChanges {
-		configChan <- config
+	s.configCache.commandKeyStringMap = config.CommandKeyStringPathMap()
+	for keyString := range s.configCache.commandKeyStringMap {
+		fmt.Println(keyString)
 	}
 }
 
@@ -139,28 +142,27 @@ func (s *logicState) loadAndApplyConfig() {
 		err = errors.WithStack(err)
 		panic(err)
 	}
+	lg.Printf("Apply %s", cn)
 }
 
 func (s *logicState) init() {
-	s.steppingCmdMap = make(map[typ.CommandName]struct{}, 10)
-
-	keyInfoChan := make(chan typ.KeyAndDown)
-	preventDefaultChan := make(chan bool)
+	keyInfoChan := make(chan di.HookKeyInfo)
+	eatChan := make(chan bool)
 	needNextKeyChan := make(chan struct{})
-	nextKeyChan := make(chan typ.Key)
-	cursorInfoChan := make(chan typ.Point)
+	nextKeyChan := make(chan di.CommandKey)
+	cursorInfoChan := make(chan di.Point)
 	exitChan := make(chan struct{})
 
-	s.channels.keyIn = keyInfoChan
-	s.channels.keyOut = preventDefaultChan
-	s.channels.nextKeyIn = needNextKeyChan
-	s.channels.nextKeyOut = nextKeyChan
-	s.channels.cursorMove = cursorInfoChan
-	s.channels.exit = exitChan
-	s.channels.configChange = make(chan typ.Config)
+	s.channel.keyIn = keyInfoChan
+	s.channel.keyOut = eatChan
+	s.channel.nextKeyIn = needNextKeyChan
+	s.channel.nextKeyOut = nextKeyChan
+	s.channel.cursorMove = cursorInfoChan
+	s.channel.exit = exitChan
+	s.channel.configChange = make(chan di.Config)
 
 	s.hookManager.SetOnCursorMoveListener(makeCursorListener(cursorInfoChan))
-	s.hookManager.SetOnKeyListener(makeKeyListener(keyInfoChan, preventDefaultChan))
+	s.hookManager.SetOnKeyListener(makeKeyListener(keyInfoChan, eatChan))
 
 	s.uiManager.SetOnGetNextKeyListener(makeOnGetNextKeyListener(needNextKeyChan, nextKeyChan))
 	s.uiManager.SetOnTerminateListener(makeOnExitListener(exitChan))
@@ -171,41 +173,106 @@ func (s *logicState) init() {
 	s.uiManager.SetOnLoadAppliedConfigNameListener(s.ioManager.LoadAppliedConfigName)
 	s.uiManager.SetOnApplyConfigNameListener(s.ioManager.ApplyConfig)
 
-	s.ioManager.SetOnConfigChangeListener(makeConfigChangeListener(s.channels.configChange))
+	s.ioManager.SetOnConfigChangeListener(makeConfigChangeListener(s.channel.configChange))
 }
 
-func (s *logicState) selectNeedNextKey(combinedKey typ.Key) bool {
+func (s *logicState) selectNeedNextKey(combinedKey di.CommandKey) bool {
 	select {
-	case <-s.channels.nextKeyIn:
-		s.channels.nextKeyOut <- combinedKey
+	case <-s.channel.nextKeyIn:
+		s.channel.nextKeyOut <- combinedKey
 		return true
 	default:
 		return false
 	}
 }
 
-func normalizeModKey(key typ.Key) (v typ.Key, isModKey bool) {
-	v = key
-	isModKey = strings.Contains(string(key), "Alt")
-	if isModKey {
-		v = "Alt"
-		return
+func (s *logicState) dataValueOrDefault(config di.Config, name di.DataName) di.DataValue {
+	v := config.DataValue(name)
+	if v == nil {
+		v = s.definitionManager.DataDefault(name)
+		lg.Printf("Use default %s", name)
+	}
+	return v
+}
+
+func (s *logicState) makeDataGetterInt(config di.Config) func(name di.DataName) int {
+	return func(name di.DataName) int {
+		dv := s.dataValueOrDefault(config, name)
+		return dv.Int()
+	}
+}
+
+func (s *logicState) makeDataGetterFloat(config di.Config) func(name di.DataName) float64 {
+	return func(name di.DataName) float64 {
+		dv := s.dataValueOrDefault(config, name)
+		return dv.Float()
+	}
+}
+
+func (s *logicState) makeDataGetterBool(config di.Config) func(name di.DataName) bool {
+	return func(name di.DataName) bool {
+		dv := s.dataValueOrDefault(config, name)
+		return dv.Bool()
+	}
+}
+
+func (s *logicState) makeDataGetterString(config di.Config) func(name di.DataName) string {
+	return func(name di.DataName) string {
+		dv := s.dataValueOrDefault(config, name)
+		return dv.String()
+	}
+}
+
+func frictionInt(p pointInt, f pointInt) (r pointInt) {
+	if p.x > 0 {
+		r.x = p.x - f.x
+		if r.x < 0 {
+			r.x = 0
+		}
+	} else if p.x < 0 {
+		r.x = p.x + f.x
+		if r.x > 0 {
+			r.x = 0
+		}
 	}
 
-	isModKey = strings.Contains(string(key), "Shift")
-	if isModKey {
-		v = "Shift"
-		return
-	}
-
-	isModKey = strings.Contains(string(key), "Ctrl")
-	if isModKey {
-		v = "Ctrl"
-		return
+	if p.y > 0 {
+		r.y = p.y - f.y
+		if r.y < 0 {
+			r.y = 0
+		}
+	} else if p.y < 0 {
+		r.y = p.y + f.y
+		if r.y > 0 {
+			r.y = 0
+		}
 	}
 	return
 }
 
-func now() int64 {
-	return time.Now().UnixMilli()
+func frictionFloat(p pointFloat, f pointFloat) (r pointFloat) {
+	if p.x > 0 {
+		r.x = p.x - f.x
+		if r.x < 0 {
+			r.x = 0
+		}
+	} else if p.x < 0 {
+		r.x = p.x + f.x
+		if r.x > 0 {
+			r.x = 0
+		}
+	}
+
+	if p.y > 0 {
+		r.y = p.y - f.y
+		if r.y < 0 {
+			r.y = 0
+		}
+	} else if p.y < 0 {
+		r.y = p.y + f.y
+		if r.y > 0 {
+			r.y = 0
+		}
+	}
+	return
 }

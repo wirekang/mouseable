@@ -1,9 +1,9 @@
 package io
 
 import (
-	"github.com/wirekang/mouseable/internal/typ"
+	"github.com/wirekang/mouseable/internal/di"
 )
 
 type metaHolder struct {
-	AppliedConfigName typ.ConfigName
+	AppliedConfigName di.ConfigName
 }

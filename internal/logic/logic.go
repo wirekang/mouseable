@@ -8,53 +8,100 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/wirekang/mouseable/internal/def"
+	"github.com/wirekang/mouseable/internal/di"
 	"github.com/wirekang/mouseable/internal/hook"
 	"github.com/wirekang/mouseable/internal/io"
 	"github.com/wirekang/mouseable/internal/lg"
 	"github.com/wirekang/mouseable/internal/overlay"
-	"github.com/wirekang/mouseable/internal/typ"
 	"github.com/wirekang/mouseable/internal/ui"
 )
+
+type pointInt struct{ x, y int }
+type pointFloat struct{ x, y float64 }
+
+var emptyPointInt = pointInt{}
+var emptyPointFloat = pointFloat{}
 
 var emptyStruct = struct{}{}
 
 type logicState struct {
-	ioManager         typ.IOManager
-	hookManager       typ.HookManager
-	overlayManager    typ.OverlayManager
-	definitionManager typ.DefinitionManager
-	uiManager         typ.UIManager
+	ioManager         di.IOManager
+	hookManager       di.HookManager
+	overlayManager    di.OverlayManager
+	definitionManager di.DefinitionManager
+	uiManager         di.UIManager
 
-	keyCmdCacheMap             map[typ.Key]cmdCache
-	steppingCmdMap             map[typ.CommandName]struct{}
-	cursorSpeedX, cursorSpeedY int
-	cursorDX, cursorDY         float64
-	wheelSpeedX, wheelSpeedY   int
-	wheelDX, wheelDY           int
-	when                       typ.When
+	commandTool *di.CommandTool
 
-	channels struct {
-		configChange chan typ.Config
+	cmdState struct {
+		when di.When
+	}
 
-		cursorMove <-chan typ.Point
+	keyState struct {
+		pressingKeys []string
+		commandKey   di.CommandKey
+		lastUpTime   int64
+	}
 
-		configChanges []chan<- typ.Config
+	cursorState struct {
+		cursorFixedSpeed pointInt
+		wheelFixedSpeed  pointInt
+		cursorSpeed      pointFloat
+		wheelSpeed       pointInt
+	}
 
-		keyIn  <-chan typ.KeyAndDown
+	configCache struct {
+		keyTimeout         int64
+		cursorAcceleration pointFloat
+		wheelAcceleration  pointInt
+		cursorFriction     pointFloat
+		wheelFriction      pointInt
+		cursorSniperSpeed  pointInt
+		wheelSniperSpeed   pointInt
+		teleportDistanceF,
+		teleportDistanceX,
+		teleportDistanceY int
+		commandKeyStringMap map[di.CommandKeyString]struct{}
+	}
+
+	channel struct {
+		configChange chan di.Config
+
+		cursorMove <-chan di.Point
+
+		keyIn  <-chan di.HookKeyInfo
 		keyOut chan<- bool
 
 		nextKeyIn  <-chan struct{}
-		nextKeyOut chan<- typ.Key
+		nextKeyOut chan<- di.CommandKey
 
 		exit <-chan struct{}
 	}
-
-	doublePressSpeed int64
 }
 
-type cmdCache struct {
-	name typ.CommandName
-	when typ.When
+func (s *logicState) initCommandTool() {
+	s.commandTool = &di.CommandTool{
+		Activate: func() {
+			s.cmdState.when = di.WhenActivated
+		},
+		Deactivate: func() {
+			s.cmdState.when = di.WhenDeactivated
+		},
+		AccelerateCursor: func(deg float64) {
+
+		},
+		MouseDown: func(button di.MouseButton) {
+			go s.hookManager.MouseDown(button)
+		},
+		MouseUp: func(button di.MouseButton) {
+			go s.hookManager.MouseUp(button)
+		},
+		MouseWheel: func(isHorizontal bool) {
+
+		},
+		Teleport:        nil,
+		TeleportForward: nil,
+	}
 }
 
 func Run() {
@@ -79,7 +126,7 @@ func Run() {
 	logic.Run()
 }
 
-func recoverFn(uim typ.UIManager) {
+func recoverFn(uim di.UIManager) {
 	cause := recover()
 	if cause != nil {
 		message := fmt.Sprintf("%v", cause)

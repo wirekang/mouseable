@@ -2,64 +2,205 @@
 package def
 
 import (
-	"github.com/wirekang/mouseable/internal/typ"
+	"github.com/wirekang/mouseable/internal/di"
 )
 
-func New() typ.DefinitionManager {
+func New() di.DefinitionManager {
 	m := &manager{
-		cmdOrderMap:        map[typ.CommandName]int{},
-		cmdWhenMap:         map[typ.CommandName]typ.When{},
-		cmdDescriptionMap:  map[typ.CommandName]string{},
-		dataTypeMap:        map[typ.DataName]typ.DataType{},
-		dataDescriptionMap: map[typ.DataName]string{},
-		nextFuncOrder:      0,
+		keyStringCmdNameMap: map[di.CommandKeyString]di.CommandName{},
+		cmdDefMap:           map[di.CommandName]*commandDef{},
+		dataDefMap:          map[di.DataName]*dataDef{},
 	}
-	m.nc("activate", "Activate Mouseable", typ.Deactivated)
-	m.nc("deactivate", "Deactivate Mouseable", typ.Activated)
-	m.nc("move-right", "Move cursor →", typ.Activated)
-	m.nc("move-right-up", "Move cursor ↗", typ.Activated)
-	m.nc("move-up", "Move cursor ↑", typ.Activated)
-	m.nc("move-left-up", "Move cursor ↖", typ.Activated)
-	m.nc("move-left", "Move cursor ←", typ.Activated)
-	m.nc("move-left-down", "Move cursor ↙", typ.Activated)
-	m.nc("move-down", "Move cursor ↓", typ.Activated)
-	m.nc("move-right-down", "Move cursor ↘", typ.Activated)
-	m.nc("sniper-mode", "Slow down to increase accuracy", typ.Activated)
-	m.nc("sniper-mode-wheel", "Slow down to increase accuracy (Wheel)", typ.Activated)
-	m.nc("click-left", "Click left mouse button", typ.Activated)
-	m.nc("click-right", "Click right mouse button", typ.Activated)
-	m.nc("click-middle", "Click middle mouse button", typ.Activated)
-	m.nc("wheel-up", "Wheel ↑", typ.Activated)
-	m.nc("wheel-down", "Wheel ↓", typ.Activated)
-	m.nc("wheel-right", "Wheel →", typ.Activated)
-	m.nc("wheel-left", "Wheel ←", typ.Activated)
-	m.nc("teleport-forward", "Teleport cursor to the direction it is moving", typ.Activated)
-	m.nc("teleport-right", "Teleport cursor →", typ.Activated)
-	m.nc("teleport-right-up", "Teleport cursor ↗", typ.Activated)
-	m.nc("teleport-up", "Teleport cursor ↑", typ.Activated)
-	m.nc("teleport-left-up", "Teleport cursor ↖", typ.Activated)
-	m.nc("teleport-left", "Teleport cursor ←", typ.Activated)
-	m.nc("teleport-left-down", "Teleport cursor ↙", typ.Activated)
-	m.nc("teleport-down", "Teleport cursor ↓", typ.Activated)
-	m.nc("teleport-right-down", "Teleport cursor ↘", typ.Activated)
+	m.insertCommand(
+		"activate",
+		"Activate Mouseable",
+		di.WhenDeactivated,
+		&di.Command{
+			OnBegin: func(tool *di.CommandTool) {
+				tool.Activate()
+			},
+		},
+	)
+	m.insertCommand(
+		"deactivate",
+		"Deactivate Mouseable",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"move-right",
+		"Move cursor →",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"move-right-up",
+		"Move cursor ↗",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"move-up",
+		"Move cursor ↑",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"move-left-up",
+		"Move cursor ↖",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"move-left",
+		"Move cursor ←",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"move-left-down",
+		"Move cursor ↙",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"move-down",
+		"Move cursor ↓",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"move-right-down",
+		"Move cursor ↘",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"sniper-mode",
+		"Slow down to increase accuracy",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"sniper-mode-wheel",
+		"Slow down to increase accuracy (MouseWheel)",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"click-left",
+		"Click left mouse button",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"click-right",
+		"Click right mouse button",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"click-middle",
+		"Click middle mouse button",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"wheel-up",
+		"MouseWheel ↑",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"wheel-down",
+		"MouseWheel ↓",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"wheel-right",
+		"MouseWheel →",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"wheel-left",
+		"MouseWheel ←",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"teleport-forward",
+		"Teleport cursor to the direction it is moving",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"teleport-right",
+		"Teleport cursor →",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"teleport-right-up",
+		"Teleport cursor ↗",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"teleport-up",
+		"Teleport cursor ↑",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"teleport-left-up",
+		"Teleport cursor ↖",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"teleport-left",
+		"Teleport cursor ←",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"teleport-left-down",
+		"Teleport cursor ↙",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"teleport-down",
+		"Teleport cursor ↓",
+		di.WhenActivated,
+		&di.Command{},
+	)
+	m.insertCommand(
+		"teleport-right-down",
+		"Teleport cursor ↘",
+		di.WhenActivated,
+		&di.Command{},
+	)
 
-	m.nd("double-press-speed", "Double press speed in ms", typ.Int)
-	m.nd("cursor-acceleration-h", "Cursor horizontal acceleration", typ.Float)
-	m.nd("cursor-acceleration-v", "Cursor vertical acceleration", typ.Float)
-	m.nd("cursor-friction-h", "Cursor horizontal friction", typ.Float)
-	m.nd("cursor-friction-v", "Cursor vertical friction", typ.Float)
-	m.nd("wheel-acceleration-h", "Wheel horizontal acceleration", typ.Int)
-	m.nd("wheel-acceleration-v", "Wheel vertical acceleration", typ.Int)
-	m.nd("wheel-friction-h", "Wheel horizontal friction", typ.Int)
-	m.nd("wheel-friction-v", "Wheel vertical friction", typ.Int)
-	m.nd("sniper-mode-speed-h", "Sniper mode horizontal speed", typ.Int)
-	m.nd("sniper-mode-speed-v", "Sniper mode vertical speed", typ.Int)
-	m.nd("sniper-mode-wheel-speed-h", "Sniper mode horizontal speed (Wheel)", typ.Int)
-	m.nd("sniper-mode-wheel-speed-v", "Sniper mode vertical speed (Wheel)", typ.Int)
-	m.nd("teleport-distance-f", "TeleportForward distance", typ.Int)
-	m.nd("teleport-distance-h", "Teleport horizontal distance", typ.Int)
-	m.nd("teleport-distance-v", "Teleport vertical distance", typ.Int)
-	m.nd("show-overlay", "Show overlay when Mouseable activated", typ.Bool)
+	m.insertData("key-timeout", "Key press timeout for continuous input in ms", di.Int, 200)
+	m.insertData("cursor-acceleration-x", "Cursor horizontal acceleration", di.Float, 2.8)
+	m.insertData("cursor-acceleration-y", "Cursor vertical acceleration", di.Float, 2.8)
+	m.insertData("cursor-friction-x", "Cursor horizontal friction", di.Float, 2.5)
+	m.insertData("cursor-friction-y", "Cursor vertical friction", di.Float, 2.5)
+	m.insertData("wheel-acceleration-x", "MouseWheel horizontal acceleration", di.Int, 5)
+	m.insertData("wheel-acceleration-y", "MouseWheel vertical acceleration", di.Int, 5)
+	m.insertData("wheel-friction-x", "MouseWheel horizontal friction", di.Int, 4)
+	m.insertData("wheel-friction-y", "MouseWheel vertical friction", di.Int, 4)
+	m.insertData("cursor-sniper-speed-x", "Sniper mode horizontal speed", di.Int, 1)
+	m.insertData("cursor-sniper-speed-y", "Sniper mode vertical speed", di.Int, 1)
+	m.insertData("wheel-sniper-speed-x", "Sniper mode horizontal speed (MouseWheel)", di.Int, 1)
+	m.insertData("wheel-sniper-speed-y", "Sniper mode vertical speed (MouseWheel)", di.Int, 1)
+	m.insertData("teleport-distance-f", "TeleportForward distance", di.Int, 300)
+	m.insertData("teleport-distance-x", "Teleport horizontal distance", di.Int, 300)
+	m.insertData("teleport-distance-y", "Teleport vertical distance", di.Int, 300)
+	m.insertData("show-overlay", "Show overlay when Mouseable activated", di.Bool, true)
 
 	return m
 }

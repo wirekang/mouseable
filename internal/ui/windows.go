@@ -50,7 +50,9 @@ func (m *manager) runNotifyIcon() {
 		panic(err)
 	}
 
-	defer notifyIcon.Dispose()
+	defer func(notifyIcon *walk.NotifyIcon) {
+		_ = notifyIcon.Dispose()
+	}(notifyIcon)
 
 	err = notifyIcon.SetIcon(icon)
 	if err != nil {

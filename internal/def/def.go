@@ -3,68 +3,116 @@ package def
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
-	"github.com/wirekang/mouseable/internal/typ"
+	"github.com/pkg/errors"
+
+	"github.com/wirekang/mouseable/internal/di"
 )
 
+type dataDef struct {
+	description string
+	dataType    di.DataType
+	dflt        interface{}
+}
+
+type commandDef struct {
+	cmd         *di.Command
+	description string
+	when        di.When
+}
+
 type manager struct {
-	cmdNames          []typ.CommandName
-	cmdOrderMap       map[typ.CommandName]int
-	cmdWhenMap        map[typ.CommandName]typ.When
-	cmdDescriptionMap map[typ.CommandName]string
-
-	dataNames          []typ.DataName
-	dataTypeMap        map[typ.DataName]typ.DataType
-	dataDescriptionMap map[typ.DataName]string
-
-	nextFuncOrder int
+	keyStringCmdNameMap map[di.CommandKeyString]di.CommandName
+	cmdDefMap           map[di.CommandName]*commandDef
+	dataDefMap          map[di.DataName]*dataDef
 }
 
-func (m *manager) CommandNames() []typ.CommandName {
-	return m.cmdNames
+func (m *manager) DataDefault(name di.DataName) di.DataValue {
+	data, ok := m.dataDefMap[name]
+	defer func() {
+		r := recover()
+		if r != nil {
+			panic(errors.WithStack(fmt.Errorf("%v", r)))
+		}
+	}()
+	if !ok {
+		panic(fmt.Sprintf("no data definition for %s", name))
+	}
+
+	dv := dataValue{}
+	switch data.dataType {
+	case di.Int:
+		dv.number = float64(data.dflt.(int))
+	case di.Float:
+		dv.number = data.dflt.(float64)
+	case di.Bool:
+		dv.bool = data.dflt.(bool)
+	case di.String:
+		dv.string = data.dflt.(string)
+	default:
+		panic(fmt.Sprintf("%v is not DataType", data.dataType))
+	}
+	return dv
 }
 
-func (m *manager) CommandWhen(name typ.CommandName) typ.When {
-	return m.cmdWhenMap[name]
+func (m *manager) SetConfig(config di.Config) {
+	m.keyStringCmdNameMap = map[di.CommandKeyString]di.CommandName{}
+	for commandName := range m.cmdDefMap {
+		cks := config.CommandKeyString(commandName)
+		m.keyStringCmdNameMap[cks] = commandName
+	}
 }
 
-func (m *manager) DataNames() []typ.DataName {
-	return m.dataNames
+func (m *manager) Command(key di.CommandKey, when di.When) *di.Command {
+	cks := cmdKeyToKeyString(key)
+	cmdName, ok := m.keyStringCmdNameMap[cks]
+	if !ok {
+		return nil
+	}
+
+	cmdDef, ok := m.cmdDefMap[cmdName]
+	if !ok {
+		return nil
+	}
+
+	if cmdDef.when != when {
+		return nil
+	}
+
+	return cmdDef.cmd
 }
 
-func (m *manager) DataType(name typ.DataName) typ.DataType {
-	return m.dataTypeMap[name]
-}
-
-func (m *manager) JSONSchema() typ.ConfigJSONSchema {
+func (m *manager) JSONSchema() di.ConfigJSONSchema {
 	command := map[string]interface{}{}
 	command["type"] = "object"
-	cmdProperties := map[typ.CommandName]interface{}{}
-	for _, cmdName := range m.cmdNames {
+	cmdProperties := map[di.CommandName]interface{}{}
+	for cmdName, cmdDef := range m.cmdDefMap {
 		cmdProperties[cmdName] = map[string]string{
 			"type": "string",
 			"description": fmt.Sprintf(
-				"%s \n\n when: %s , order: %d",
-				m.cmdDescriptionMap[cmdName],
-				whenToString(m.cmdWhenMap[cmdName]),
-				m.cmdOrderMap[cmdName],
+				"%s \n\n when: %s",
+				cmdDef.description,
+				whenToString(cmdDef.when),
 			),
-			"pattern": "^((Ctrl|Shift|Alt)\\+)?[^\\+]+(x2)?$",
+			// todo
+			"pattern": ".*",
 		}
 	}
 	command["properties"] = cmdProperties
 
 	data := map[string]interface{}{}
 	data["type"] = "object"
-	dataProperties := map[typ.DataName]interface{}{}
-	for _, dataName := range m.dataNames {
+	dataProperties := map[di.DataName]interface{}{}
+	for dataName, dataDef := range m.dataDefMap {
 		dataProperties[dataName] = map[string]string{
-			"type": dataTypeToString(m.dataTypeMap[dataName]),
+			"type": dataTypeToString(dataDef.dataType),
 			"description": fmt.Sprintf(
 				"%s \n\n type: %s",
-				m.dataDescriptionMap[dataName],
-				dataTypeToString(m.dataTypeMap[dataName]),
+				dataDef.description,
+				dataTypeToString(dataDef.dataType),
 			),
+			"default": fmt.Sprintf("%v", dataDef.dflt),
 		}
 	}
 	data["properties"] = dataProperties
@@ -79,55 +127,99 @@ func (m *manager) JSONSchema() typ.ConfigJSONSchema {
 
 	s, err := json.Marshal(root)
 	if err != nil {
-		return typ.ConfigJSONSchema(err.Error())
+		return di.ConfigJSONSchema(err.Error())
 	}
 
-	return typ.ConfigJSONSchema(s)
+	return di.ConfigJSONSchema(s)
 }
 
-// nd is new Data
-func (m *manager) nd(name, desc string, t typ.DataType) {
-	dm := typ.DataName(name)
-	m.dataNames = append(m.dataNames, dm)
-	m.dataTypeMap[dm] = t
-	m.dataDescriptionMap[dm] = desc
+func (m *manager) insertData(name, desc string, t di.DataType, dflt interface{}) {
+	dataDef := &dataDef{
+		description: desc,
+		dataType:    t,
+		dflt:        dflt,
+	}
+	m.dataDefMap[di.DataName(name)] = dataDef
 }
 
-// nc is new Command
-func (m *manager) nc(name, desc string, when typ.When) {
-	m.nextFuncOrder += 1
-	cn := typ.CommandName(name)
-	m.cmdNames = append(m.cmdNames, cn)
-	m.cmdOrderMap[cn] = m.nextFuncOrder
-	m.cmdDescriptionMap[cn] = desc
-	m.cmdWhenMap[cn] = when
+func (m *manager) insertCommand(name, description string, when di.When, cmd *di.Command) {
+	if cmd.OnBegin == nil {
+		cmd.OnBegin = nop
+	}
+	if cmd.OnStep == nil {
+		cmd.OnStep = nop
+	}
+	if cmd.OnEnd == nil {
+		cmd.OnEnd = nop
+	}
+	m.cmdDefMap[di.CommandName(name)] = &commandDef{
+		cmd:         cmd,
+		description: description,
+		when:        when,
+	}
 }
 
-func whenToString(when typ.When) string {
+func whenToString(when di.When) string {
 	switch when {
-	case typ.Activated:
+	case di.WhenActivated:
 		return "Activated"
 
-	case typ.Deactivated:
+	case di.WhenDeactivated:
 		return "Deactivated"
 
-	case typ.Any:
+	case di.WhenAnytime:
 		return "Any"
 	}
 
 	return "?"
 }
 
-func dataTypeToString(dt typ.DataType) string {
+func dataTypeToString(dt di.DataType) string {
 	switch dt {
-	case typ.Int:
+	case di.Int:
 		return "integer"
-	case typ.Float:
+	case di.Float:
 		return "number"
-	case typ.Bool:
+	case di.Bool:
 		return "boolean"
-	case typ.String:
+	case di.String:
 		return "string"
 	}
 	return "?"
+}
+
+func cmdKeyToKeyString(c di.CommandKey) di.CommandKeyString {
+	var outers []string
+	for i := range c {
+		var inners []string
+		for j := range c[i] {
+			inners = append(inners, c[i][j])
+		}
+		outers = append(outers, strings.Join(inners, "+"))
+	}
+	return di.CommandKeyString(strings.Join(outers, " - "))
+}
+
+func nop(*di.CommandTool) {}
+
+type dataValue struct {
+	string string
+	bool   bool
+	number float64
+}
+
+func (d dataValue) String() string {
+	return d.string
+}
+
+func (d dataValue) Bool() bool {
+	return d.bool
+}
+
+func (d dataValue) Int() int {
+	return int(d.number)
+}
+
+func (d dataValue) Float() float64 {
+	return d.number
 }

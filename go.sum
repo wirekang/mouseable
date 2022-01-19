@@ -1,3 +1,4 @@
+github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/juju/fslock v0.0.0-20160525022230-4d5c94c67b4b h1:FQ7+9fxhyp82ks9vAuyPzG0/vVbWwMwLJ+P6yJI5FN8=
 github.com/juju/fslock v0.0.0-20160525022230-4d5c94c67b4b/go.mod h1:HMcgvsgd0Fjj4XXDkbjdmlbI505rUPBs6WBMYg2pXks=
 github.com/lxn/walk v0.0.0-20210112085537-c389da54e794 h1:NVRJ0Uy0SOFcXSKLsS65OmI1sgCCfiDUPj+cwnH7GZw=
@@ -8,6 +9,11 @@ github.com/mat/besticon v3.12.0+incompatible h1:1KTD6wisfjfnX+fk9Kx/6VEZL+MAW1Lh
 github.com/mat/besticon v3.12.0+incompatible/go.mod h1:mA1auQYHt6CW5e7L9HJLmqVQC8SzNk2gVwouO0AbiEU=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
+github.com/thoas/go-funk v0.9.1 h1:O549iLZqPpTUQ10ykd26sZhzD+rmR5pWhuElrhbC20M=
+github.com/thoas/go-funk v0.9.1/go.mod h1:+IWnUfUmFO1+WVYQWQtIJHeRRdaIyyYglZN7xzUPe4Q=
 github.com/wirekang/w32 v1.2.1-0.20220109051044-e6d7dabffcd3 h1:zZnRCKOLXiJZdsxlW9TbvpoBKaGKTjcj2iAblVdbnVw=
 github.com/wirekang/w32 v1.2.1-0.20220109051044-e6d7dabffcd3/go.mod h1:L6LTHMKvhtpGUkIYGTo4U9PKancYKpGS/+naYtTs8Ys=
 github.com/zserge/lorca v0.1.10 h1:f/xBJ3D3ipcVRCcvN8XqZnpoKcOXV8I4vwqlFyw7ruc=
@@ -32,3 +38,4 @@ gopkg.in/Knetic/govaluate.v3 v3.0.0 h1:18mUyIt4ZlRlFZAAfVetz4/rzlJs9yhN+U02F4u1A
 gopkg.in/Knetic/govaluate.v3 v3.0.0/go.mod h1:csKLBORsPbafmSCGTEh3U7Ozmsuq8ZSIlKk1bcqph0E=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=

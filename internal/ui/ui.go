@@ -10,44 +10,44 @@ import (
 	"github.com/zserge/lorca"
 
 	"github.com/wirekang/mouseable/internal/cnst"
+	"github.com/wirekang/mouseable/internal/di"
 	"github.com/wirekang/mouseable/internal/lg"
-	"github.com/wirekang/mouseable/internal/typ"
 )
 
-func New() typ.UIManager {
+func New() di.UIManager {
 	mustChrome()
 	return &manager{}
 }
 
 type manager struct {
-	onGetNextKeyListener            func() typ.Key
+	onGetNextKeyListener            func() di.CommandKey
 	onTerminateListener             func()
-	onSaveConfigListener            func(typ.ConfigName, typ.ConfigJSON) error
-	onLoadConfigListener            func(typ.ConfigName) (typ.ConfigJSON, error)
-	onLoadConfigSchemaListener      func() typ.ConfigJSONSchema
-	onLoadConfigNamesListener       func() ([]typ.ConfigName, error)
-	onLoadAppliedConfigNameListener func() (typ.ConfigName, error)
-	onApplyConfigListener           func(typ.ConfigName) error
+	onSaveConfigListener            func(di.ConfigName, di.ConfigJSON) error
+	onLoadConfigListener            func(di.ConfigName) (di.ConfigJSON, error)
+	onLoadConfigSchemaListener      func() di.ConfigJSONSchema
+	onLoadConfigNamesListener       func() ([]di.ConfigName, error)
+	onLoadAppliedConfigNameListener func() (di.ConfigName, error)
+	onApplyConfigListener           func(di.ConfigName) error
 	isOpen                          bool
 }
 
-func (m *manager) SetOnApplyConfigNameListener(f func(name typ.ConfigName) error) {
+func (m *manager) SetOnApplyConfigNameListener(f func(name di.ConfigName) error) {
 	m.onApplyConfigListener = f
 }
 
-func (m *manager) SetOnLoadAppliedConfigNameListener(f func() (typ.ConfigName, error)) {
+func (m *manager) SetOnLoadAppliedConfigNameListener(f func() (di.ConfigName, error)) {
 	m.onLoadAppliedConfigNameListener = f
 }
 
-func (m *manager) SetOnLoadConfigSchemaListener(f func() typ.ConfigJSONSchema) {
+func (m *manager) SetOnLoadConfigSchemaListener(f func() di.ConfigJSONSchema) {
 	m.onLoadConfigSchemaListener = f
 }
 
-func (m *manager) SetOnLoadConfigNamesListener(f func() ([]typ.ConfigName, error)) {
+func (m *manager) SetOnLoadConfigNamesListener(f func() ([]di.ConfigName, error)) {
 	m.onLoadConfigNamesListener = f
 }
 
-func (m *manager) SetOnGetNextKeyListener(f func() typ.Key) {
+func (m *manager) SetOnGetNextKeyListener(f func() di.CommandKey) {
 	m.onGetNextKeyListener = f
 }
 
@@ -55,11 +55,11 @@ func (m *manager) SetOnTerminateListener(f func()) {
 	m.onTerminateListener = f
 }
 
-func (m *manager) SetOnSaveConfigListener(f func(typ.ConfigName, typ.ConfigJSON) error) {
+func (m *manager) SetOnSaveConfigListener(f func(di.ConfigName, di.ConfigJSON) error) {
 	m.onSaveConfigListener = f
 }
 
-func (m *manager) SetOnLoadConfigListener(f func(typ.ConfigName) (typ.ConfigJSON, error)) {
+func (m *manager) SetOnLoadConfigListener(f func(di.ConfigName) (di.ConfigJSON, error)) {
 	m.onLoadConfigListener = f
 }
 

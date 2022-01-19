@@ -4,28 +4,30 @@ package hook
 
 import (
 	"fmt"
+	"strings"
 	"unsafe"
 
 	"github.com/JamesHovious/w32"
 
-	"github.com/wirekang/mouseable/internal/typ"
+	"github.com/wirekang/mouseable/internal/di"
+	"github.com/wirekang/mouseable/internal/lg"
 )
 
-func New() typ.HookManager {
+func New() di.HookManager {
 	return &manager{}
 }
 
 type manager struct {
-	hhooks               []w32.HHOOK
-	onKeyListener        func(typ.KeyAndDown) bool
-	onCursorMoveListener func(info typ.Point)
+	hHookKeyboard, hHookMouse w32.HHOOK
+	onKeyListener             func(di.HookKeyInfo) bool
+	onCursorMoveListener      func(info di.Point)
 }
 
-func (m *manager) SetOnKeyListener(f func(typ.KeyAndDown) bool) {
+func (m *manager) SetOnKeyListener(f func(di.HookKeyInfo) bool) {
 	m.onKeyListener = f
 }
 
-func (m *manager) SetOnCursorMoveListener(f func(typ.Point)) {
+func (m *manager) SetOnCursorMoveListener(f func(di.Point)) {
 	m.onCursorMoveListener = f
 }
 
@@ -46,38 +48,46 @@ func (m *manager) CursorPosition() (x, y int) {
 	return
 }
 
-func (m *manager) MouseDown(button typ.MouseButton) {
+func (m *manager) MouseDown(button di.MouseButton) {
 	sendMouseInput(0, 0, 0, getMouseDownFlag(button))
 }
 
-func (m *manager) MouseUp(button typ.MouseButton) {
+func (m *manager) MouseUp(button di.MouseButton) {
 	sendMouseInput(0, 0, 0, getMouseUpFlag(button))
 }
 
-func (m *manager) Wheel(amount int, isHorizontal bool) {
+func (m *manager) MouseWheel(amount int, isHorizontal bool) {
 	if amount != 0 {
 		sendMouseInput(0, 0, uint32(amount), getMouseWheelFlag(isHorizontal))
 	}
 }
 
 func (m *manager) Install() {
-	f := func(idHook int, lpfn w32.HOOKPROC) {
-		hhook := w32.SetWindowsHookEx(idHook, lpfn, 0, 0)
-		if hhook == 0 {
-			panic(fmt.Sprintf("hook failed. id: %d", idHook))
-			return
-		}
-
-		m.hhooks = append(m.hhooks, hhook)
+	m.hHookKeyboard = w32.SetWindowsHookEx(w32.WH_KEYBOARD_LL, m.keyboardProc, 0, 0)
+	if m.hHookKeyboard == 0 {
+		panic(fmt.Sprintf("Keyboard hook failed"))
+		return
 	}
-	f(w32.WH_KEYBOARD_LL, m.keyboardProc)
-	f(w32.WH_MOUSE_LL, m.mouseProc)
+	lg.Printf("KeyboardHook: %v", m.hHookKeyboard)
+
+	m.hHookMouse = w32.SetWindowsHookEx(w32.WH_MOUSE_LL, m.mouseProc, 0, 0)
+	if m.hHookMouse == 0 {
+		panic(fmt.Sprintf("Mouse hook failed"))
+		return
+	}
+
+	lg.Printf("MouseHook: %v", m.hHookMouse)
 	return
 }
 
 func (m *manager) Uninstall() {
-	for i := range m.hhooks {
-		w32.UnhookWindowsHookEx(m.hhooks[i])
+	ok := w32.UnhookWindowsHookEx(m.hHookKeyboard)
+	if !ok {
+		lg.Errorf("Unhook keyboard failed.")
+	}
+	ok = w32.UnhookWindowsHookEx(m.hHookMouse)
+	if !ok {
+		lg.Errorf("Unhook mouse failed.")
 	}
 }
 
@@ -92,21 +102,20 @@ func (m *manager) keyboardProc(code int, wParam w32.WPARAM, lParam w32.LPARAM) w
 	isDown := fUp == 0
 	txt := getKey(uint32(data.ScanCode))
 	if m.onKeyListener(
-		typ.KeyAndDown{
-			Key:    typ.Key(txt),
+		di.HookKeyInfo{
+			Key:    txt,
 			IsDown: isDown,
 		},
 	) {
 		return 1
 	}
-
 	return w32.CallNextHookEx(0, code, wParam, lParam)
 }
 
 func (m *manager) mouseProc(code int, wParam w32.WPARAM, lParam w32.LPARAM) w32.LRESULT {
 	data := *(*w32.MSLLHOOKSTRUCT)(unsafe.Pointer(lParam))
 	go m.onCursorMoveListener(
-		typ.Point{
+		di.Point{
 			X: int(data.Pt.X),
 			Y: int(data.Pt.Y),
 		},
@@ -136,25 +145,25 @@ func sendMouseInput(dx, dy int32, mouseData uint32, flags ...uint32) {
 	_ = w32.SendInput(input)
 }
 
-func getMouseDownFlag(button typ.MouseButton) (flag uint32) {
+func getMouseDownFlag(button di.MouseButton) (flag uint32) {
 	switch button {
-	case typ.Left:
+	case di.LeftMouseButton:
 		flag = w32.MOUSEEVENTF_LEFTDOWN
-	case typ.Right:
+	case di.RightMouseButton:
 		flag = w32.MOUSEEVENTF_RIGHTDOWN
-	case typ.Middle:
+	case di.MiddleMouseButton:
 		flag = w32.MOUSEEVENTF_MIDDLEDOWN
 	}
 	return
 }
 
-func getMouseUpFlag(button typ.MouseButton) (flag uint32) {
+func getMouseUpFlag(button di.MouseButton) (flag uint32) {
 	switch button {
-	case typ.Left:
+	case di.LeftMouseButton:
 		flag = w32.MOUSEEVENTF_LEFTUP
-	case typ.Right:
+	case di.RightMouseButton:
 		flag = w32.MOUSEEVENTF_RIGHTUP
-	case typ.Middle:
+	case di.MiddleMouseButton:
 		flag = w32.MOUSEEVENTF_MIDDLEUP
 	}
 	return
@@ -170,5 +179,6 @@ func getMouseWheelFlag(isHorizontal bool) (flag uint32) {
 
 func getKey(scanCode uint32) (txt string) {
 	txt, _ = w32.GetKeyNameText(scanCode, false, false)
+	txt = strings.ReplaceAll(txt, " ", "")
 	return
 }

@@ -5,32 +5,32 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/wirekang/mouseable/internal/lg"
-	"github.com/wirekang/mouseable/internal/typ"
+	"github.com/wirekang/mouseable/internal/di"
 )
 
-func makeConfigChangeListener(c chan<- typ.Config) func(typ.Config) {
-	return func(config typ.Config) {
-		lg.Printf("onConfigChange")
+func makeConfigChangeListener(c chan<- di.Config) func(di.Config) {
+	return func(config di.Config) {
 		c <- config
 	}
 }
 
-func makeCursorListener(c chan<- typ.Point) func(typ.Point) {
-	return func(info typ.Point) {
+func makeCursorListener(c chan<- di.Point) func(di.Point) {
+	return func(info di.Point) {
 		c <- info
 	}
 }
 
-func makeKeyListener(c chan<- typ.KeyAndDown, c2 <-chan bool) func(typ.KeyAndDown) bool {
-	return func(info typ.KeyAndDown) bool {
+func makeKeyListener(c chan<- di.HookKeyInfo, c2 <-chan bool) func(di.HookKeyInfo) bool {
+	return func(info di.HookKeyInfo) bool {
 		c <- info
 		return <-c2
 	}
 }
 
-func makeOnGetNextKeyListener(needNextKeyChan chan<- struct{}, nextKeyChan <-chan typ.Key) func() typ.Key {
-	return func() (key typ.Key) {
+func makeOnGetNextKeyListener(
+	needNextKeyChan chan<- struct{}, nextKeyChan <-chan di.CommandKey,
+) func() di.CommandKey {
+	return func() (key di.CommandKey) {
 		needNextKeyChan <- emptyStruct
 		key = <-nextKeyChan
 		timoutChan := time.After(time.Second)
@@ -53,7 +53,7 @@ func makeOnGetNextKeyListener(needNextKeyChan chan<- struct{}, nextKeyChan <-cha
 func makeOnExitListener(exitChan chan<- struct{}) func() {
 	go func() {
 		sigChan := make(chan os.Signal)
-		signal.Notify(sigChan, os.Interrupt)
+		signal.Notify(sigChan, os.Interrupt, os.Kill)
 		<-sigChan
 		exitChan <- emptyStruct
 	}()

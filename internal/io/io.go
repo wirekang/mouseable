@@ -15,13 +15,13 @@ import (
 
 	"github.com/wirekang/mouseable/internal/cfg"
 	"github.com/wirekang/mouseable/internal/cnst"
+	"github.com/wirekang/mouseable/internal/di"
 	"github.com/wirekang/mouseable/internal/lg"
-	"github.com/wirekang/mouseable/internal/typ"
 )
 
-var defaultConfigName typ.ConfigName = "default.json"
+var defaultConfigName di.ConfigName = "default.json"
 
-func New() typ.IOManager {
+func New() di.IOManager {
 	rd, cd := initDirs()
 	return &manager{
 		rootDir:   rd,
@@ -35,10 +35,10 @@ type manager struct {
 	configDir               string
 	metaPath                string
 	lock                    *fslock.Lock
-	onConfigChangedListener func(typ.Config)
+	onConfigChangedListener func(di.Config)
 }
 
-func (im *manager) LoadAppliedConfigName() (rst typ.ConfigName, err error) {
+func (im *manager) LoadAppliedConfigName() (rst di.ConfigName, err error) {
 	var m metaHolder
 	m, err = im.loadMeta()
 	if err != nil {
@@ -50,7 +50,7 @@ func (im *manager) LoadAppliedConfigName() (rst typ.ConfigName, err error) {
 	return
 }
 
-func (im *manager) ApplyConfig(name typ.ConfigName) (err error) {
+func (im *manager) ApplyConfig(name di.ConfigName) (err error) {
 	var m metaHolder
 	m, err = im.loadMeta()
 	if err != nil {
@@ -65,28 +65,29 @@ func (im *manager) ApplyConfig(name typ.ConfigName) (err error) {
 		return
 	}
 
-	json, err := im.LoadConfig(name)
+	jsn, err := im.LoadConfig(name)
 	if err != nil {
 		err = errors.WithStack(err)
 		return
 	}
 
-	cfg, err := cfg.New(json)
+	config := cfg.New()
+	err = config.SetJSON(jsn)
 	if err != nil {
 		err = errors.WithStack(err)
 		return
 	}
 
-	go im.onConfigChangedListener(cfg)
+	go im.onConfigChangedListener(config)
 	return
 }
 
-func (im *manager) SetOnConfigChangeListener(f func(typ.Config)) {
+func (im *manager) SetOnConfigChangeListener(f func(di.Config)) {
 	im.onConfigChangedListener = f
 }
 
-func (im *manager) LoadConfigNames() (rst []typ.ConfigName, err error) {
-	rst = make([]typ.ConfigName, 0)
+func (im *manager) LoadConfigNames() (rst []di.ConfigName, err error) {
+	rst = make([]di.ConfigName, 0)
 	infos, err := ioutil.ReadDir(im.configDir)
 	if err != nil {
 		return
@@ -96,12 +97,12 @@ func (im *manager) LoadConfigNames() (rst []typ.ConfigName, err error) {
 		if info.IsDir() {
 			continue
 		}
-		rst = append(rst, typ.ConfigName(info.Name()))
+		rst = append(rst, di.ConfigName(info.Name()))
 	}
 	return
 }
 
-func (im *manager) SaveConfig(name typ.ConfigName, data typ.ConfigJSON) (err error) {
+func (im *manager) SaveConfig(name di.ConfigName, data di.ConfigJSON) (err error) {
 	err = ioutil.WriteFile(filepath.Join(im.configDir, string(name)), []byte(data), fs.ModePerm)
 	if err != nil {
 		err = errors.WithStack(err)
@@ -109,7 +110,7 @@ func (im *manager) SaveConfig(name typ.ConfigName, data typ.ConfigJSON) (err err
 	return
 }
 
-func (im *manager) LoadConfig(name typ.ConfigName) (data typ.ConfigJSON, err error) {
+func (im *manager) LoadConfig(name di.ConfigName) (data di.ConfigJSON, err error) {
 	if name == "" {
 		name = defaultConfigName
 	}
@@ -120,7 +121,7 @@ func (im *manager) LoadConfig(name typ.ConfigName) (data typ.ConfigJSON, err err
 		return
 	}
 
-	data = typ.ConfigJSON(bytes)
+	data = di.ConfigJSON(bytes)
 	return
 }
 
@@ -239,7 +240,7 @@ func initDefaultConfigs(configDir string) {
 			continue
 		}
 
-		src.Close()
-		dst.Close()
+		_ = src.Close()
+		_ = dst.Close()
 	}
 }

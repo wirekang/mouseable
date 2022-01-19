@@ -54,6 +54,7 @@ async function applyConfig() {
     throw errNoLoadedConfigName;
   }
 
+  await saveConfig();
   await window.__applyConfig(store.loadedConfigName);
   showMsg(`${store.loadedConfigName} Applied.`);
   renderAppliedConfig(store.loadedConfigName);

@@ -1,5 +1,6 @@
 package cfg
 
+// dataValue implements di.DataValue
 type dataValue struct {
 	string string
 	bool   bool

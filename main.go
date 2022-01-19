@@ -14,6 +14,7 @@ var Asset embed.FS
 var VERSION = "x.x.x"
 
 func main() {
+
 	cnst.VERSION = VERSION
 	initFS()
 
