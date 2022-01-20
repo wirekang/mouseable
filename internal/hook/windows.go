@@ -5,12 +5,10 @@ package hook
 import (
 	"fmt"
 	"strings"
-	"syscall"
 	"time"
 	"unsafe"
 
 	"github.com/JamesHovious/w32"
-	"github.com/pkg/errors"
 
 	"github.com/wirekang/mouseable/internal/di"
 	"github.com/wirekang/mouseable/internal/lg"
@@ -66,20 +64,20 @@ func (m *manager) MouseWheel(amount int, isHorizontal bool) {
 }
 
 func (m *manager) Install() {
-	hMod, err := syscall.LoadLibrary("user32.dll")
-	if err != nil {
-		err = errors.WithStack(err)
-		panic(err)
-	}
+	// hMod, err := syscall.LoadLibrary("user32.dll")
+	// if err != nil {
+	// 	err = errors.WithStack(err)
+	// 	panic(err)
+	// }
 
-	m.hHookKeyboard = w32.SetWindowsHookEx(w32.WH_KEYBOARD_LL, m.keyboardProc, w32.HINSTANCE(hMod), 0)
+	m.hHookKeyboard = w32.SetWindowsHookEx(w32.WH_KEYBOARD_LL, m.keyboardProc, 0, 0)
 	if m.hHookKeyboard == 0 {
 		panic(fmt.Sprintf("Keyboard hook failed"))
 	}
 
 	lg.Printf("KeyboardHook: %v", m.hHookKeyboard)
 
-	m.hHookMouse = w32.SetWindowsHookEx(w32.WH_MOUSE_LL, m.mouseProc, w32.HINSTANCE(hMod), 0)
+	m.hHookMouse = w32.SetWindowsHookEx(w32.WH_MOUSE_LL, m.mouseProc, 0, 0)
 	if m.hHookMouse == 0 {
 		panic(fmt.Sprintf("Mouse hook failed"))
 	}

@@ -2,7 +2,6 @@ package logic
 
 import (
 	"fmt"
-	"math"
 	"os"
 	"runtime/debug"
 
@@ -83,59 +82,6 @@ type logicState struct {
 		exit <-chan struct{}
 	}
 	config di.Config
-}
-
-func (s *logicState) initCommandTool() {
-	s.commandTool = &di.CommandTool{
-		Activate: func() {
-			s.cmdState.when = di.WhenActivated
-			s.overlayManager.Show()
-		},
-		Deactivate: func() {
-			s.cmdState.when = di.WhenDeactivated
-			s.overlayManager.Hide()
-		},
-		AccelerateCursor: func(deg float64) {
-			_ = s.configCache.cursorAcceleration.x
-			_ = s.configCache.cursorAcceleration.y
-
-			s.cursorState.cursorSpeed.x += 1
-			s.cursorState.cursorSpeed.y += 1
-		},
-		FixCursorSpeed: func() {
-			s.cursorState.cursorFixedSpeed = s.configCache.cursorSniperSpeed
-		},
-		UnfixCursorSpeed: func() {
-			s.cursorState.cursorFixedSpeed = emptyPointInt
-		},
-		FixWheelSpeed: func() {
-			s.cursorState.wheelFixedSpeed = s.configCache.wheelSniperSpeed
-		},
-		UnfixWheelSpeed: func() {
-			s.cursorState.wheelFixedSpeed = emptyPointInt
-		},
-		MouseDown: func(button di.MouseButton) {
-			go s.hookManager.MouseDown(button)
-		},
-		MouseUp: func(button di.MouseButton) {
-			go s.hookManager.MouseUp(button)
-		},
-		MouseWheel: func(deg float64) {},
-		Teleport:   func(deg float64) {},
-		TeleportForward: func() {
-			if math.Abs(s.cursorState.cursorSpeed.x) > 0.3 || math.Abs(s.cursorState.cursorSpeed.y) > 0.3 {
-				distance := s.configCache.teleportDistanceF
-				angle := math.Atan2(s.cursorState.cursorSpeed.x, s.cursorState.cursorSpeed.y)
-				s.cursorState.lastTeleportForward = pointInt{
-					x: int(math.Round(float64(distance) * math.Sin(angle))),
-					y: int(math.Round(float64(distance) * math.Cos(angle))),
-				}
-			}
-			s.hookManager.AddCursorPosition(
-				s.cursorState.lastTeleportForward.x, s.cursorState.lastTeleportForward.y,
-			)
-		},
-	}
 }
 
 func Run() {

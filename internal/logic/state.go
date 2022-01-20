@@ -27,32 +27,27 @@ func (s *logicState) Run() {
 }
 
 func (s *logicState) mainLoop() {
-	cursorTicker := time.NewTicker(time.Millisecond * 33)
+	cursorTicker := time.NewTicker(time.Millisecond * 20)
 	cmdStepTicker := time.NewTicker(time.Millisecond * 200)
 	for {
-		select {
-		case <-s.channel.exit:
-			lg.Printf("Exit mainLoop")
-			return
-		default:
-		}
-
 		select {
 		case keyInfo := <-s.channel.keyIn:
 			s.channel.keyOut <- s.onKey(keyInfo)
 		default:
-		}
-
-		select {
-		case <-cursorTicker.C:
-			s.onCursorTick()
-		case point := <-s.channel.cursorMove:
-			s.onCursorMove(point.X, point.Y)
-		case config := <-s.channel.configChange:
-			s.onConfigChange(config)
-		case <-cmdStepTicker.C:
-			s.onCmdStep()
-		default:
+			select {
+			case <-s.channel.exit:
+				lg.Printf("Exit mainLoop")
+				return
+			case <-cursorTicker.C:
+				s.onCursorTick()
+			case point := <-s.channel.cursorMove:
+				s.onCursorMove(point.X, point.Y)
+			case config := <-s.channel.configChange:
+				s.onConfigChange(config)
+			case <-cmdStepTicker.C:
+				s.onCmdStep()
+			default:
+			}
 		}
 	}
 }
@@ -66,7 +61,7 @@ func (s *logicState) onCursorTick() {
 		dx = s.cursorState.cursorFixedSpeed.x
 		dy = s.cursorState.cursorFixedSpeed.y
 	}
-	s.hookManager.AddCursorPosition(dx, dy)
+	go s.hookManager.AddCursorPosition(dx, dy)
 
 	if s.cursorState.wheelFixedSpeed == emptyPointInt {
 		dx = s.cursorState.wheelFixedSpeed.x
@@ -77,15 +72,15 @@ func (s *logicState) onCursorTick() {
 	}
 	s.hookManager.MouseWheel(dx, true)
 	s.hookManager.MouseWheel(dy, false)
-
-	s.cursorState.cursorSpeed = frictionFloat(s.cursorState.cursorSpeed, s.configCache.cursorFriction)
-	s.cursorState.wheelSpeed = frictionInt(s.cursorState.wheelSpeed, s.configCache.wheelFriction)
 }
 
 func (s *logicState) onCmdStep() {
 	for command := range s.cmdState.steppingCmdMap {
-		_ = command
+		command.OnStep(s.commandTool)
 	}
+
+	s.cursorState.cursorSpeed = frictionFloat(s.cursorState.cursorSpeed, s.configCache.cursorFriction)
+	s.cursorState.wheelSpeed = frictionInt(s.cursorState.wheelSpeed, s.configCache.wheelFriction)
 }
 
 func (s *logicState) onConfigChange(config di.Config) {
@@ -189,13 +184,54 @@ func (s *logicState) init() {
 	s.ioManager.SetOnConfigChangeListener(makeConfigChangeListener(s.channel.configChange))
 }
 
-func (s *logicState) selectNeedNextKey(combinedKey di.CommandKey) bool {
-	select {
-	case <-s.channel.nextKeyIn:
-		s.channel.nextKeyOut <- combinedKey
-		return true
-	default:
-		return false
+func (s *logicState) initCommandTool() {
+	s.commandTool = &di.CommandTool{
+		Activate: func() {
+			s.cmdState.when = di.WhenActivated
+			s.overlayManager.Show()
+		},
+		Deactivate: func() {
+			s.cmdState.when = di.WhenDeactivated
+			s.overlayManager.Hide()
+		},
+		AccelerateCursor: func(deg float64) {
+			// todo
+			s.cursorState.cursorSpeed.x += s.configCache.cursorAcceleration.x
+			s.cursorState.cursorSpeed.y += s.configCache.cursorAcceleration.y
+		},
+		FixCursorSpeed: func() {
+			s.cursorState.cursorFixedSpeed = s.configCache.cursorSniperSpeed
+		},
+		UnfixCursorSpeed: func() {
+			s.cursorState.cursorFixedSpeed = emptyPointInt
+		},
+		FixWheelSpeed: func() {
+			s.cursorState.wheelFixedSpeed = s.configCache.wheelSniperSpeed
+		},
+		UnfixWheelSpeed: func() {
+			s.cursorState.wheelFixedSpeed = emptyPointInt
+		},
+		MouseDown: func(button di.MouseButton) {
+			go s.hookManager.MouseDown(button)
+		},
+		MouseUp: func(button di.MouseButton) {
+			go s.hookManager.MouseUp(button)
+		},
+		MouseWheel: func(deg float64) {},
+		Teleport:   func(deg float64) {},
+		TeleportForward: func() {
+			if math.Abs(s.cursorState.cursorSpeed.x) > 0.3 || math.Abs(s.cursorState.cursorSpeed.y) > 0.3 {
+				distance := s.configCache.teleportDistanceF
+				angle := math.Atan2(s.cursorState.cursorSpeed.x, s.cursorState.cursorSpeed.y)
+				s.cursorState.lastTeleportForward = pointInt{
+					x: int(math.Round(float64(distance) * math.Sin(angle))),
+					y: int(math.Round(float64(distance) * math.Cos(angle))),
+				}
+			}
+			s.hookManager.AddCursorPosition(
+				s.cursorState.lastTeleportForward.x, s.cursorState.lastTeleportForward.y,
+			)
+		},
 	}
 }
 

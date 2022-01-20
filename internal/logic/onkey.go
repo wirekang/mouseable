@@ -118,3 +118,13 @@ func (s *logicState) cloneCommandKey() (clone di.CommandKey) {
 	}
 	return
 }
+
+func (s *logicState) selectNeedNextKey(combinedKey di.CommandKey) bool {
+	select {
+	case <-s.channel.nextKeyIn:
+		s.channel.nextKeyOut <- combinedKey
+		return true
+	default:
+		return false
+	}
+}
