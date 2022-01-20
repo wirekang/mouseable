@@ -1,6 +1,22 @@
 package di
 
+import (
+	"strings"
+)
+
 type CommandKey [][]string
+
+func (c CommandKey) String() CommandKeyString {
+	var outers []string
+	for i := range c {
+		var inners []string
+		for j := range c[i] {
+			inners = append(inners, c[i][j])
+		}
+		outers = append(outers, strings.Join(inners, "+"))
+	}
+	return CommandKeyString(strings.Join(outers, " - "))
+}
 
 type HookKeyInfo struct {
 	Key    string
@@ -107,6 +123,7 @@ type UIManager interface {
 	SetOnLoadConfigSchemaListener(func() ConfigJSONSchema)
 	SetOnLoadConfigNamesListener(func() ([]ConfigName, error))
 	SetOnLoadAppliedConfigNameListener(func() (ConfigName, error))
+	SetOnApplyConfigNameListener(func(name ConfigName) error)
 	Open()
 }
 

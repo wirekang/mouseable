@@ -15,15 +15,15 @@ import (
 func (s *logicState) onKey(keyInfo di.HookKeyInfo) (eat bool) {
 	key := keyInfo.Key
 	isDown := keyInfo.IsDown
-	isRepeat := s.updatePressingKeyMap(key, isDown)
+	isRepeat, pressingCount := s.updatePressingKeyMap(key, isDown)
 	_ = isRepeat
-	s.updateCommandKey(isDown)
+	s.updateCommandKey(key, isDown, pressingCount)
 	fmt.Printf("%v\n", s.keyState.commandKey)
 
 	return
 }
 
-func (s *logicState) updatePressingKeyMap(key string, isDown bool) (isRepeat bool) {
+func (s *logicState) updatePressingKeyMap(key string, isDown bool) (isRepeat bool, pressingCount int) {
 	if isDown {
 		isRepeat = funk.ContainsString(s.keyState.pressingKeys, key)
 		if !isRepeat {
@@ -32,40 +32,58 @@ func (s *logicState) updatePressingKeyMap(key string, isDown bool) (isRepeat boo
 	} else {
 		s.keyState.pressingKeys = funk.FilterString(
 			s.keyState.pressingKeys, func(s string) bool {
-				return s == key
+				return s != key
 			},
 		)
 	}
+	pressingCount = len(s.keyState.pressingKeys)
 	return
 }
 
-func (s *logicState) updateCommandKey(isDown bool) {
+func (s *logicState) updateCommandKey(key string, isDown bool, pressingCount int) {
 	now := time.Now().UnixMilli()
-	switch pressingCount := len(s.keyState.pressingKeys); pressingCount {
-	case 0: // end last block
-		if !isDown {
-			s.keyState.lastUpTime = now
-		} else {
-			lg.Errorf("LOGICAL FALLACY: no pressingKey, but isDown = true")
-		}
-	case 1:
-		if isDown {
-			if len(s.keyState.commandKey) > 0 && s.configCache.keyTimeout > now-s.keyState.lastUpTime {
-
-			} else {
-				s.keyState.commandKey = [][]string{}
-			}
-		}
+	if !isDown {
+		s.keyState.lastUpTime = now
+		return
 	}
-	// replace last block with pressingKeys
+
+	didTimeout := s.configCache.keyTimeout < now-s.keyState.lastUpTime
+	clone := s.cloneCommandKey()
+	switch pressingCount {
+	case 0:
+		lg.Errorf("LOGICAL FALLACY: isDown=true, pressingCount=0")
+		return
+	case 1:
+		if didTimeout {
+			s.keyState.commandKey = [][]string{{key}}
+			return
+		}
+
+		clone = append(clone, []string{key})
+	default:
+		if len(clone) < 1 {
+			lg.Errorf("LOGICAL FALLACY: isDown=true, pressingCount>1, len(clone) < 1")
+			return
+		}
+		clone[len(clone)-1] = append(clone[len(clone)-1], key)
+	}
+
+	if _, ok := s.configCache.commandKeyStringMap[clone.String()]; ok {
+		s.keyState.commandKey = clone
+		return
+	} else {
+		s.keyState.commandKey = [][]string{{key}}
+	}
+
 }
 
-func printKey(kad di.HookKeyInfo) {
-	s := "Up"
-	if kad.IsDown {
-		s = "Down"
+func (s *logicState) cloneCommandKey() (clone di.CommandKey) {
+	clone = make(di.CommandKey, len(s.keyState.commandKey))
+	for i := range s.keyState.commandKey {
+		clone[i] = make([]string, len(s.keyState.commandKey[i]))
+		copy(clone[i], s.keyState.commandKey[i])
 	}
-	fmt.Printf("%s %s\n", kad.Key, s)
+	return
 }
 
 func keyStringToCmdKey(c di.CommandKeyString) (key di.CommandKey) {

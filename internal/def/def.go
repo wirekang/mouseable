@@ -3,7 +3,6 @@ package def
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/pkg/errors"
 
@@ -65,7 +64,7 @@ func (m *manager) SetConfig(config di.Config) {
 }
 
 func (m *manager) Command(key di.CommandKey, when di.When) *di.Command {
-	cks := cmdKeyToKeyString(key)
+	cks := key.String()
 	cmdName, ok := m.keyStringCmdNameMap[cks]
 	if !ok {
 		return nil
@@ -186,18 +185,6 @@ func dataTypeToString(dt di.DataType) string {
 		return "string"
 	}
 	return "?"
-}
-
-func cmdKeyToKeyString(c di.CommandKey) di.CommandKeyString {
-	var outers []string
-	for i := range c {
-		var inners []string
-		for j := range c[i] {
-			inners = append(inners, c[i][j])
-		}
-		outers = append(outers, strings.Join(inners, "+"))
-	}
-	return di.CommandKeyString(strings.Join(outers, " - "))
 }
 
 func nop(*di.CommandTool) {}
