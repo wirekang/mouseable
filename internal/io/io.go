@@ -19,7 +19,7 @@ import (
 	"github.com/wirekang/mouseable/internal/lg"
 )
 
-var defaultConfigName di.ConfigName = "default.json"
+var defaultConfigName di.ConfigName = "qwerty-wasd.json"
 
 func New() di.IOManager {
 	rd, cd := initDirs()

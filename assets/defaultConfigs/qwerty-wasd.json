@@ -1,0 +1,29 @@
+{
+  "command": {
+    "activate": "Alt+J",
+    "deactivate": ";",
+    "move-left": "A",
+    "move-down": "S",
+    "move-up": "W",
+    "move-right": "D",
+    "teleport-forward": "H",
+    "sniper-mode": "Space",
+    "sniper-mode-wheel": "Space",
+    "wheel-up": "R",
+    "wheel-down": "F",
+    "wheel-left": "Q",
+    "wheel-right": "E",
+    "click-left": "J",
+    "click-middle": "K",
+    "click-right": "L"
+  },
+  "data": {
+    "cursor-sniper-speed": 4,
+    "cursor-speed": 10,
+    "key-timeout": 150,
+    "show-overlay": true,
+    "teleport-distance": 200,
+    "wheel-sniper-speed": 8,
+    "wheel-speed": 40
+  }
+}
