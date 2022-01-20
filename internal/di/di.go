@@ -157,6 +157,7 @@ type CommandTool struct {
 	Teleport                    func(direction Direction)
 	TeleportForward             func()
 	Toggle                      func()
+	Attach                      func(direction Direction)
 }
 
 type Command struct {

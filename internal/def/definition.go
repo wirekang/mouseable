@@ -373,6 +373,46 @@ func New() di.DefinitionManager {
 			},
 		},
 	)
+	m.insertCommand(
+		"attach-right",
+		"Attach cursor rightmost.",
+		di.WhenActivated,
+		&di.Command{
+			OnBegin: func(tool *di.CommandTool) {
+				tool.Attach(di.DirectionRight)
+			},
+		},
+	)
+	m.insertCommand(
+		"attach-left",
+		"Attach cursor leftmost.",
+		di.WhenActivated,
+		&di.Command{
+			OnBegin: func(tool *di.CommandTool) {
+				tool.Attach(di.DirectionLeft)
+			},
+		},
+	)
+	m.insertCommand(
+		"attach-up",
+		"Attach cursor uppermost.",
+		di.WhenActivated,
+		&di.Command{
+			OnBegin: func(tool *di.CommandTool) {
+				tool.Attach(di.DirectionUp)
+			},
+		},
+	)
+	m.insertCommand(
+		"attach-down",
+		"Attach cursor bottommost.",
+		di.WhenActivated,
+		&di.Command{
+			OnBegin: func(tool *di.CommandTool) {
+				tool.Attach(di.DirectionDown)
+			},
+		},
+	)
 
 	m.insertData("key-timeout", "Key press timeout for continuous input in ms", di.Int, 150)
 	m.insertData("cursor-acceleration", "Cursor acceleration", di.Int, 2)

@@ -82,6 +82,9 @@ func (s *logicState) initCommandTool() {
 				s.commandTool.Deactivate()
 			}
 		},
+		Attach: func(dir di.Direction) {
+			s.channel.cursorBuffer <- directionToVectorInt(dir, 20000)
+		},
 	}
 }
 
