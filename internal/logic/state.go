@@ -27,6 +27,8 @@ func (s *logicState) Run() {
 }
 
 func (s *logicState) mainLoop() {
+	s.hookManager.AddCursorPosition(1, 0)
+
 	cursorTicker := time.NewTicker(time.Millisecond * 20)
 	cmdStepTicker := time.NewTicker(time.Millisecond * 200)
 	for {
