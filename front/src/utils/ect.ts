@@ -32,7 +32,7 @@ export function initPing() {
   }, 3000);
 
   setInterval(() => {
-    if (Date.now() - store.lastPing > 10000) {
+    if (Date.now() - store.lastPing > 8000) {
       nc.show();
     }
   }, 1000);
@@ -41,6 +41,9 @@ export function initPing() {
 export async function renderVersion() {
   const version = await window.__getVersion();
   $("#version").text(version);
+  const r = await fetch("https://api.github.com/repos/wirekang/mouseable/releases/latest");
+  const { tag_name } = await r.json();
+  $("#latest-version").text(tag_name);
 }
 
 export function initButtons() {
@@ -53,5 +56,9 @@ export function initButtons() {
       window.__terminate();
       window.close();
     }
+  });
+
+  $("#latest-button").on("click", () => {
+    window.__openLink("github.com/wirekang/mouseable/releases/latest");
   });
 }

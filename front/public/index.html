@@ -22,6 +22,10 @@
       <div id="version-wrapper">
         <span>Version: </span>
         <span id="version"></span>
+        <button id="latest-button">
+          Latest:
+          <span id="latest-version"></span>
+        </button>
       </div>
       <button id="more-modal-button">More</button>
       <button id="terminate-button">Terminate</button>
@@ -35,7 +39,7 @@
     </div>
     <div id="above">
       <ul>
-        <li><b>Ctrl+I</b> to show suggestions.</li>
+        <li><b>Ctrl+I</b> to show suggestions. <b>Ctrl+W</b> to close window.</li>
         <li><b>F1</b> to receive next key from OS.</li>
         <li><b>F2</b> to save, <b>F3</b> to save and apply.</li>
         <li><b>F4</b> to create new config.</li>
@@ -45,6 +49,7 @@
         <div id="examples-modal">
           <b>"A+B"</b> for simultaneous input.<br />
           <b>"A - B"</b> (Space required!) for sequential input.<br />
+          <br />
           <b>"Ctrl+C"</b>: Press Ctrl and press C before release Ctrl.<br />
           <b>"Ctrl - Ctrl"</b>: Press Ctrl, release it, and press again in
           <b>key-timeout</b> milliseconds.<br />
