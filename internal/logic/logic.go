@@ -38,9 +38,12 @@ type logicState struct {
 	}
 
 	keyState struct {
-		pressingKeys []string
-		commandKey   di.CommandKey
-		lastUpTime   int64
+		pressingKeys   []string
+		commandKey     di.CommandKey
+		lastUpTime     int64
+		eatUntilUpMap  map[string]struct{}
+		steppingCmdMap map[*di.Command]struct{}
+		enderMap       map[string]*di.Command
 	}
 
 	cursorState struct {
@@ -61,7 +64,7 @@ type logicState struct {
 		teleportDistanceF,
 		teleportDistanceX,
 		teleportDistanceY int
-		commandKeyStringMap map[di.CommandKeyString]struct{}
+		commandKeyStringPathMap map[di.CommandKeyString]struct{}
 	}
 
 	channel struct {
@@ -77,6 +80,7 @@ type logicState struct {
 
 		exit <-chan struct{}
 	}
+	config di.Config
 }
 
 func (s *logicState) initCommandTool() {
@@ -88,7 +92,7 @@ func (s *logicState) initCommandTool() {
 			s.cmdState.when = di.WhenDeactivated
 		},
 		AccelerateCursor: func(deg float64) {
-
+			// todo
 		},
 		MouseDown: func(button di.MouseButton) {
 			go s.hookManager.MouseDown(button)
@@ -97,10 +101,14 @@ func (s *logicState) initCommandTool() {
 			go s.hookManager.MouseUp(button)
 		},
 		MouseWheel: func(isHorizontal bool) {
-
+			// todo
 		},
-		Teleport:        nil,
-		TeleportForward: nil,
+		Teleport: func(deg float64) {
+			// todo
+		},
+		TeleportForward: func() {
+			// todo
+		},
 	}
 }
 

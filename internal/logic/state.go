@@ -84,6 +84,8 @@ func (s *logicState) onCmdTick() {
 
 func (s *logicState) onConfigChange(config di.Config) {
 	lg.Printf("onConfigChange")
+	s.definitionManager.SetConfig(config)
+
 	getInt := s.makeDataGetterInt(config)
 	getFloat := s.makeDataGetterFloat(config)
 	getBool := s.makeDataGetterBool(config)
@@ -120,8 +122,8 @@ func (s *logicState) onConfigChange(config di.Config) {
 	s.configCache.teleportDistanceX = getInt("teleport-distance-x")
 	s.configCache.teleportDistanceY = getInt("teleport-distance-y")
 
-	s.configCache.commandKeyStringMap = config.CommandKeyStringPathMap()
-	for keyString := range s.configCache.commandKeyStringMap {
+	s.configCache.commandKeyStringPathMap = config.CommandKeyStringPathMap()
+	for keyString := range s.configCache.commandKeyStringPathMap {
 		fmt.Println(keyString)
 	}
 }
@@ -146,6 +148,9 @@ func (s *logicState) loadAndApplyConfig() {
 }
 
 func (s *logicState) init() {
+	s.keyState.steppingCmdMap = map[*di.Command]struct{}{}
+	s.keyState.eatUntilUpMap = map[string]struct{}{}
+	s.keyState.enderMap = map[string]*di.Command{}
 	keyInfoChan := make(chan di.HookKeyInfo)
 	eatChan := make(chan bool)
 	needNextKeyChan := make(chan struct{})

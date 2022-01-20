@@ -16,10 +16,11 @@ func (s *logicState) onKey(keyInfo di.HookKeyInfo) (eat bool) {
 	key := keyInfo.Key
 	isDown := keyInfo.IsDown
 	isRepeat, pressingCount := s.updatePressingKeyMap(key, isDown)
-	_ = isRepeat
-	s.updateCommandKey(key, isDown, pressingCount)
-	fmt.Printf("%v\n", s.keyState.commandKey)
+	s.updateCommandKey(key, isDown, isRepeat, pressingCount)
+	didBegin := s.procCommand(key, isDown, isRepeat)
+	eat = s.procEat(key, isDown, didBegin)
 
+	fmt.Printf("%v\n", s.keyState.commandKey)
 	return
 }
 
@@ -40,7 +41,11 @@ func (s *logicState) updatePressingKeyMap(key string, isDown bool) (isRepeat boo
 	return
 }
 
-func (s *logicState) updateCommandKey(key string, isDown bool, pressingCount int) {
+func (s *logicState) updateCommandKey(key string, isDown bool, isRepeat bool, pressingCount int) {
+	if isDown && isRepeat {
+		return
+	}
+
 	now := time.Now().UnixMilli()
 	if !isDown {
 		s.keyState.lastUpTime = now
@@ -68,13 +73,55 @@ func (s *logicState) updateCommandKey(key string, isDown bool, pressingCount int
 		clone[len(clone)-1] = append(clone[len(clone)-1], key)
 	}
 
-	if _, ok := s.configCache.commandKeyStringMap[clone.String()]; ok {
+	if _, ok := s.configCache.commandKeyStringPathMap[clone.String()]; ok {
 		s.keyState.commandKey = clone
 		return
 	} else {
 		s.keyState.commandKey = [][]string{{key}}
 	}
+}
 
+func (s *logicState) procCommand(key string, isDown bool, isRepeat bool) (didBegin bool) {
+	if isDown && isRepeat {
+		return
+	}
+
+	cmd := s.definitionManager.Command(s.keyState.commandKey, s.cmdState.when)
+	if cmd != nil {
+		_, isStepping := s.keyState.steppingCmdMap[cmd]
+		if isDown && !isStepping {
+			cmd.OnBegin(s.commandTool)
+			s.keyState.enderMap[key] = cmd
+			s.keyState.steppingCmdMap[cmd] = emptyStruct
+			didBegin = true
+			lg.Printf("Begin %d", cmd)
+		}
+	}
+
+	if !isDown {
+		endCmd := s.keyState.enderMap[key]
+		if endCmd != nil {
+			endCmd.OnEnd(s.commandTool)
+			delete(s.keyState.enderMap, key)
+			delete(s.keyState.steppingCmdMap, endCmd)
+			lg.Printf("End %d", endCmd)
+		}
+	}
+	return
+}
+
+func (s *logicState) procEat(key string, isDown bool, didBegin bool) (shouldEat bool) {
+	if didBegin {
+		s.keyState.eatUntilUpMap[key] = emptyStruct
+		shouldEat = true
+		return
+	}
+
+	_, shouldEat = s.keyState.eatUntilUpMap[key]
+	if shouldEat && !isDown {
+		delete(s.keyState.eatUntilUpMap, key)
+	}
+	return
 }
 
 func (s *logicState) cloneCommandKey() (clone di.CommandKey) {
