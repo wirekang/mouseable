@@ -1,4 +1,3 @@
-// Package def declares types for prevent circular dependencies.
 package def
 
 import (
@@ -342,18 +341,12 @@ func New() di.DefinitionManager {
 		},
 	)
 
-	m.insertData("key-timeout", "Key press timeout for continuous input in ms", di.Int, 200)
-	m.insertData("cursor-speed-x", "Speed of cursor", di.Int, 6)
-	m.insertData("cursor-speed-y", "Speed of cursor", di.Int, 6)
-	m.insertData("wheel-speed-x", "Initial speed of wheel", di.Int, 10)
-	m.insertData("wheel-speed-y", "Initial speed of wheel", di.Int, 10)
-	m.insertData("cursor-sniper-speed-x", "Sniper mode horizontal speed", di.Int, 1)
-	m.insertData("cursor-sniper-speed-y", "Sniper mode vertical speed", di.Int, 1)
-	m.insertData("wheel-sniper-speed-x", "Sniper mode horizontal speed (MouseWheel)", di.Int, 4)
-	m.insertData("wheel-sniper-speed-y", "Sniper mode vertical speed (MouseWheel)", di.Int, 4)
-	m.insertData("teleport-distance-f", "TeleportForward distance", di.Int, 300)
-	m.insertData("teleport-distance-x", "Teleport horizontal distance", di.Int, 300)
-	m.insertData("teleport-distance-y", "Teleport vertical distance", di.Int, 300)
+	m.insertData("key-timeout", "Key press timeout for continuous input in ms", di.Int, 150)
+	m.insertData("cursor-speed", "Speed of cursor", di.Int, 10)
+	m.insertData("wheel-speed", "Initial speed of wheel", di.Int, 40)
+	m.insertData("cursor-sniper-speed", "Sniper mode horizontal speed", di.Int, 2)
+	m.insertData("wheel-sniper-speed", "Sniper mode horizontal speed (MouseWheel)", di.Int, 8)
+	m.insertData("teleport-distance", "TeleportForward distance", di.Int, 300)
 	m.insertData("show-overlay", "Show overlay when Mouseable activated", di.Bool, true)
 
 	return m

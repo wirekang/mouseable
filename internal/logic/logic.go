@@ -47,23 +47,22 @@ type logicState struct {
 	}
 
 	cursorState struct {
-		cursorFixedSpeed    vectorInt
-		wheelFixedSpeed     vectorInt
 		cursorSpeed         vectorInt
 		wheelSpeed          vectorInt
 		lastTeleportForward vectorInt
+		maxCursorSpeed      int
+		maxWheelSpeed       int
 		cursorDirectionMap  map[di.Direction]struct{}
 		wheelDirectionMap   map[di.Direction]struct{}
 	}
 
 	configCache struct {
 		keyTimeout              int64
-		cursorSpeed             vectorInt
-		wheelSpeed              vectorInt
-		cursorSniperSpeed       vectorInt
-		wheelSniperSpeed        vectorInt
-		teleportDistanceF       int
-		teleportDistance        vectorInt
+		cursorSpeed             int
+		wheelSpeed              int
+		cursorSniperSpeed       int
+		wheelSniperSpeed        int
+		teleportDistance        int
 		commandKeyStringPathMap map[di.CommandKeyString]struct{}
 	}
 
@@ -76,14 +75,13 @@ type logicState struct {
 		keyOut chan<- bool
 
 		nextKeyIn  <-chan struct{}
-		nextKeyOut chan<- di.CommandKey
+		nextKeyOut chan<- di.CommandKeyString
 
 		exit <-chan struct{}
 
 		cursorBuffer chan vectorInt
 		wheelBuffer  chan vectorInt
 	}
-	config di.Config
 }
 
 func Run() {

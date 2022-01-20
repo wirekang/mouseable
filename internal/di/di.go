@@ -116,7 +116,7 @@ type UIManager interface {
 	Run()
 	ShowAlert(string)
 	ShowError(string)
-	SetOnGetNextKeyListener(func() CommandKey)
+	SetOnGetNextKeyListener(func() CommandKeyString)
 	SetOnTerminateListener(func())
 	SetOnSaveConfigListener(func(ConfigName, ConfigJSON) error)
 	SetOnLoadConfigListener(func(ConfigName) (ConfigJSON, error))

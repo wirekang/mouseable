@@ -3,7 +3,6 @@ package logic
 import (
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/wirekang/mouseable/internal/di"
 )
@@ -28,25 +27,12 @@ func makeKeyListener(c chan<- di.HookKeyInfo, c2 <-chan bool) func(di.HookKeyInf
 }
 
 func makeOnGetNextKeyListener(
-	needNextKeyChan chan<- struct{}, nextKeyChan <-chan di.CommandKey,
-) func() di.CommandKey {
-	return func() (key di.CommandKey) {
+	needNextKeyChan chan<- struct{}, nextKeyChan <-chan di.CommandKeyString,
+) func() di.CommandKeyString {
+	return func() (key di.CommandKeyString) {
 		needNextKeyChan <- emptyStruct
 		key = <-nextKeyChan
-		timoutChan := time.After(time.Second)
-		for {
-			select {
-			case <-timoutChan:
-				select {
-				case <-nextKeyChan:
-				default:
-					return
-				}
-
-			case needNextKeyChan <- emptyStruct:
-				key = <-nextKeyChan
-			}
-		}
+		return
 	}
 }
 

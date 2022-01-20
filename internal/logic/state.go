@@ -1,8 +1,8 @@
 package logic
 
 import (
-	"fmt"
 	"math"
+	"os"
 	"time"
 
 	"github.com/pkg/errors"
@@ -19,19 +19,14 @@ func (s *logicState) Run() {
 	go s.bufferLoop()
 	go s.mainLoop()
 	s.uiManager.Run()
-	defer func() {
-		s.ioManager.Unlock()
-		lg.Printf("Unlock")
-		s.hookManager.Uninstall()
-		lg.Printf("Hook uninstalled")
-	}()
 }
 
 func (s *logicState) mainLoop() {
 	s.hookManager.AddCursorPosition(1, 0)
 
-	cursorTicker := time.NewTicker(time.Millisecond * 10)
+	cursorTicker := time.NewTicker(time.Millisecond * 25)
 	cmdStepTicker := time.NewTicker(time.Millisecond * 100)
+Loop:
 	for {
 		select {
 		case keyInfo := <-s.channel.keyIn:
@@ -40,7 +35,7 @@ func (s *logicState) mainLoop() {
 			select {
 			case <-s.channel.exit:
 				lg.Printf("Exit mainLoop")
-				return
+				break Loop
 			case <-cursorTicker.C:
 				s.onCursorTick()
 			case point := <-s.channel.cursorMove:
@@ -53,6 +48,12 @@ func (s *logicState) mainLoop() {
 			}
 		}
 	}
+
+	s.ioManager.Unlock()
+	lg.Printf("Unlock")
+	s.hookManager.Uninstall()
+	lg.Printf("Hook uninstalled")
+	os.Exit(0)
 }
 
 func (s *logicState) bufferLoop() {
@@ -68,18 +69,8 @@ func (s *logicState) bufferLoop() {
 }
 
 func (s *logicState) onCursorTick() {
-	spd := s.cursorState.cursorSpeed
-	if s.cursorState.cursorFixedSpeed != emptyVectorInt {
-		spd = minMaxInt(s.cursorState.cursorSpeed, s.cursorState.cursorFixedSpeed)
-	}
-	s.channel.cursorBuffer <- spd
-
-	spd = s.cursorState.wheelSpeed
-	if s.cursorState.wheelFixedSpeed != emptyVectorInt {
-		spd = minMaxInt(s.cursorState.wheelSpeed, s.cursorState.wheelFixedSpeed)
-	}
-	s.channel.wheelBuffer <- spd
-
+	s.channel.cursorBuffer <- s.cursorState.cursorSpeed
+	s.channel.wheelBuffer <- s.cursorState.wheelSpeed
 }
 
 func (s *logicState) onCmdTick() {
@@ -89,13 +80,13 @@ func (s *logicState) onCmdTick() {
 
 	if len(s.cursorState.cursorDirectionMap) > 0 {
 		s.cursorState.cursorSpeed = combineDirectionMap(
-			s.cursorState.cursorDirectionMap, s.configCache.cursorSpeed,
+			s.cursorState.cursorDirectionMap, s.cursorState.maxCursorSpeed,
 		)
 	}
 
 	if len(s.cursorState.wheelDirectionMap) > 0 {
 		s.cursorState.wheelSpeed = combineDirectionMap(
-			s.cursorState.wheelDirectionMap, s.configCache.wheelSpeed,
+			s.cursorState.wheelDirectionMap, s.cursorState.maxWheelSpeed,
 		)
 	}
 }
@@ -113,32 +104,16 @@ func (s *logicState) onConfigChange(config di.Config) {
 
 	s.overlayManager.SetVisibility(getBool("show-overlay"))
 	s.configCache.keyTimeout = int64(getInt("key-timeout"))
-	s.configCache.cursorSpeed = vectorInt{
-		x: getInt("cursor-speed-x"),
-		y: getInt("cursor-speed-y"),
-	}
-	s.configCache.wheelSpeed = vectorInt{
-		x: getInt("wheel-speed-x"),
-		y: getInt("wheel-speed-y"),
-	}
-	s.configCache.cursorSniperSpeed = vectorInt{
-		x: getInt("cursor-sniper-speed-x"),
-		y: getInt("cursor-sniper-speed-y"),
-	}
-	s.configCache.wheelSniperSpeed = vectorInt{
-		x: getInt("wheel-sniper-speed-x"),
-		y: getInt("wheel-sniper-speed-y"),
-	}
-	s.configCache.teleportDistanceF = getInt("teleport-distance-f")
-	s.configCache.teleportDistance = vectorInt{
-		x: getInt("teleport-distance-x"),
-		y: getInt("teleport-distance-y"),
-	}
+	s.configCache.cursorSpeed = getInt("cursor-speed")
+	s.configCache.wheelSpeed = getInt("wheel-speed")
+	s.configCache.cursorSniperSpeed = getInt("cursor-sniper-speed")
+	s.configCache.wheelSniperSpeed = getInt("wheel-sniper-speed")
+	s.configCache.teleportDistance = getInt("teleport-distance")
 
 	s.configCache.commandKeyStringPathMap = config.CommandKeyStringPathMap()
-	for keyString := range s.configCache.commandKeyStringPathMap {
-		fmt.Println(keyString)
-	}
+
+	s.cursorState.maxCursorSpeed = s.configCache.cursorSpeed
+	s.cursorState.maxWheelSpeed = s.configCache.wheelSpeed
 }
 
 func (s *logicState) onCursorMove(x, y int) {
@@ -171,7 +146,7 @@ func (s *logicState) init() {
 	keyInfoChan := make(chan di.HookKeyInfo)
 	eatChan := make(chan bool)
 	needNextKeyChan := make(chan struct{})
-	nextKeyChan := make(chan di.CommandKey)
+	nextKeyChan := make(chan di.CommandKeyString)
 	cursorInfoChan := make(chan di.Point)
 	exitChan := make(chan struct{})
 
@@ -237,36 +212,21 @@ func (s *logicState) makeDataGetterString(config di.Config) func(name di.DataNam
 	}
 }
 
-func combineDirectionMap(m map[di.Direction]struct{}, v vectorInt) (r vectorInt) {
+func combineDirectionMap(m map[di.Direction]struct{}, max int) (r vectorInt) {
 	var x, y float64
 	for direction := range m {
-		x += directionVectorMap[direction].x * float64(v.x)
-		y += directionVectorMap[direction].y * float64(v.y)
+		x += directionVectorMap[direction].x * float64(max)
+		y += directionVectorMap[direction].y * float64(max)
 	}
-	r = minMaxFloatInt(vectorFloat{x, y}, v)
-	if math.Abs(float64(r.x)) == math.Abs(float64(r.y)) {
-		r.x = int(math.Round(float64(r.x) * slow))
-		r.y = int(math.Round(float64(r.y) * slow))
+
+	if x == 0 && y == 0 {
+		return
 	}
-	return
-}
 
-func minMaxFloat(v vectorFloat, mm vectorFloat) (r vectorFloat) {
-	r.x = math.Min(math.Max(v.x, -mm.x), mm.x)
-	r.y = math.Min(math.Max(v.y, -mm.y), mm.y)
-	return
-}
-
-func minMaxFloatInt(v vectorFloat, mm vectorInt) (r vectorInt) {
-	fr := minMaxFloat(v, vectorFloat{float64(mm.x), float64(mm.y)})
-	r.x = int(math.Round(fr.x))
-	r.y = int(math.Round(fr.y))
-	return
-}
-
-func minMaxInt(v vectorInt, mm vectorInt) (r vectorInt) {
-	fr := minMaxFloat(vectorFloat{float64(v.x), float64(v.y)}, vectorFloat{float64(mm.x), float64(mm.y)})
-	r.x = int(math.Round(fr.x))
-	r.y = int(math.Round(fr.y))
+	length := math.Sqrt(math.Pow(x, 2) + math.Pow(y, 2))
+	x = x / length
+	y = y / length
+	r.x = int(math.Round(x * float64(max)))
+	r.y = int(math.Round(y * float64(max)))
 	return
 }

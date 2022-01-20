@@ -20,7 +20,7 @@ func New() di.UIManager {
 }
 
 type manager struct {
-	onGetNextKeyListener            func() di.CommandKey
+	onGetNextKeyListener            func() di.CommandKeyString
 	onTerminateListener             func()
 	onSaveConfigListener            func(di.ConfigName, di.ConfigJSON) error
 	onLoadConfigListener            func(di.ConfigName) (di.ConfigJSON, error)
@@ -47,7 +47,7 @@ func (m *manager) SetOnLoadConfigNamesListener(f func() ([]di.ConfigName, error)
 	m.onLoadConfigNamesListener = f
 }
 
-func (m *manager) SetOnGetNextKeyListener(f func() di.CommandKey) {
+func (m *manager) SetOnGetNextKeyListener(f func() di.CommandKeyString) {
 	m.onGetNextKeyListener = f
 }
 

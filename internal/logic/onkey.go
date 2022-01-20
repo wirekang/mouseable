@@ -18,6 +18,9 @@ func (s *logicState) onKey(keyInfo di.HookKeyInfo) (eat bool) {
 		didBegin = s.procCommand(key, isDown)
 	}
 	eat = s.procEat(key, isDown, didBegin)
+	if isDown {
+		eat = s.selectNeedNextKey(di.CommandKeyString(key)) || eat
+	}
 	return
 }
 
@@ -119,10 +122,10 @@ func (s *logicState) cloneCommandKey() (clone di.CommandKey) {
 	return
 }
 
-func (s *logicState) selectNeedNextKey(combinedKey di.CommandKey) bool {
+func (s *logicState) selectNeedNextKey(cks di.CommandKeyString) bool {
 	select {
 	case <-s.channel.nextKeyIn:
-		s.channel.nextKeyOut <- combinedKey
+		s.channel.nextKeyOut <- cks
 		return true
 	default:
 		return false

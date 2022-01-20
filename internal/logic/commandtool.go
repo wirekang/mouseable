@@ -17,8 +17,6 @@ func (s *logicState) initCommandTool() {
 			s.overlayManager.Hide()
 			s.cursorState.cursorSpeed = emptyVectorInt
 			s.cursorState.wheelSpeed = emptyVectorInt
-			s.cursorState.cursorFixedSpeed = emptyVectorInt
-			s.cursorState.wheelFixedSpeed = emptyVectorInt
 		},
 		RegisterCursorAccelerator: func(dir di.Direction) {
 			s.cursorState.cursorDirectionMap[dir] = emptyStruct
@@ -40,16 +38,16 @@ func (s *logicState) initCommandTool() {
 			}
 		},
 		FixCursorSpeed: func() {
-			s.cursorState.cursorFixedSpeed = s.configCache.cursorSniperSpeed
+			s.cursorState.maxCursorSpeed = s.configCache.cursorSniperSpeed
 		},
 		UnfixCursorSpeed: func() {
-			s.cursorState.cursorFixedSpeed = emptyVectorInt
+			s.cursorState.maxCursorSpeed = s.configCache.cursorSpeed
 		},
 		FixWheelSpeed: func() {
-			s.cursorState.wheelFixedSpeed = s.configCache.wheelSniperSpeed
+			s.cursorState.maxWheelSpeed = s.configCache.wheelSniperSpeed
 		},
 		UnfixWheelSpeed: func() {
-			s.cursorState.wheelFixedSpeed = emptyVectorInt
+			s.cursorState.maxWheelSpeed = s.configCache.wheelSpeed
 		},
 		MouseDown: func(button di.MouseButton) {
 			go s.hookManager.MouseDown(button)
@@ -63,7 +61,7 @@ func (s *logicState) initCommandTool() {
 		TeleportForward: func() {
 			if math.Abs(float64(s.cursorState.cursorSpeed.x)) > 0.3 ||
 				math.Abs(float64(s.cursorState.cursorSpeed.y)) > 0.3 {
-				distance := s.configCache.teleportDistanceF
+				distance := s.configCache.teleportDistance
 				angle := math.Atan2(
 					float64(s.cursorState.cursorSpeed.x),
 					float64(s.cursorState.cursorSpeed.y),
@@ -91,9 +89,9 @@ var directionVectorMap = map[di.Direction]vectorFloat{
 	di.DirectionRightDown: {x: slow, y: slow},
 }
 
-func directionToVectorInt(d di.Direction, distance vectorInt) (r vectorInt) {
+func directionToVectorInt(d di.Direction, distance int) (r vectorInt) {
 	f := directionVectorMap[d]
-	r.x = int(math.Round(f.x * float64(distance.x)))
-	r.y = int(math.Round(f.y * float64(distance.y)))
+	r.x = int(math.Round(f.x * float64(distance)))
+	r.y = int(math.Round(f.y * float64(distance)))
 	return
 }
