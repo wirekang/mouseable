@@ -24,7 +24,7 @@ func (s *logicState) Run() {
 func (s *logicState) mainLoop() {
 	s.hookManager.AddCursorPosition(1, 0)
 
-	stepTicker := time.NewTicker(time.Millisecond * 20)
+	ticker := time.NewTicker(time.Millisecond * 30)
 Loop:
 	for {
 		select {
@@ -39,8 +39,8 @@ Loop:
 				s.onCursorMove(point.X, point.Y)
 			case config := <-s.channel.configChange:
 				s.onConfigChange(config)
-			case <-stepTicker.C:
-				s.onStepTick()
+			case <-ticker.C:
+				s.onTick()
 			default:
 			}
 		}
@@ -65,21 +65,26 @@ func (s *logicState) bufferLoop() {
 	}
 }
 
-func (s *logicState) onStepTick() {
-
+func (s *logicState) onTick() {
 	for command := range s.cmdState.steppingCmdMap {
 		command.OnStep(s.commandTool)
 	}
 
 	if len(s.cursorState.cursorDirectionMap) > 0 {
 		s.cursorState.cursorSpeed = combineDirectionMap(
-			s.cursorState.cursorDirectionMap, s.cursorState.maxCursorSpeed,
+			s.cursorState.cursorSpeed,
+			s.cursorState.cursorDirectionMap,
+			s.configCache.cursorAccel,
+			s.cursorState.maxCursorSpeed,
 		)
 	}
 
 	if len(s.cursorState.wheelDirectionMap) > 0 {
 		s.cursorState.wheelSpeed = combineDirectionMap(
-			s.cursorState.wheelDirectionMap, s.cursorState.maxWheelSpeed,
+			s.cursorState.wheelSpeed,
+			s.cursorState.wheelDirectionMap,
+			s.configCache.wheelAccel,
+			s.cursorState.maxWheelSpeed,
 		)
 	}
 
@@ -100,16 +105,18 @@ func (s *logicState) onConfigChange(config di.Config) {
 
 	s.overlayManager.SetVisibility(getBool("show-overlay"))
 	s.configCache.keyTimeout = int64(getInt("key-timeout"))
-	s.configCache.cursorSpeed = getInt("cursor-speed")
-	s.configCache.wheelSpeed = getInt("wheel-speed")
+	s.configCache.cursorAccel = getInt("cursor-acceleration")
+	s.configCache.wheelAccel = getInt("wheel-acceleration")
+	s.configCache.cursorMaxSpeed = getInt("cursor-max-speed")
+	s.configCache.wheelMaxSpeed = getInt("wheel-max-speed")
 	s.configCache.cursorSniperSpeed = getInt("cursor-sniper-speed")
 	s.configCache.wheelSniperSpeed = getInt("wheel-sniper-speed")
 	s.configCache.teleportDistance = getInt("teleport-distance")
 
 	s.configCache.commandKeyStringPathMap = config.CommandKeyStringPathMap()
 
-	s.cursorState.maxCursorSpeed = s.configCache.cursorSpeed
-	s.cursorState.maxWheelSpeed = s.configCache.wheelSpeed
+	s.cursorState.maxCursorSpeed = s.configCache.cursorMaxSpeed
+	s.cursorState.maxWheelSpeed = s.configCache.wheelMaxSpeed
 }
 
 func (s *logicState) onCursorMove(x, y int) {
@@ -208,11 +215,12 @@ func (s *logicState) makeDataGetterString(config di.Config) func(name di.DataNam
 	}
 }
 
-func combineDirectionMap(m map[di.Direction]struct{}, max int) (r vectorInt) {
-	var x, y float64
+func combineDirectionMap(v vectorInt, m map[di.Direction]struct{}, accel, max int) (r vectorInt) {
+	x := float64(v.x)
+	y := float64(v.y)
 	for direction := range m {
-		x += directionVectorMap[direction].x * float64(max)
-		y += directionVectorMap[direction].y * float64(max)
+		x += directionVectorMap[direction].x * float64(accel)
+		y += directionVectorMap[direction].y * float64(accel)
 	}
 
 	if x == 0 && y == 0 {
@@ -220,9 +228,14 @@ func combineDirectionMap(m map[di.Direction]struct{}, max int) (r vectorInt) {
 	}
 
 	length := math.Sqrt(math.Pow(x, 2) + math.Pow(y, 2))
-	x = x / length
-	y = y / length
-	r.x = int(math.Round(x * float64(max)))
-	r.y = int(math.Round(y * float64(max)))
+	if length > float64(max) {
+		x = x / length
+		y = y / length
+		r.x = int(math.Round(x * float64(max)))
+		r.y = int(math.Round(y * float64(max)))
+	} else {
+		r.x = int(math.Round(x))
+		r.y = int(math.Round(y))
+	}
 	return
 }

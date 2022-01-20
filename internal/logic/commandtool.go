@@ -41,13 +41,13 @@ func (s *logicState) initCommandTool() {
 			s.cursorState.maxCursorSpeed = s.configCache.cursorSniperSpeed
 		},
 		UnfixCursorSpeed: func() {
-			s.cursorState.maxCursorSpeed = s.configCache.cursorSpeed
+			s.cursorState.maxCursorSpeed = s.configCache.cursorMaxSpeed
 		},
 		FixWheelSpeed: func() {
 			s.cursorState.maxWheelSpeed = s.configCache.wheelSniperSpeed
 		},
 		UnfixWheelSpeed: func() {
-			s.cursorState.maxWheelSpeed = s.configCache.wheelSpeed
+			s.cursorState.maxWheelSpeed = s.configCache.wheelMaxSpeed
 		},
 		MouseDown: func(button di.MouseButton) {
 			go s.hookManager.MouseDown(button)

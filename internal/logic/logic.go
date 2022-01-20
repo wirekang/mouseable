@@ -58,8 +58,10 @@ type logicState struct {
 
 	configCache struct {
 		keyTimeout              int64
-		cursorSpeed             int
-		wheelSpeed              int
+		cursorAccel             int
+		wheelAccel              int
+		cursorMaxSpeed          int
+		wheelMaxSpeed           int
 		cursorSniperSpeed       int
 		wheelSniperSpeed        int
 		teleportDistance        int
