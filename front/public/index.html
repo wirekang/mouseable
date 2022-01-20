@@ -23,9 +23,9 @@
         <span>Version: </span>
         <span id="version"></span>
       </div>
-      <button id="modal-button">More</button>
+      <button id="more-modal-button">More</button>
       <button id="terminate-button">Terminate</button>
-      <div id="modal">
+      <div id="more-modal">
         <p>
           Do you have trouble or suggestion? Open issue on
           <button id="github-button" class="text">Github</button>
@@ -35,10 +35,27 @@
     </div>
     <div id="above">
       <ul>
-        <li>Press <b>Ctrl+I</b> to show suggestions.</li>
-        <li>Press <b>F1</b> to insert key.</li>
-        <li>Press <b>F2</b> to save.</li>
-        <li>Press <b>F3</b> to save and apply.</li>
+        <li><b>Ctrl+I</b> to show suggestions.</li>
+        <li><b>F1</b> to receive next key from OS.</li>
+        <li><b>F2</b> to save, <b>F3</b> to save and apply.</li>
+        <li><b>F4</b> to create new config.</li>
+        <li>
+          <button id="examples-button">HotKey Example</button>
+        </li>
+        <div id="examples-modal">
+          <b>"A+B"</b> for simultaneous input.<br />
+          <b>"A - B"</b> (Space required!) for sequential input.<br />
+          <b>"Ctrl+C"</b>: Press Ctrl and press C before release Ctrl.<br />
+          <b>"Ctrl - Ctrl"</b>: Press Ctrl, release it, and press again in
+          <b>key-timeout</b> milliseconds.<br />
+          <b>"A+B - C+D"</b>: Press A with B, release them, press C with D before timeout.
+          <br />
+          <br />
+          <b
+            >Mouseable rely on strings from OS's API, so use F1 function well.<br />
+            Some keys may appear strange (ex: Num9,Num8) but ignore it. OS sent it.
+          </b>
+        </div>
       </ul>
       <div id="config-wrapper">
         <select id="config-select"></select>

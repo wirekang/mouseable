@@ -2,9 +2,13 @@ import { showError } from "./toast";
 import store from "./store";
 
 export function initModal() {
-  $("#modal").hide();
-  $("#modal-button").on("click", () => {
-    $("#modal").toggle();
+  $("#more-modal").hide();
+  $("#examples-modal").hide();
+  $("#more-modal-button").on("click", () => {
+    $("#more-modal").toggle();
+  });
+  $("#examples-button").on("click", () => {
+    $("#examples-modal").toggle();
   });
 }
 

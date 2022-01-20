@@ -34,11 +34,11 @@ div {
   flex-direction: row;
 }
 
-#modal-button {
+#more-modal-button {
   margin-left: auto;
 }
 
-#modal {
+#more-modal {
   position: absolute;
   top: 30px;
   right: 30px;
@@ -46,6 +46,12 @@ div {
   padding: 0 10px 5px;
   box-shadow: 2px 2px 2px black;
   z-index: 100;
+}
+
+#examples-modal {
+  background-color: beige;
+  z-index: 100;
+  padding: 5px;
 }
 
 #not-connected {
@@ -61,12 +67,14 @@ div {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  font-size: 0.8rem;
 }
 
 #config-wrapper {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  font-size: 1.3rem;
 }
 
 button.text {
