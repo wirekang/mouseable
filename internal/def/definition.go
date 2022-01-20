@@ -343,10 +343,10 @@ func New() di.DefinitionManager {
 
 	m.insertData("key-timeout", "Key press timeout for continuous input in ms", di.Int, 150)
 	m.insertData("cursor-speed", "Speed of cursor", di.Int, 10)
-	m.insertData("wheel-speed", "Initial speed of wheel", di.Int, 40)
-	m.insertData("cursor-sniper-speed", "Sniper mode horizontal speed", di.Int, 2)
-	m.insertData("wheel-sniper-speed", "Sniper mode horizontal speed (MouseWheel)", di.Int, 8)
-	m.insertData("teleport-distance", "TeleportForward distance", di.Int, 300)
+	m.insertData("wheel-speed", "Speed of wheel", di.Int, 40)
+	m.insertData("cursor-sniper-speed", "Sniper mode speed", di.Int, 2)
+	m.insertData("wheel-sniper-speed", "Sniper mode speed (Wheel)", di.Int, 8)
+	m.insertData("teleport-distance", "Teleport distance", di.Int, 300)
 	m.insertData("show-overlay", "Show overlay when Mouseable activated", di.Bool, true)
 
 	return m

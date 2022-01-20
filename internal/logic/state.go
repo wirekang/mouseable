@@ -24,8 +24,7 @@ func (s *logicState) Run() {
 func (s *logicState) mainLoop() {
 	s.hookManager.AddCursorPosition(1, 0)
 
-	cursorTicker := time.NewTicker(time.Millisecond * 25)
-	cmdStepTicker := time.NewTicker(time.Millisecond * 100)
+	stepTicker := time.NewTicker(time.Millisecond * 20)
 Loop:
 	for {
 		select {
@@ -36,14 +35,12 @@ Loop:
 			case <-s.channel.exit:
 				lg.Printf("Exit mainLoop")
 				break Loop
-			case <-cursorTicker.C:
-				s.onCursorTick()
 			case point := <-s.channel.cursorMove:
 				s.onCursorMove(point.X, point.Y)
 			case config := <-s.channel.configChange:
 				s.onConfigChange(config)
-			case <-cmdStepTicker.C:
-				s.onCmdTick()
+			case <-stepTicker.C:
+				s.onStepTick()
 			default:
 			}
 		}
@@ -68,12 +65,8 @@ func (s *logicState) bufferLoop() {
 	}
 }
 
-func (s *logicState) onCursorTick() {
-	s.channel.cursorBuffer <- s.cursorState.cursorSpeed
-	s.channel.wheelBuffer <- s.cursorState.wheelSpeed
-}
+func (s *logicState) onStepTick() {
 
-func (s *logicState) onCmdTick() {
 	for command := range s.cmdState.steppingCmdMap {
 		command.OnStep(s.commandTool)
 	}
@@ -89,6 +82,9 @@ func (s *logicState) onCmdTick() {
 			s.cursorState.wheelDirectionMap, s.cursorState.maxWheelSpeed,
 		)
 	}
+
+	s.channel.cursorBuffer <- s.cursorState.cursorSpeed
+	s.channel.wheelBuffer <- s.cursorState.wheelSpeed
 }
 
 func (s *logicState) onConfigChange(config di.Config) {

@@ -45,6 +45,8 @@ async function saveConfig() {
     throw errNoLoadedConfigName;
   }
 
+  store.editor!.trigger("anyString", "editor.action.formatDocument", null);
+
   await window.__saveConfig(store.loadedConfigName, value);
   showMsg(`${store.loadedConfigName} Saved.`);
 }
