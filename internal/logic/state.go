@@ -24,7 +24,7 @@ func (s *logicState) Run() {
 func (s *logicState) mainLoop() {
 	s.hookManager.AddCursorPosition(1, 0)
 
-	ticker := time.NewTicker(time.Millisecond * 30)
+	ticker := time.NewTicker(time.Millisecond * 20)
 Loop:
 	for {
 		select {
