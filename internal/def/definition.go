@@ -20,12 +20,38 @@ func New() di.DefinitionManager {
 		},
 	)
 	m.insertCommand(
+		"activate-temp",
+		"Activate Mouseable temporarily",
+		di.WhenDeactivated,
+		&di.Command{
+			OnBegin: func(tool *di.CommandTool) {
+				tool.Activate()
+			},
+			OnEnd: func(tool *di.CommandTool) {
+				tool.Deactivate()
+			},
+		},
+	)
+	m.insertCommand(
 		"deactivate",
 		"Deactivate Mouseable",
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
 				tool.Deactivate()
+			},
+		},
+	)
+	m.insertCommand(
+		"deactivate-temp",
+		"Deactivate Mouseable temporarily",
+		di.WhenActivated,
+		&di.Command{
+			OnBegin: func(tool *di.CommandTool) {
+				tool.Deactivate()
+			},
+			OnEnd: func(tool *di.CommandTool) {
+				tool.Activate()
 			},
 		},
 	)
@@ -342,11 +368,10 @@ func New() di.DefinitionManager {
 	)
 
 	m.insertData("key-timeout", "Key press timeout for continuous input in ms", di.Int, 150)
-	m.insertData("cursor-acceleration", "Speed of cursor", di.Int, 2)
-	m.insertData("cursor-max-speed", "Speed of cursor", di.Int, 10)
-	m.insertData("wheel-acceleration", "Speed of wheel", di.Int, 2)
-	m.insertData("wheel-max-speed", "Speed of wheel", di.Int, 40)
-
+	m.insertData("cursor-acceleration", "Cursor acceleration", di.Int, 2)
+	m.insertData("cursor-max-speed", "Cursor max speed", di.Int, 10)
+	m.insertData("wheel-acceleration", "Wheel acceleration", di.Int, 2)
+	m.insertData("wheel-max-speed", "Wheel max speed", di.Int, 40)
 	m.insertData("cursor-sniper-speed", "Sniper mode speed", di.Int, 2)
 	m.insertData("wheel-sniper-speed", "Sniper mode speed (Wheel)", di.Int, 8)
 	m.insertData("teleport-distance", "Teleport distance", di.Int, 300)
