@@ -3,11 +3,11 @@ import { focusMonacoEditor } from "./editor";
 import store from "./store";
 import { errNoLoadedConfigName } from "./cnst";
 import { showMsg } from "./toast";
-import { renderAppliedConfig } from "./config";
+import { loadConfig, renderAppliedConfig, renderConfigNames } from "./config";
 
 export function initHotkeys() {
   window.addEventListener("keydown", (e) => {
-    if (e.key === "F1" || e.key === "F2" || e.key === "F3") {
+    if (e.key === "F1" || e.key === "F2" || e.key === "F3" || e.key == "F4") {
       e.preventDefault();
 
       switch (e.key) {
@@ -19,6 +19,9 @@ export function initHotkeys() {
           break;
         case "F3":
           applyConfig();
+          break;
+        case "F4":
+          newConfig();
           break;
       }
     }
@@ -60,4 +63,16 @@ async function applyConfig() {
   await window.__applyConfig(store.loadedConfigName);
   showMsg(`${store.loadedConfigName} Applied.`);
   renderAppliedConfig(store.loadedConfigName);
+}
+
+async function newConfig() {
+  const s = prompt("Enter name without .json");
+  if (!s) {
+    return;
+  }
+
+  const name = `${s}.json`;
+  await window.__saveConfig(name, "{}");
+  await renderConfigNames();
+  await loadConfig(name);
 }

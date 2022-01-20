@@ -1,7 +1,7 @@
 import store from "./store";
 
 const configSelect = $<HTMLSelectElement>("#config-select");
-async function renderConfigNames() {
+export async function renderConfigNames() {
   const configNames = await window.__loadConfigNames();
   configSelect.empty();
   configNames.forEach((name) => {

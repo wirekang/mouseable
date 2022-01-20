@@ -32,6 +32,7 @@ if (isDev) {
   window.__loadConfig = (name) => resolve(configJsons.get(name) ?? `${name} default`);
   window.__saveConfig = (name, json) =>
     resolve(() => {
+      configs.push(name);
       configJsons.set(name, json);
     });
   window.__applyConfig = (name) =>
