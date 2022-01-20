@@ -72,25 +72,25 @@ func (s *logicState) updateCommandKey(key string, isDown bool, pressingCount int
 }
 
 func (s *logicState) procCommand(key string, isDown bool) (didBegin bool) {
-	cmd := s.definitionManager.Command(s.keyState.commandKey, s.cmdState.when)
-	if cmd != nil {
+	cmds := s.definitionManager.Command(s.keyState.commandKey, s.cmdState.when)
+	for _, cmd := range cmds {
 		_, isStepping := s.cmdState.steppingCmdMap[cmd]
 		if isDown && !isStepping {
 			cmd.OnBegin(s.commandTool)
-			s.keyState.enderMap[key] = cmd
+			s.keyState.enderMap[key] = append(s.keyState.enderMap[key], cmd)
 			s.cmdState.steppingCmdMap[cmd] = emptyStruct
 			didBegin = true
-			lg.Printf("Begin %d By %s", cmd, key)
+			lg.Printf("Begin %p by %s", cmd, key)
 		}
 	}
 
 	if !isDown {
-		endCmd := s.keyState.enderMap[key]
-		if endCmd != nil {
+		endCmds := s.keyState.enderMap[key]
+		for _, endCmd := range endCmds {
 			endCmd.OnEnd(s.commandTool)
 			delete(s.keyState.enderMap, key)
 			delete(s.cmdState.steppingCmdMap, endCmd)
-			lg.Printf("End %d", endCmd)
+			lg.Printf("End %p by %s", endCmd, key)
 		}
 	}
 	return

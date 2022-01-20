@@ -16,11 +16,11 @@ import (
 	"github.com/wirekang/mouseable/internal/ui"
 )
 
-type pointInt struct{ x, y int }
-type pointFloat struct{ x, y float64 }
+type vectorInt struct{ x, y int }
+type vectorFloat struct{ x, y float64 }
 
-var emptyPointInt = pointInt{}
-var emptyPointFloat = pointFloat{}
+var emptyVectorInt = vectorInt{}
+var emptyVectorFloat = vectorFloat{}
 
 var emptyStruct = struct{}{}
 
@@ -43,28 +43,27 @@ type logicState struct {
 		commandKey     di.CommandKey
 		lastUpTime     int64
 		eatUntilUpMap  map[string]struct{}
-		enderMap       map[string]*di.Command
+		enderMap       map[string][]*di.Command
 	}
 
 	cursorState struct {
-		cursorFixedSpeed    pointInt
-		wheelFixedSpeed     pointInt
-		cursorSpeed         pointFloat
-		wheelSpeed          pointInt
-		lastTeleportForward pointInt
+		cursorFixedSpeed    vectorInt
+		wheelFixedSpeed     vectorInt
+		cursorSpeed         vectorInt
+		wheelSpeed          vectorInt
+		lastTeleportForward vectorInt
+		cursorDirectionMap  map[di.Direction]struct{}
+		wheelDirectionMap   map[di.Direction]struct{}
 	}
 
 	configCache struct {
-		keyTimeout         int64
-		cursorAcceleration pointFloat
-		wheelAcceleration  pointInt
-		cursorFriction     pointFloat
-		wheelFriction      pointInt
-		cursorSniperSpeed  pointInt
-		wheelSniperSpeed   pointInt
-		teleportDistanceF,
-		teleportDistanceX,
-		teleportDistanceY int
+		keyTimeout              int64
+		cursorSpeed             vectorInt
+		wheelSpeed              vectorInt
+		cursorSniperSpeed       vectorInt
+		wheelSniperSpeed        vectorInt
+		teleportDistanceF       int
+		teleportDistance        vectorInt
 		commandKeyStringPathMap map[di.CommandKeyString]struct{}
 	}
 
@@ -80,6 +79,9 @@ type logicState struct {
 		nextKeyOut chan<- di.CommandKey
 
 		exit <-chan struct{}
+
+		cursorBuffer chan vectorInt
+		wheelBuffer  chan vectorInt
 	}
 	config di.Config
 }

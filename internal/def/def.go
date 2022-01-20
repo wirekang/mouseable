@@ -22,9 +22,9 @@ type commandDef struct {
 }
 
 type manager struct {
-	keyStringCmdNameMap map[di.CommandKeyString]di.CommandName
-	cmdDefMap           map[di.CommandName]*commandDef
-	dataDefMap          map[di.DataName]*dataDef
+	keyStringMap map[di.CommandKeyString][]*commandDef
+	cmdDefMap    map[di.CommandName]*commandDef
+	dataDefMap   map[di.DataName]*dataDef
 }
 
 func (m *manager) DataDefault(name di.DataName) di.DataValue {
@@ -56,30 +56,28 @@ func (m *manager) DataDefault(name di.DataName) di.DataValue {
 }
 
 func (m *manager) SetConfig(config di.Config) {
-	m.keyStringCmdNameMap = map[di.CommandKeyString]di.CommandName{}
+	m.keyStringMap = make(map[di.CommandKeyString][]*commandDef, len(m.cmdDefMap))
 	for commandName := range m.cmdDefMap {
 		cks := config.CommandKeyString(commandName)
-		m.keyStringCmdNameMap[cks] = commandName
+		m.keyStringMap[cks] = append(m.keyStringMap[cks], m.cmdDefMap[commandName])
 	}
 }
 
-func (m *manager) Command(key di.CommandKey, when di.When) *di.Command {
+func (m *manager) Command(key di.CommandKey, when di.When) (r []*di.Command) {
 	cks := key.String()
-	cmdName, ok := m.keyStringCmdNameMap[cks]
+	cmdDefs, ok := m.keyStringMap[cks]
 	if !ok {
-		return nil
+		return
 	}
 
-	cmdDef, ok := m.cmdDefMap[cmdName]
-	if !ok {
-		return nil
+	for i := range cmdDefs {
+		if cmdDefs[i].when != di.WhenAnytime && cmdDefs[i].when != when {
+			continue
+		}
+		r = append(r, cmdDefs[i].cmd)
 	}
 
-	if cmdDef.when != di.WhenAnytime && cmdDef.when != when {
-		return nil
-	}
-
-	return cmdDef.cmd
+	return
 }
 
 func (m *manager) JSONSchema() di.ConfigJSONSchema {
@@ -107,11 +105,11 @@ func (m *manager) JSONSchema() di.ConfigJSONSchema {
 		dataProperties[dataName] = map[string]string{
 			"type": dataTypeToString(dataDef.dataType),
 			"description": fmt.Sprintf(
-				"%s \n\n type: %s",
+				"%s \n\n type: %s\ndefault: %v",
 				dataDef.description,
 				dataTypeToString(dataDef.dataType),
+				dataDef.dflt,
 			),
-			"default": fmt.Sprintf("%v", dataDef.dflt),
 		}
 	}
 	data["properties"] = dataProperties

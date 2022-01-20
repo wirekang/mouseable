@@ -35,8 +35,11 @@ func New() di.DefinitionManager {
 		"Move cursor →",
 		di.WhenActivated,
 		&di.Command{
-			OnStep: func(tool *di.CommandTool) {
-				tool.AccelerateCursor(0)
+			OnBegin: func(tool *di.CommandTool) {
+				tool.RegisterCursorAccelerator(di.DirectionRight)
+			},
+			OnEnd: func(tool *di.CommandTool) {
+				tool.UnregisterCursorAccelerator(di.DirectionRight)
 			},
 		},
 	)
@@ -45,8 +48,11 @@ func New() di.DefinitionManager {
 		"Move cursor ↗",
 		di.WhenActivated,
 		&di.Command{
-			OnStep: func(tool *di.CommandTool) {
-				tool.AccelerateCursor(45)
+			OnBegin: func(tool *di.CommandTool) {
+				tool.RegisterCursorAccelerator(di.DirectionRightUp)
+			},
+			OnEnd: func(tool *di.CommandTool) {
+				tool.UnregisterCursorAccelerator(di.DirectionRightUp)
 			},
 		},
 	)
@@ -55,8 +61,11 @@ func New() di.DefinitionManager {
 		"Move cursor ↑",
 		di.WhenActivated,
 		&di.Command{
-			OnStep: func(tool *di.CommandTool) {
-				tool.AccelerateCursor(90)
+			OnBegin: func(tool *di.CommandTool) {
+				tool.RegisterCursorAccelerator(di.DirectionUp)
+			},
+			OnEnd: func(tool *di.CommandTool) {
+				tool.UnregisterCursorAccelerator(di.DirectionUp)
 			},
 		},
 	)
@@ -65,8 +74,11 @@ func New() di.DefinitionManager {
 		"Move cursor ↖",
 		di.WhenActivated,
 		&di.Command{
-			OnStep: func(tool *di.CommandTool) {
-				tool.AccelerateCursor(135)
+			OnBegin: func(tool *di.CommandTool) {
+				tool.RegisterCursorAccelerator(di.DirectionLeftUp)
+			},
+			OnEnd: func(tool *di.CommandTool) {
+				tool.UnregisterCursorAccelerator(di.DirectionLeftUp)
 			},
 		},
 	)
@@ -75,8 +87,11 @@ func New() di.DefinitionManager {
 		"Move cursor ←",
 		di.WhenActivated,
 		&di.Command{
-			OnStep: func(tool *di.CommandTool) {
-				tool.AccelerateCursor(180)
+			OnBegin: func(tool *di.CommandTool) {
+				tool.RegisterCursorAccelerator(di.DirectionLeft)
+			},
+			OnEnd: func(tool *di.CommandTool) {
+				tool.UnregisterCursorAccelerator(di.DirectionLeft)
 			},
 		},
 	)
@@ -85,8 +100,11 @@ func New() di.DefinitionManager {
 		"Move cursor ↙",
 		di.WhenActivated,
 		&di.Command{
-			OnStep: func(tool *di.CommandTool) {
-				tool.AccelerateCursor(225)
+			OnBegin: func(tool *di.CommandTool) {
+				tool.RegisterCursorAccelerator(di.DirectionLeftDown)
+			},
+			OnEnd: func(tool *di.CommandTool) {
+				tool.UnregisterCursorAccelerator(di.DirectionLeftDown)
 			},
 		},
 	)
@@ -95,8 +113,11 @@ func New() di.DefinitionManager {
 		"Move cursor ↓",
 		di.WhenActivated,
 		&di.Command{
-			OnStep: func(tool *di.CommandTool) {
-				tool.AccelerateCursor(270)
+			OnBegin: func(tool *di.CommandTool) {
+				tool.RegisterCursorAccelerator(di.DirectionDown)
+			},
+			OnEnd: func(tool *di.CommandTool) {
+				tool.UnregisterCursorAccelerator(di.DirectionDown)
 			},
 		},
 	)
@@ -105,8 +126,11 @@ func New() di.DefinitionManager {
 		"Move cursor ↘",
 		di.WhenActivated,
 		&di.Command{
-			OnStep: func(tool *di.CommandTool) {
-				tool.AccelerateCursor(315)
+			OnBegin: func(tool *di.CommandTool) {
+				tool.RegisterCursorAccelerator(di.DirectionRightDown)
+			},
+			OnEnd: func(tool *di.CommandTool) {
+				tool.UnregisterCursorAccelerator(di.DirectionRightDown)
 			},
 		},
 	)
@@ -181,7 +205,10 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.MouseWheel(90)
+				tool.RegisterWheelAccelerator(di.DirectionUp)
+			},
+			OnEnd: func(tool *di.CommandTool) {
+				tool.UnregisterWheelAccelerator(di.DirectionUp)
 			},
 		},
 	)
@@ -190,8 +217,11 @@ func New() di.DefinitionManager {
 		"MouseWheel ↓",
 		di.WhenActivated,
 		&di.Command{
-			OnBegin: func(tool *di.CommandTool) {
-				tool.MouseWheel(270)
+			OnStep: func(tool *di.CommandTool) {
+				tool.RegisterWheelAccelerator(di.DirectionDown)
+			},
+			OnEnd: func(tool *di.CommandTool) {
+				tool.UnregisterWheelAccelerator(di.DirectionDown)
 			},
 		},
 	)
@@ -200,8 +230,11 @@ func New() di.DefinitionManager {
 		"MouseWheel →",
 		di.WhenActivated,
 		&di.Command{
-			OnBegin: func(tool *di.CommandTool) {
-				tool.MouseWheel(0)
+			OnStep: func(tool *di.CommandTool) {
+				tool.RegisterWheelAccelerator(di.DirectionRight)
+			},
+			OnEnd: func(tool *di.CommandTool) {
+				tool.UnregisterWheelAccelerator(di.DirectionRight)
 			},
 		},
 	)
@@ -210,8 +243,11 @@ func New() di.DefinitionManager {
 		"MouseWheel ←",
 		di.WhenActivated,
 		&di.Command{
-			OnBegin: func(tool *di.CommandTool) {
-				tool.MouseWheel(180)
+			OnStep: func(tool *di.CommandTool) {
+				tool.RegisterWheelAccelerator(di.DirectionLeft)
+			},
+			OnEnd: func(tool *di.CommandTool) {
+				tool.UnregisterWheelAccelerator(di.DirectionLeft)
 			},
 		},
 	)
@@ -231,7 +267,7 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.Teleport(0)
+				tool.Teleport(di.DirectionRight)
 			},
 		},
 	)
@@ -241,7 +277,7 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.Teleport(45)
+				tool.Teleport(di.DirectionRightUp)
 			},
 		},
 	)
@@ -251,7 +287,7 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.Teleport(90)
+				tool.Teleport(di.DirectionUp)
 			},
 		},
 	)
@@ -261,7 +297,7 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.Teleport(135)
+				tool.Teleport(di.DirectionLeftUp)
 			},
 		},
 	)
@@ -271,7 +307,7 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.Teleport(180)
+				tool.Teleport(di.DirectionLeft)
 			},
 		},
 	)
@@ -281,7 +317,7 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.Teleport(225)
+				tool.Teleport(di.DirectionLeftDown)
 			},
 		},
 	)
@@ -291,7 +327,7 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.Teleport(270)
+				tool.Teleport(di.DirectionDown)
 			},
 		},
 	)
@@ -301,24 +337,20 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.Teleport(315)
+				tool.Teleport(di.DirectionRightDown)
 			},
 		},
 	)
 
 	m.insertData("key-timeout", "Key press timeout for continuous input in ms", di.Int, 200)
-	m.insertData("cursor-acceleration-x", "Cursor horizontal acceleration", di.Float, 2.8)
-	m.insertData("cursor-acceleration-y", "Cursor vertical acceleration", di.Float, 2.8)
-	m.insertData("cursor-friction-x", "Cursor horizontal friction", di.Float, 2.5)
-	m.insertData("cursor-friction-y", "Cursor vertical friction", di.Float, 2.5)
-	m.insertData("wheel-acceleration-x", "MouseWheel horizontal acceleration", di.Int, 5)
-	m.insertData("wheel-acceleration-y", "MouseWheel vertical acceleration", di.Int, 5)
-	m.insertData("wheel-friction-x", "MouseWheel horizontal friction", di.Int, 4)
-	m.insertData("wheel-friction-y", "MouseWheel vertical friction", di.Int, 4)
+	m.insertData("cursor-speed-x", "Speed of cursor", di.Int, 6)
+	m.insertData("cursor-speed-y", "Speed of cursor", di.Int, 6)
+	m.insertData("wheel-speed-x", "Initial speed of wheel", di.Int, 10)
+	m.insertData("wheel-speed-y", "Initial speed of wheel", di.Int, 10)
 	m.insertData("cursor-sniper-speed-x", "Sniper mode horizontal speed", di.Int, 1)
 	m.insertData("cursor-sniper-speed-y", "Sniper mode vertical speed", di.Int, 1)
-	m.insertData("wheel-sniper-speed-x", "Sniper mode horizontal speed (MouseWheel)", di.Int, 1)
-	m.insertData("wheel-sniper-speed-y", "Sniper mode vertical speed (MouseWheel)", di.Int, 1)
+	m.insertData("wheel-sniper-speed-x", "Sniper mode horizontal speed (MouseWheel)", di.Int, 4)
+	m.insertData("wheel-sniper-speed-y", "Sniper mode vertical speed (MouseWheel)", di.Int, 4)
 	m.insertData("teleport-distance-f", "TeleportForward distance", di.Int, 300)
 	m.insertData("teleport-distance-x", "Teleport horizontal distance", di.Int, 300)
 	m.insertData("teleport-distance-y", "Teleport vertical distance", di.Int, 300)

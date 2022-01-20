@@ -76,7 +76,7 @@ const (
 
 type DefinitionManager interface {
 	SetConfig(Config)
-	Command(CommandKey, When) *Command
+	Command(CommandKey, When) []*Command
 	DataDefault(DataName) DataValue
 	JSONSchema() ConfigJSONSchema
 }
@@ -127,19 +127,34 @@ type UIManager interface {
 	Open()
 }
 
+type Direction uint
+
+const (
+	DirectionRight     Direction = 0
+	DirectionRightUp   Direction = 1
+	DirectionUp        Direction = 2
+	DirectionLeftUp    Direction = 3
+	DirectionLeft      Direction = 4
+	DirectionLeftDown  Direction = 5
+	DirectionDown      Direction = 6
+	DirectionRightDown Direction = 7
+)
+
 type CommandTool struct {
-	Activate         func()
-	Deactivate       func()
-	AccelerateCursor func(deg float64)
-	FixCursorSpeed   func()
-	UnfixCursorSpeed func()
-	FixWheelSpeed    func()
-	UnfixWheelSpeed  func()
-	MouseDown        func(button MouseButton)
-	MouseUp          func(button MouseButton)
-	MouseWheel       func(deg float64)
-	Teleport         func(deg float64)
-	TeleportForward  func()
+	Activate                    func()
+	Deactivate                  func()
+	RegisterCursorAccelerator   func(direction Direction)
+	UnregisterCursorAccelerator func(direction Direction)
+	RegisterWheelAccelerator    func(direction Direction)
+	UnregisterWheelAccelerator  func(direction Direction)
+	FixCursorSpeed              func()
+	UnfixCursorSpeed            func()
+	FixWheelSpeed               func()
+	UnfixWheelSpeed             func()
+	MouseDown                   func(button MouseButton)
+	MouseUp                     func(button MouseButton)
+	Teleport                    func(direction Direction)
+	TeleportForward             func()
 }
 
 type Command struct {

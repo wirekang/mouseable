@@ -16,6 +16,7 @@ func (s *logicState) Run() {
 	s.loadAndApplyConfig()
 	s.initCommandTool()
 	s.hookManager.Install()
+	go s.bufferLoop()
 	go s.mainLoop()
 	s.uiManager.Run()
 	defer func() {
@@ -29,8 +30,8 @@ func (s *logicState) Run() {
 func (s *logicState) mainLoop() {
 	s.hookManager.AddCursorPosition(1, 0)
 
-	cursorTicker := time.NewTicker(time.Millisecond * 20)
-	cmdStepTicker := time.NewTicker(time.Millisecond * 200)
+	cursorTicker := time.NewTicker(time.Millisecond * 10)
+	cmdStepTicker := time.NewTicker(time.Millisecond * 100)
 	for {
 		select {
 		case keyInfo := <-s.channel.keyIn:
@@ -47,42 +48,56 @@ func (s *logicState) mainLoop() {
 			case config := <-s.channel.configChange:
 				s.onConfigChange(config)
 			case <-cmdStepTicker.C:
-				s.onCmdStep()
+				s.onCmdTick()
 			default:
 			}
 		}
 	}
 }
 
-func (s *logicState) onCursorTick() {
-	var dx, dy int
-	if s.cursorState.cursorFixedSpeed == emptyPointInt {
-		dx = int(math.Round(s.cursorState.cursorSpeed.x))
-		dy = int(math.Round(s.cursorState.cursorSpeed.y))
-	} else {
-		dx = s.cursorState.cursorFixedSpeed.x
-		dy = s.cursorState.cursorFixedSpeed.y
+func (s *logicState) bufferLoop() {
+	for {
+		select {
+		case v := <-s.channel.cursorBuffer:
+			s.hookManager.AddCursorPosition(v.x, v.y)
+		case v := <-s.channel.wheelBuffer:
+			s.hookManager.MouseWheel(v.x, true)
+			s.hookManager.MouseWheel(-v.y, false)
+		}
 	}
-	go s.hookManager.AddCursorPosition(dx, dy)
-
-	if s.cursorState.wheelFixedSpeed == emptyPointInt {
-		dx = s.cursorState.wheelFixedSpeed.x
-		dy = s.cursorState.wheelFixedSpeed.y
-	} else {
-		dx = s.cursorState.wheelSpeed.x
-		dy = s.cursorState.wheelSpeed.y
-	}
-	s.hookManager.MouseWheel(dx, true)
-	s.hookManager.MouseWheel(dy, false)
 }
 
-func (s *logicState) onCmdStep() {
+func (s *logicState) onCursorTick() {
+	spd := s.cursorState.cursorSpeed
+	if s.cursorState.cursorFixedSpeed != emptyVectorInt {
+		spd = minMaxInt(s.cursorState.cursorSpeed, s.cursorState.cursorFixedSpeed)
+	}
+	s.channel.cursorBuffer <- spd
+
+	spd = s.cursorState.wheelSpeed
+	if s.cursorState.wheelFixedSpeed != emptyVectorInt {
+		spd = minMaxInt(s.cursorState.wheelSpeed, s.cursorState.wheelFixedSpeed)
+	}
+	s.channel.wheelBuffer <- spd
+
+}
+
+func (s *logicState) onCmdTick() {
 	for command := range s.cmdState.steppingCmdMap {
 		command.OnStep(s.commandTool)
 	}
 
-	s.cursorState.cursorSpeed = frictionFloat(s.cursorState.cursorSpeed, s.configCache.cursorFriction)
-	s.cursorState.wheelSpeed = frictionInt(s.cursorState.wheelSpeed, s.configCache.wheelFriction)
+	if len(s.cursorState.cursorDirectionMap) > 0 {
+		s.cursorState.cursorSpeed = combineDirectionMap(
+			s.cursorState.cursorDirectionMap, s.configCache.cursorSpeed,
+		)
+	}
+
+	if len(s.cursorState.wheelDirectionMap) > 0 {
+		s.cursorState.wheelSpeed = combineDirectionMap(
+			s.cursorState.wheelDirectionMap, s.configCache.wheelSpeed,
+		)
+	}
 }
 
 func (s *logicState) onConfigChange(config di.Config) {
@@ -94,36 +109,31 @@ func (s *logicState) onConfigChange(config di.Config) {
 	getBool := s.makeDataGetterBool(config)
 	getString := s.makeDataGetterString(config)
 	_ = getString
+	_ = getFloat
 
 	s.overlayManager.SetVisibility(getBool("show-overlay"))
 	s.configCache.keyTimeout = int64(getInt("key-timeout"))
-	s.configCache.cursorFriction = pointFloat{
-		x: getFloat("cursor-friction-x"),
-		y: getFloat("cursor-friction-y"),
+	s.configCache.cursorSpeed = vectorInt{
+		x: getInt("cursor-speed-x"),
+		y: getInt("cursor-speed-y"),
 	}
-	s.configCache.wheelFriction = pointInt{
-		x: getInt("wheel-friction-x"),
-		y: getInt("wheel-friction-y"),
+	s.configCache.wheelSpeed = vectorInt{
+		x: getInt("wheel-speed-x"),
+		y: getInt("wheel-speed-y"),
 	}
-	s.configCache.cursorAcceleration = pointFloat{
-		x: getFloat("cursor-acceleration-x"),
-		y: getFloat("cursor-acceleration-y"),
-	}
-	s.configCache.wheelAcceleration = pointInt{
-		x: getInt("wheel-acceleration-x"),
-		y: getInt("wheel-acceleration-y"),
-	}
-	s.configCache.cursorSniperSpeed = pointInt{
+	s.configCache.cursorSniperSpeed = vectorInt{
 		x: getInt("cursor-sniper-speed-x"),
 		y: getInt("cursor-sniper-speed-y"),
 	}
-	s.configCache.wheelSniperSpeed = pointInt{
+	s.configCache.wheelSniperSpeed = vectorInt{
 		x: getInt("wheel-sniper-speed-x"),
 		y: getInt("wheel-sniper-speed-y"),
 	}
 	s.configCache.teleportDistanceF = getInt("teleport-distance-f")
-	s.configCache.teleportDistanceX = getInt("teleport-distance-x")
-	s.configCache.teleportDistanceY = getInt("teleport-distance-y")
+	s.configCache.teleportDistance = vectorInt{
+		x: getInt("teleport-distance-x"),
+		y: getInt("teleport-distance-y"),
+	}
 
 	s.configCache.commandKeyStringPathMap = config.CommandKeyStringPathMap()
 	for keyString := range s.configCache.commandKeyStringPathMap {
@@ -151,10 +161,12 @@ func (s *logicState) loadAndApplyConfig() {
 }
 
 func (s *logicState) init() {
+	s.cursorState.cursorDirectionMap = make(map[di.Direction]struct{}, 8)
+	s.cursorState.wheelDirectionMap = make(map[di.Direction]struct{}, 8)
 	s.cmdState.steppingCmdMap = make(map[*di.Command]struct{}, 5)
 	s.keyState.pressingKeyMap = make(map[string]struct{}, 5)
 	s.keyState.eatUntilUpMap = make(map[string]struct{}, 5)
-	s.keyState.enderMap = make(map[string]*di.Command, 5)
+	s.keyState.enderMap = make(map[string][]*di.Command, 5)
 
 	keyInfoChan := make(chan di.HookKeyInfo)
 	eatChan := make(chan bool)
@@ -169,6 +181,8 @@ func (s *logicState) init() {
 	s.channel.nextKeyOut = nextKeyChan
 	s.channel.cursorMove = cursorInfoChan
 	s.channel.exit = exitChan
+	s.channel.cursorBuffer = make(chan vectorInt, 100)
+	s.channel.wheelBuffer = make(chan vectorInt, 100)
 	s.channel.configChange = make(chan di.Config)
 
 	s.hookManager.SetOnCursorMoveListener(makeCursorListener(cursorInfoChan))
@@ -184,57 +198,6 @@ func (s *logicState) init() {
 	s.uiManager.SetOnApplyConfigNameListener(s.ioManager.ApplyConfig)
 
 	s.ioManager.SetOnConfigChangeListener(makeConfigChangeListener(s.channel.configChange))
-}
-
-func (s *logicState) initCommandTool() {
-	s.commandTool = &di.CommandTool{
-		Activate: func() {
-			s.cmdState.when = di.WhenActivated
-			s.overlayManager.Show()
-		},
-		Deactivate: func() {
-			s.cmdState.when = di.WhenDeactivated
-			s.overlayManager.Hide()
-		},
-		AccelerateCursor: func(deg float64) {
-			// todo
-			s.cursorState.cursorSpeed.x += s.configCache.cursorAcceleration.x
-			s.cursorState.cursorSpeed.y += s.configCache.cursorAcceleration.y
-		},
-		FixCursorSpeed: func() {
-			s.cursorState.cursorFixedSpeed = s.configCache.cursorSniperSpeed
-		},
-		UnfixCursorSpeed: func() {
-			s.cursorState.cursorFixedSpeed = emptyPointInt
-		},
-		FixWheelSpeed: func() {
-			s.cursorState.wheelFixedSpeed = s.configCache.wheelSniperSpeed
-		},
-		UnfixWheelSpeed: func() {
-			s.cursorState.wheelFixedSpeed = emptyPointInt
-		},
-		MouseDown: func(button di.MouseButton) {
-			go s.hookManager.MouseDown(button)
-		},
-		MouseUp: func(button di.MouseButton) {
-			go s.hookManager.MouseUp(button)
-		},
-		MouseWheel: func(deg float64) {},
-		Teleport:   func(deg float64) {},
-		TeleportForward: func() {
-			if math.Abs(s.cursorState.cursorSpeed.x) > 0.3 || math.Abs(s.cursorState.cursorSpeed.y) > 0.3 {
-				distance := s.configCache.teleportDistanceF
-				angle := math.Atan2(s.cursorState.cursorSpeed.x, s.cursorState.cursorSpeed.y)
-				s.cursorState.lastTeleportForward = pointInt{
-					x: int(math.Round(float64(distance) * math.Sin(angle))),
-					y: int(math.Round(float64(distance) * math.Cos(angle))),
-				}
-			}
-			s.hookManager.AddCursorPosition(
-				s.cursorState.lastTeleportForward.x, s.cursorState.lastTeleportForward.y,
-			)
-		},
-	}
 }
 
 func (s *logicState) dataValueOrDefault(config di.Config, name di.DataName) di.DataValue {
@@ -274,56 +237,36 @@ func (s *logicState) makeDataGetterString(config di.Config) func(name di.DataNam
 	}
 }
 
-func frictionInt(p pointInt, f pointInt) (r pointInt) {
-	if p.x > 0 {
-		r.x = p.x - f.x
-		if r.x < 0 {
-			r.x = 0
-		}
-	} else if p.x < 0 {
-		r.x = p.x + f.x
-		if r.x > 0 {
-			r.x = 0
-		}
+func combineDirectionMap(m map[di.Direction]struct{}, v vectorInt) (r vectorInt) {
+	var x, y float64
+	for direction := range m {
+		x += directionVectorMap[direction].x * float64(v.x)
+		y += directionVectorMap[direction].y * float64(v.y)
 	}
-
-	if p.y > 0 {
-		r.y = p.y - f.y
-		if r.y < 0 {
-			r.y = 0
-		}
-	} else if p.y < 0 {
-		r.y = p.y + f.y
-		if r.y > 0 {
-			r.y = 0
-		}
+	r = minMaxFloatInt(vectorFloat{x, y}, v)
+	if math.Abs(float64(r.x)) == math.Abs(float64(r.y)) {
+		r.x = int(math.Round(float64(r.x) * slow))
+		r.y = int(math.Round(float64(r.y) * slow))
 	}
 	return
 }
 
-func frictionFloat(p pointFloat, f pointFloat) (r pointFloat) {
-	if p.x > 0 {
-		r.x = p.x - f.x
-		if r.x < 0 {
-			r.x = 0
-		}
-	} else if p.x < 0 {
-		r.x = p.x + f.x
-		if r.x > 0 {
-			r.x = 0
-		}
-	}
+func minMaxFloat(v vectorFloat, mm vectorFloat) (r vectorFloat) {
+	r.x = math.Min(math.Max(v.x, -mm.x), mm.x)
+	r.y = math.Min(math.Max(v.y, -mm.y), mm.y)
+	return
+}
 
-	if p.y > 0 {
-		r.y = p.y - f.y
-		if r.y < 0 {
-			r.y = 0
-		}
-	} else if p.y < 0 {
-		r.y = p.y + f.y
-		if r.y > 0 {
-			r.y = 0
-		}
-	}
+func minMaxFloatInt(v vectorFloat, mm vectorInt) (r vectorInt) {
+	fr := minMaxFloat(v, vectorFloat{float64(mm.x), float64(mm.y)})
+	r.x = int(math.Round(fr.x))
+	r.y = int(math.Round(fr.y))
+	return
+}
+
+func minMaxInt(v vectorInt, mm vectorInt) (r vectorInt) {
+	fr := minMaxFloat(vectorFloat{float64(v.x), float64(v.y)}, vectorFloat{float64(mm.x), float64(mm.y)})
+	r.x = int(math.Round(fr.x))
+	r.y = int(math.Round(fr.y))
 	return
 }
