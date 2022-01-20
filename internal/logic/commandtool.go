@@ -11,10 +11,12 @@ func (s *logicState) initCommandTool() {
 		Activate: func() {
 			s.cmdState.when = di.WhenActivated
 			s.overlayManager.Show()
+			s.uiManager.SetTrayIconEnabled(true)
 		},
 		Deactivate: func() {
 			s.cmdState.when = di.WhenDeactivated
 			s.overlayManager.Hide()
+			s.uiManager.SetTrayIconEnabled(false)
 			s.cursorState.cursorSpeed = emptyVectorInt
 			s.cursorState.wheelSpeed = emptyVectorInt
 		},

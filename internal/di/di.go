@@ -124,6 +124,7 @@ type UIManager interface {
 	SetOnLoadConfigNamesListener(func() ([]ConfigName, error))
 	SetOnLoadAppliedConfigNameListener(func() (ConfigName, error))
 	SetOnApplyConfigNameListener(func(name ConfigName) error)
+	SetTrayIconEnabled(bool)
 	Open()
 }
 

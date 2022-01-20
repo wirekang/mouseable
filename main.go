@@ -27,17 +27,17 @@ func main() {
 
 func initFS() {
 	var err error
-	assetFS, err := fs.Sub(Asset, "assets")
+	cnst.AssetFS, err = fs.Sub(Asset, "assets")
 	if err != nil {
 		panic(err)
 	}
 
-	cnst.FrontFS, err = fs.Sub(assetFS, "front")
+	cnst.FrontFS, err = fs.Sub(cnst.AssetFS, "front")
 	if err != nil {
 		panic(err)
 	}
 
-	cnst.DefaultConfigsFS, err = fs.Sub(assetFS, "defaultConfigs")
+	cnst.DefaultConfigsFS, err = fs.Sub(cnst.DefaultConfigsFS, "defaultConfigs")
 	if err != nil {
 		panic(err)
 	}

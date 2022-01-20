@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"os/signal"
 
+	"github.com/lxn/walk"
 	"github.com/zserge/lorca"
 
 	"github.com/wirekang/mouseable/internal/cnst"
@@ -29,6 +30,12 @@ type manager struct {
 	onLoadAppliedConfigNameListener func() (di.ConfigName, error)
 	onApplyConfigListener           func(di.ConfigName) error
 	isOpen                          bool
+	iconEnabled, iconDisabled       *walk.Icon
+	notifyIcon                      *walk.NotifyIcon
+}
+
+func (m *manager) SetTrayIconEnabled(b bool) {
+	go m.setTrayIconEnabled(b)
 }
 
 func (m *manager) SetOnApplyConfigNameListener(f func(name di.ConfigName) error) {

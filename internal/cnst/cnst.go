@@ -6,5 +6,6 @@ import (
 
 var VERSION string
 var IsDev bool
+var AssetFS fs.FS
 var FrontFS fs.FS
 var DefaultConfigsFS fs.FS
