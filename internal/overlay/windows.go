@@ -30,7 +30,7 @@ type manager struct {
 
 func (m *manager) SetPosition(x, y int) {
 	if m.isVisible {
-		w32.MoveWindow(m.hwnd, x+m.cursorWidth, y+m.cursorHeight, 8, 8, true)
+		go w32.MoveWindow(m.hwnd, x+m.cursorWidth, y+m.cursorHeight, 8, 8, true)
 	}
 }
 
@@ -41,14 +41,14 @@ func (m *manager) SetVisibility(b bool) {
 func (m *manager) Show() {
 	if m.isVisible && !m.isShowing {
 		m.isShowing = true
-		w32.ShowWindow(m.hwnd, w32.SW_SHOWNORMAL)
+		go w32.ShowWindow(m.hwnd, w32.SW_SHOWNORMAL)
 	}
 }
 
 func (m *manager) Hide() {
 	if m.isShowing {
 		m.isShowing = false
-		w32.ShowWindow(m.hwnd, w32.SW_HIDE)
+		go w32.ShowWindow(m.hwnd, w32.SW_HIDE)
 	}
 }
 

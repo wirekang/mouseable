@@ -1,11 +1,7 @@
 package logic
 
 import (
-	"fmt"
-	"strings"
 	"time"
-
-	"github.com/thoas/go-funk"
 
 	"github.com/wirekang/mouseable/internal/di"
 	"github.com/wirekang/mouseable/internal/lg"
@@ -16,35 +12,29 @@ func (s *logicState) onKey(keyInfo di.HookKeyInfo) (eat bool) {
 	key := keyInfo.Key
 	isDown := keyInfo.IsDown
 	isRepeat, pressingCount := s.updatePressingKeyMap(key, isDown)
-	s.updateCommandKey(key, isDown, isRepeat, pressingCount)
-	didBegin := s.procCommand(key, isDown, isRepeat)
+	didBegin := false
+	if !isDown || !isRepeat {
+		s.updateCommandKey(key, isDown, pressingCount)
+		didBegin = s.procCommand(key, isDown)
+	}
 	eat = s.procEat(key, isDown, didBegin)
-
-	fmt.Printf("%v\n", s.keyState.commandKey)
 	return
 }
 
 func (s *logicState) updatePressingKeyMap(key string, isDown bool) (isRepeat bool, pressingCount int) {
 	if isDown {
-		isRepeat = funk.ContainsString(s.keyState.pressingKeys, key)
+		_, isRepeat = s.keyState.pressingKeyMap[key]
 		if !isRepeat {
-			s.keyState.pressingKeys = append(s.keyState.pressingKeys, key)
+			s.keyState.pressingKeyMap[key] = emptyStruct
 		}
 	} else {
-		s.keyState.pressingKeys = funk.FilterString(
-			s.keyState.pressingKeys, func(s string) bool {
-				return s != key
-			},
-		)
+		delete(s.keyState.pressingKeyMap, key)
 	}
-	pressingCount = len(s.keyState.pressingKeys)
+	pressingCount = len(s.keyState.pressingKeyMap)
 	return
 }
 
-func (s *logicState) updateCommandKey(key string, isDown bool, isRepeat bool, pressingCount int) {
-	if isDown && isRepeat {
-		return
-	}
+func (s *logicState) updateCommandKey(key string, isDown bool, pressingCount int) {
 
 	now := time.Now().UnixMilli()
 	if !isDown {
@@ -81,20 +71,16 @@ func (s *logicState) updateCommandKey(key string, isDown bool, isRepeat bool, pr
 	}
 }
 
-func (s *logicState) procCommand(key string, isDown bool, isRepeat bool) (didBegin bool) {
-	if isDown && isRepeat {
-		return
-	}
-
+func (s *logicState) procCommand(key string, isDown bool) (didBegin bool) {
 	cmd := s.definitionManager.Command(s.keyState.commandKey, s.cmdState.when)
 	if cmd != nil {
-		_, isStepping := s.keyState.steppingCmdMap[cmd]
+		_, isStepping := s.cmdState.steppingCmdMap[cmd]
 		if isDown && !isStepping {
 			cmd.OnBegin(s.commandTool)
 			s.keyState.enderMap[key] = cmd
-			s.keyState.steppingCmdMap[cmd] = emptyStruct
+			s.cmdState.steppingCmdMap[cmd] = emptyStruct
 			didBegin = true
-			lg.Printf("Begin %d", cmd)
+			lg.Printf("Begin %d By %s", cmd, key)
 		}
 	}
 
@@ -103,7 +89,7 @@ func (s *logicState) procCommand(key string, isDown bool, isRepeat bool) (didBeg
 		if endCmd != nil {
 			endCmd.OnEnd(s.commandTool)
 			delete(s.keyState.enderMap, key)
-			delete(s.keyState.steppingCmdMap, endCmd)
+			delete(s.cmdState.steppingCmdMap, endCmd)
 			lg.Printf("End %d", endCmd)
 		}
 	}
@@ -129,19 +115,6 @@ func (s *logicState) cloneCommandKey() (clone di.CommandKey) {
 	for i := range s.keyState.commandKey {
 		clone[i] = make([]string, len(s.keyState.commandKey[i]))
 		copy(clone[i], s.keyState.commandKey[i])
-	}
-	return
-}
-
-func keyStringToCmdKey(c di.CommandKeyString) (key di.CommandKey) {
-	outers := strings.Split(string(c), " - ")
-	for _, outer := range outers {
-		var inArr []string
-		inners := strings.Split(outer, "+")
-		for _, inner := range inners {
-			inArr = append(inArr, inner)
-		}
-		key = append(key, inners)
 	}
 	return
 }

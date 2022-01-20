@@ -75,7 +75,7 @@ func (m *manager) Command(key di.CommandKey, when di.When) *di.Command {
 		return nil
 	}
 
-	if cmdDef.when != when {
+	if cmdDef.when != di.WhenAnytime && cmdDef.when != when {
 		return nil
 	}
 

@@ -28,22 +28,31 @@ func (s *logicState) Run() {
 
 func (s *logicState) mainLoop() {
 	cursorTicker := time.NewTicker(time.Millisecond * 33)
-	cmdStepTicker := time.NewTicker(time.Millisecond * 100)
+	cmdStepTicker := time.NewTicker(time.Millisecond * 200)
 	for {
 		select {
 		case <-s.channel.exit:
 			lg.Printf("Exit mainLoop")
 			return
+		default:
+		}
+
+		select {
+		case keyInfo := <-s.channel.keyIn:
+			s.channel.keyOut <- s.onKey(keyInfo)
+		default:
+		}
+
+		select {
 		case <-cursorTicker.C:
 			s.onCursorTick()
 		case point := <-s.channel.cursorMove:
 			s.onCursorMove(point.X, point.Y)
 		case config := <-s.channel.configChange:
 			s.onConfigChange(config)
-		case keyInfo := <-s.channel.keyIn:
-			s.channel.keyOut <- s.onKey(keyInfo)
 		case <-cmdStepTicker.C:
-			s.onCmdTick()
+			s.onCmdStep()
+		default:
 		}
 	}
 }
@@ -73,12 +82,9 @@ func (s *logicState) onCursorTick() {
 	s.cursorState.wheelSpeed = frictionInt(s.cursorState.wheelSpeed, s.configCache.wheelFriction)
 }
 
-func (s *logicState) onCmdTick() {
-	switch s.cmdState.when {
-	case di.WhenDeactivated:
-		s.overlayManager.Hide()
-	case di.WhenActivated:
-		s.overlayManager.Show()
+func (s *logicState) onCmdStep() {
+	for command := range s.cmdState.steppingCmdMap {
+		_ = command
 	}
 }
 
@@ -148,9 +154,11 @@ func (s *logicState) loadAndApplyConfig() {
 }
 
 func (s *logicState) init() {
-	s.keyState.steppingCmdMap = map[*di.Command]struct{}{}
-	s.keyState.eatUntilUpMap = map[string]struct{}{}
-	s.keyState.enderMap = map[string]*di.Command{}
+	s.cmdState.steppingCmdMap = make(map[*di.Command]struct{}, 5)
+	s.keyState.pressingKeyMap = make(map[string]struct{}, 5)
+	s.keyState.eatUntilUpMap = make(map[string]struct{}, 5)
+	s.keyState.enderMap = make(map[string]*di.Command, 5)
+
 	keyInfoChan := make(chan di.HookKeyInfo)
 	eatChan := make(chan bool)
 	needNextKeyChan := make(chan struct{})

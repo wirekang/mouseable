@@ -43,9 +43,9 @@ type HookManager interface {
 type MouseButton uint
 
 const (
-	LeftMouseButton   MouseButton = 0
-	MiddleMouseButton MouseButton = 1
-	RightMouseButton  MouseButton = 2
+	ButtonLeft   MouseButton = 0
+	ButtonMiddle MouseButton = 1
+	ButtonRight  MouseButton = 2
 )
 
 type CommandName string
@@ -131,9 +131,13 @@ type CommandTool struct {
 	Activate         func()
 	Deactivate       func()
 	AccelerateCursor func(deg float64)
+	FixCursorSpeed   func()
+	UnfixCursorSpeed func()
+	FixWheelSpeed    func()
+	UnfixWheelSpeed  func()
 	MouseDown        func(button MouseButton)
 	MouseUp          func(button MouseButton)
-	MouseWheel       func(isHorizontal bool)
+	MouseWheel       func(deg float64)
 	Teleport         func(deg float64)
 	TeleportForward  func()
 }

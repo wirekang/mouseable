@@ -5,9 +5,12 @@ package hook
 import (
 	"fmt"
 	"strings"
+	"syscall"
+	"time"
 	"unsafe"
 
 	"github.com/JamesHovious/w32"
+	"github.com/pkg/errors"
 
 	"github.com/wirekang/mouseable/internal/di"
 	"github.com/wirekang/mouseable/internal/lg"
@@ -63,17 +66,22 @@ func (m *manager) MouseWheel(amount int, isHorizontal bool) {
 }
 
 func (m *manager) Install() {
-	m.hHookKeyboard = w32.SetWindowsHookEx(w32.WH_KEYBOARD_LL, m.keyboardProc, 0, 0)
+	hMod, err := syscall.LoadLibrary("user32.dll")
+	if err != nil {
+		err = errors.WithStack(err)
+		panic(err)
+	}
+
+	m.hHookKeyboard = w32.SetWindowsHookEx(w32.WH_KEYBOARD_LL, m.keyboardProc, w32.HINSTANCE(hMod), 0)
 	if m.hHookKeyboard == 0 {
 		panic(fmt.Sprintf("Keyboard hook failed"))
-		return
 	}
+
 	lg.Printf("KeyboardHook: %v", m.hHookKeyboard)
 
-	m.hHookMouse = w32.SetWindowsHookEx(w32.WH_MOUSE_LL, m.mouseProc, 0, 0)
+	m.hHookMouse = w32.SetWindowsHookEx(w32.WH_MOUSE_LL, m.mouseProc, w32.HINSTANCE(hMod), 0)
 	if m.hHookMouse == 0 {
 		panic(fmt.Sprintf("Mouse hook failed"))
-		return
 	}
 
 	lg.Printf("MouseHook: %v", m.hHookMouse)
@@ -92,6 +100,14 @@ func (m *manager) Uninstall() {
 }
 
 func (m *manager) keyboardProc(code int, wParam w32.WPARAM, lParam w32.LPARAM) w32.LRESULT {
+	start := time.Now().UnixMilli()
+	defer func() {
+		dur := time.Now().UnixMilli() - start
+		if dur > 100 {
+			lg.Errorf("Hook too long: %dms", dur)
+		}
+	}()
+
 	data := *(*w32.KBDLLHOOKSTRUCT)(unsafe.Pointer(lParam))
 	// fExtended := data.Flags & (w32.KF_EXTENDED >> 8)
 	// fLowerInjected := data.Flags & 0x00000002
@@ -147,11 +163,11 @@ func sendMouseInput(dx, dy int32, mouseData uint32, flags ...uint32) {
 
 func getMouseDownFlag(button di.MouseButton) (flag uint32) {
 	switch button {
-	case di.LeftMouseButton:
+	case di.ButtonLeft:
 		flag = w32.MOUSEEVENTF_LEFTDOWN
-	case di.RightMouseButton:
+	case di.ButtonRight:
 		flag = w32.MOUSEEVENTF_RIGHTDOWN
-	case di.MiddleMouseButton:
+	case di.ButtonMiddle:
 		flag = w32.MOUSEEVENTF_MIDDLEDOWN
 	}
 	return
@@ -159,11 +175,11 @@ func getMouseDownFlag(button di.MouseButton) (flag uint32) {
 
 func getMouseUpFlag(button di.MouseButton) (flag uint32) {
 	switch button {
-	case di.LeftMouseButton:
+	case di.ButtonLeft:
 		flag = w32.MOUSEEVENTF_LEFTUP
-	case di.RightMouseButton:
+	case di.ButtonRight:
 		flag = w32.MOUSEEVENTF_RIGHTUP
-	case di.MiddleMouseButton:
+	case di.ButtonMiddle:
 		flag = w32.MOUSEEVENTF_MIDDLEUP
 	}
 	return
