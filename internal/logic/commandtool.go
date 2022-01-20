@@ -73,6 +73,13 @@ func (s *logicState) initCommandTool() {
 			}
 			s.channel.cursorBuffer <- s.cursorState.lastTeleportForward
 		},
+		Toggle: func() {
+			if s.cmdState.when == di.WhenDeactivated {
+				s.commandTool.Activate()
+			} else {
+				s.commandTool.Deactivate()
+			}
+		},
 	}
 }
 

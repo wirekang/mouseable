@@ -155,6 +155,7 @@ type CommandTool struct {
 	MouseUp                     func(button MouseButton)
 	Teleport                    func(direction Direction)
 	TeleportForward             func()
+	Toggle                      func()
 }
 
 type Command struct {

@@ -43,6 +43,13 @@ func New() di.DefinitionManager {
 		},
 	)
 	m.insertCommand(
+		"toggle", "Toggle Activate <-> Deactivate", di.WhenAnytime, &di.Command{
+			OnBegin: func(tool *di.CommandTool) {
+				tool.Toggle()
+			},
+		},
+	)
+	m.insertCommand(
 		"deactivate-temp",
 		"Deactivate Mouseable temporarily",
 		di.WhenActivated,
