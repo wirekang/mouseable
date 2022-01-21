@@ -1,3 +1,25 @@
+# v2.0.1
+
+### UI
+
+Dropped sloppy UI, embed [monaco-editor](https://microsoft.github.io/monaco-editor). Now you can edit json
+file directly with comfortable suggestion.
+
+### New Logic
+
+All logic have been newly created.
+
+To reduce cpu usage and cursor accuracy, **friction was deleted.**  There are **acceleration and max-speed**
+now. It could be uncomfortable, I'll get your opinion and revise it.
+
+### Abstraction
+
+It has become a more suitable code for maintenance.
+
+### Etc.
+
+There are many changes that have not been mentioned. There may be a bug, please let me know. I will fix it.
+
 # v1.0.14
 
 ### Bug Fixes
