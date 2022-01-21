@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link
+      href="http://cdn.jsdelivr.net/gh/joungkyun/font-d2coding/d2coding.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link rel="icon" href="favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mouseable</title>
+  </head>
+  <body>
+    <div id="not-connected">
+      <h3>
+        Cannot connect to Mouseable. Please check tray icon to ensure Mouseable is running, or close this
+        window.
+      </h3>
+    </div>
+    <div id="top">
+      <div id="version-wrapper">
+        <span>Version: </span>
+        <span id="version"></span>
+        <button id="latest-button">
+          Latest:
+          <span id="latest-version"></span>
+        </button>
+      </div>
+      <button id="more-modal-button">More</button>
+      <button id="terminate-button">Terminate</button>
+      <div id="more-modal">
+        <p>
+          Do you have trouble or suggestion? Open issue on
+          <button id="github-button" class="text">Github</button>
+        </p>
+        <p>If you like Mouseable, don't forget to hit the star button!</p>
+      </div>
+    </div>
+    <div id="above">
+      <ul>
+        <li><b>Ctrl+I</b> to show suggestions. <b>Ctrl+W</b> to close window.</li>
+        <li><b>F1</b> to receive next key from OS.</li>
+        <li><b>F2</b> to save, <b>F3</b> to save and apply.</li>
+        <li><b>F4</b> to create new config.</li>
+        <li>
+          <button id="examples-button">HotKey Example</button>
+        </li>
+        <div id="examples-modal">
+          <b>"A+B"</b> for simultaneous input.<br />
+          <b>"A - B"</b> (Space required!) for sequential input.<br />
+          <br />
+          <b>"Ctrl+C"</b>: Press Ctrl and press C before release Ctrl.<br />
+          <b>"Ctrl - Ctrl"</b>: Press Ctrl, release it, and press again in
+          <b>key-timeout</b> milliseconds.<br />
+          <b>"A+B - C+D"</b>: Press A with B, release them, press C with D before timeout.
+          <br />
+          <br />
+          <b
+            >Mouseable rely on strings from OS's API, so use F1 function well.<br />
+            Some keys may appear strange (ex: Num9,Num8) but ignore it. OS sent it.
+          </b>
+        </div>
+      </ul>
+      <div id="config-wrapper">
+        <select id="config-select"></select>
+        <span>Applied: <span id="applied"></span></span>
+      </div>
+    </div>
+    <div id="my-monaco"></div>
+  </body>
+</html>

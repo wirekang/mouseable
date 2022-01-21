@@ -2,156 +2,245 @@ package io
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
+	"io/fs"
+	"io/ioutil"
 	"os"
+	"path/filepath"
+	"runtime"
 
+	"github.com/juju/fslock"
 	"github.com/pkg/errors"
 
+	"github.com/wirekang/mouseable/internal/cfg"
 	"github.com/wirekang/mouseable/internal/cnst"
-	"github.com/wirekang/mouseable/internal/def"
+	"github.com/wirekang/mouseable/internal/di"
 	"github.com/wirekang/mouseable/internal/lg"
 )
 
-const configVersion = "1"
+var defaultConfigName di.ConfigName = "qwerty-wasd.json"
 
-var configDir string
-var configFile string
-
-var DI struct {
-	SetConfig func(config def.Config)
-}
-
-type functionNameKeyMap map[string]def.FunctionKey
-type dataNameValueMap map[string]def.DataValue
-
-type jsonHolder struct {
-	Function functionNameKeyMap
-	Data     dataNameValueMap
-}
-
-func Init() {
-	configDir = os.Getenv("APPDATA") + "\\mouseable"
-	if cnst.IsDev {
-		configDir += "_dev"
+func New() di.IOManager {
+	rd, cd := initDirs()
+	return &manager{
+		rootDir:   rd,
+		configDir: cd,
+		metaPath:  filepath.Join(rd, "meta.json"),
 	}
-	_ = os.Mkdir(configDir, os.ModeDir)
-	configFile = configDir + "\\config_v" + configVersion + ".json"
-	lg.Logf("ConfigFile: %s", configFile)
-	config, err := LoadConfig()
+}
+
+type manager struct {
+	rootDir                 string
+	configDir               string
+	metaPath                string
+	lock                    *fslock.Lock
+	onConfigChangedListener func(di.Config)
+}
+
+func (im *manager) LoadAppliedConfigName() (rst di.ConfigName, err error) {
+	var m metaHolder
+	m, err = im.loadMeta()
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	rst = m.AppliedConfigName
+	return
+}
+
+func (im *manager) ApplyConfig(name di.ConfigName) (err error) {
+	var m metaHolder
+	m, err = im.loadMeta()
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	m.AppliedConfigName = name
+	err = im.saveMeta(m)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	jsn, err := im.LoadConfig(name)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	config := cfg.New()
+	err = config.SetJSON(jsn)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	go im.onConfigChangedListener(config)
+	return
+}
+
+func (im *manager) SetOnConfigChangeListener(f func(di.Config)) {
+	im.onConfigChangedListener = f
+}
+
+func (im *manager) LoadConfigNames() (rst []di.ConfigName, err error) {
+	rst = make([]di.ConfigName, 0)
+	infos, err := ioutil.ReadDir(im.configDir)
+	if err != nil {
+		return
+	}
+
+	for _, info := range infos {
+		if info.IsDir() {
+			continue
+		}
+		rst = append(rst, di.ConfigName(info.Name()))
+	}
+	return
+}
+
+func (im *manager) SaveConfig(name di.ConfigName, data di.ConfigJSON) (err error) {
+	err = ioutil.WriteFile(filepath.Join(im.configDir, string(name)), []byte(data), fs.ModePerm)
+	if err != nil {
+		err = errors.WithStack(err)
+	}
+	return
+}
+
+func (im *manager) LoadConfig(name di.ConfigName) (data di.ConfigJSON, err error) {
+	if name == "" {
+		name = defaultConfigName
+	}
+	bytes, err := ioutil.ReadFile(filepath.Join(im.configDir, string(name)))
+
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	data = di.ConfigJSON(bytes)
+	return
+}
+
+func (im *manager) Lock() {
+	lockFile := im.rootDir + "\\lockfile"
+	im.lock = fslock.New(lockFile)
+	err := im.lock.TryLock()
+	if err != nil {
+		if errors.Is(err, fslock.ErrLocked) {
+			panic("Mouseable is already running. Please check tray icon.")
+		}
+
+		panic(err)
+	}
+
+	return
+}
+
+func (im *manager) Unlock() {
+	_ = im.lock.Unlock()
+}
+
+func (im *manager) loadMeta() (m metaHolder, err error) {
+	var bytes []byte
+	if isNotExists(im.metaPath) {
+		m = metaHolder{AppliedConfigName: defaultConfigName}
+		err = im.saveMeta(m)
+		if err != nil {
+			err = errors.WithStack(err)
+			return
+		}
+	}
+
+	bytes, err = ioutil.ReadFile(im.metaPath)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	err = json.Unmarshal(bytes, &m)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	return
+}
+
+func (im *manager) saveMeta(m metaHolder) (err error) {
+	var bytes []byte
+	bytes, err = json.Marshal(m)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	err = ioutil.WriteFile(im.metaPath, bytes, os.ModePerm)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	return
+}
+
+func initDirs() (rootDir string, configDir string) {
+	if runtime.GOOS == "windows" {
+		rootDir = filepath.Join(os.Getenv("APPDATA"), "mouseable")
+		if cnst.IsDev {
+			rootDir += "_dev"
+		}
+		configDir = filepath.Join(rootDir, "configs")
+
+		if isNotExists(configDir) {
+			_ = os.MkdirAll(configDir, os.ModeDir)
+			initDefaultConfigs(configDir)
+		}
+		return
+	}
+	panic(fmt.Sprintf("%s not supported.", runtime.GOOS))
+}
+
+func isNotExists(path string) bool {
+	_, err := os.Stat(path)
+	return os.IsNotExist(err)
+}
+
+func initDefaultConfigs(configDir string) {
+	lg.Printf("Init default configs")
+
+	entries, err := fs.ReadDir(cnst.DefaultConfigsFS, ".")
 	if err != nil {
 		panic(err)
 	}
-	DI.SetConfig(config)
-	return
-}
 
-func SaveConfig(config def.Config) (err error) {
-	err = saveData(config)
-	if err != nil {
-		err = errors.WithStack(err)
-		return
-	}
-
-	DI.SetConfig(config)
-	return
-}
-
-func saveData(config def.Config) (err error) {
-	DI.SetConfig(config)
-	_ = os.MkdirAll(configDir, os.ModeDir)
-	jh := jsonHolder{
-		Function: functionMapToNameMap(config.FunctionMap),
-		Data:     dataMapToNameMap(config.DataMap),
-	}
-	bytes, err := json.MarshalIndent(jh, "", "    ")
-	if err != nil {
-		err = errors.WithStack(err)
-		return
-	}
-
-	err = os.WriteFile(configFile, bytes, 0755)
-	if err != nil {
-		err = errors.WithStack(err)
-		return
-	}
-
-	return
-}
-
-func LoadConfig() (config def.Config, err error) {
-	config, err = loadConfig()
-	if err != nil {
-		err = errors.WithStack(err)
-		return
-	}
-
-	return
-}
-
-func loadConfig() (config def.Config, err error) {
-	bytes, err := os.ReadFile(configFile)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			err = nil
-			config = def.Config{
-				FunctionMap: functionMapFromNameMap(functionMapToNameMap(def.DefaultConfig.FunctionMap)),
-				DataMap:     dataMapFromNameMap(dataMapToNameMap(def.DefaultConfig.DataMap)),
-			}
-			return
+	for _, entry := range entries {
+		if entry.IsDir() {
+			lg.Errorf("%s is directory", entry.Name())
+			continue
 		}
 
-		err = errors.WithStack(err)
-		return
-	}
-
-	var nameConfig jsonHolder
-	err = json.Unmarshal(bytes, &nameConfig)
-	if err != nil {
-		err = errors.WithStack(err)
-		return
-	}
-
-	config = def.Config{
-		FunctionMap: functionMapFromNameMap(nameConfig.Function),
-		DataMap:     dataMapFromNameMap(nameConfig.Data),
-	}
-
-	return
-}
-
-func functionMapToNameMap(m def.FunctionMap) (rst functionNameKeyMap) {
-	rst = make(functionNameKeyMap, len(m))
-	for fnc := range m {
-		rst[fnc.Name] = m[fnc]
-	}
-	return
-}
-
-func dataMapToNameMap(m def.DataMap) (rst dataNameValueMap) {
-	rst = make(dataNameValueMap, len(m))
-	for data := range m {
-		rst[data.Name] = m[data]
-	}
-	return
-}
-
-func functionMapFromNameMap(m functionNameKeyMap) (rst def.FunctionMap) {
-	rst = make(def.FunctionMap, len(def.FunctionDefinitions))
-	for name, key := range m {
-		rst[def.FunctionNameMap[name]] = key
-	}
-	for i := range def.FunctionDefinitions {
-		_, ok := rst[def.FunctionDefinitions[i]]
-		if !ok {
-			rst[def.FunctionDefinitions[i]] = def.FunctionKey{}
+		src, err := cnst.DefaultConfigsFS.Open(entry.Name())
+		if err != nil {
+			lg.Errorf("DefaultConfigsFS.Open: %v", err)
+			continue
 		}
-	}
-	return
-}
 
-func dataMapFromNameMap(m dataNameValueMap) (rst map[*def.DataDefinition]def.DataValue) {
-	rst = def.DefaultConfig.DataMap
-	for name, value := range m {
-		rst[def.DataNameMap[name]] = value
+		dst, err := os.Create(filepath.Join(configDir, entry.Name()))
+		if err != nil {
+			lg.Errorf("os.Open: %v", err)
+			continue
+		}
+		_, err = io.Copy(dst, src)
+		if err != nil {
+			lg.Errorf("dst.Write: %v", err)
+			continue
+		}
+
+		_ = src.Close()
+		_ = dst.Close()
 	}
-	return
 }

@@ -1,410 +1,142 @@
 package logic
 
 import (
-	"math"
-	"sort"
-	"sync"
-	"time"
+	"fmt"
+	"os"
+	"runtime/debug"
 
-	"github.com/thoas/go-funk"
+	"github.com/pkg/errors"
 
 	"github.com/wirekang/mouseable/internal/def"
+	"github.com/wirekang/mouseable/internal/di"
+	"github.com/wirekang/mouseable/internal/hook"
+	"github.com/wirekang/mouseable/internal/io"
 	"github.com/wirekang/mouseable/internal/lg"
+	"github.com/wirekang/mouseable/internal/overlay"
+	"github.com/wirekang/mouseable/internal/ui"
 )
 
-var mutex = sync.Mutex{}
-var functionMap = def.FunctionMap{}
-var cachedDataMap = map[*def.DataDefinition]dataCache{}
-var lState = logicState{}
-var kState = keyState{
-	keyCodes: []uint32{},
-}
+type vectorInt struct{ x, y int }
+type vectorFloat struct{ x, y float64 }
 
-var steppingLogics = []*logicDefinition{}
-var willStartLogics = []*logicDefinition{}
-var willStopLogics = []*logicDefinition{}
-var lastOkMap = map[*logicDefinition]int64{}
-var isActivated bool
-var wasCursorMoving bool
+var emptyVectorInt = vectorInt{}
+var emptyVectorFloat = vectorFloat{}
 
-var winKeys = []uint32{0x5b, 0x5c}
-var controlKeys = []uint32{0x11, 0xa2, 0xa3}
-var altKeys = []uint32{0x12, 0xa4, 0xa5}
-var shiftKeys = []uint32{0x10, 0xa0, 0xa1}
-var lastNormalKeyCode uint32
+var emptyStruct = struct{}{}
 
-func OnKey(keyCode uint32, isDown bool) (preventDefault bool) {
-	mutex.Lock()
-	defer mutex.Unlock()
+type logicState struct {
+	ioManager         di.IOManager
+	hookManager       di.HookManager
+	overlayManager    di.OverlayManager
+	definitionManager di.DefinitionManager
+	uiManager         di.UIManager
 
-	for _, fd := range def.FunctionDefinitions {
-		r := procFunction(keyCode, isDown, fd, functionMap[fd])
-		preventDefault = preventDefault || r
-	}
-	kState = updateKeyState(keyCode, isDown, kState)
+	commandTool *di.CommandTool
 
-	preventDefault = preventDefault || procNormal(keyCode, isDown)
-	return
-}
-
-var emptyFunctionKey = def.FunctionKey{}
-
-func procFunction(
-	keyCode uint32, isDown bool, fd *def.FunctionDefinition, key def.FunctionKey,
-) (preventDefault bool) {
-	if key == emptyFunctionKey {
-		return
+	cmdState struct {
+		when           di.When
+		steppingCmdMap map[*di.Command]struct{}
 	}
 
-	ld := findLogicDefinition(fd)
-	if ld == nil {
-		lg.Errorf("No LogicDefinition for %s", fd.Name)
-		return
+	keyState struct {
+		pressingKeyMap map[string]struct{}
+		commandKey     di.CommandKey
+		lastUpTime     int64
+		eatUntilUpMap  map[string]struct{}
+		enderMap       map[string][]*di.Command
 	}
 
-	isStepping := funk.Contains(steppingLogics, ld)
-
-	if fd.When == def.Activated && !isActivated || fd.When == def.Deactivated && isActivated {
-		if isStepping {
-			registerStop(ld)
-		}
-		return
+	cursorState struct {
+		cursorSpeed         vectorInt
+		wheelSpeed          vectorInt
+		lastTeleportForward vectorInt
+		maxCursorSpeed      int
+		maxWheelSpeed       int
+		cursorDirectionMap  map[di.Direction]struct{}
+		wheelDirectionMap   map[di.Direction]struct{}
 	}
 
-	wasOk := isKeyOk(kState, key)
-	willOk := isKeyOk(updateKeyState(keyCode, isDown, kState), key)
-
-	if !wasOk && !willOk {
-		if isStepping {
-			lg.Errorf("LOGIC FALLACY: %s is stepping even not ok", ld.function.Name)
-			registerStop(ld)
-		}
-		return
+	configCache struct {
+		keyTimeout              int64
+		cursorAccel             int
+		wheelAccel              int
+		cursorMaxSpeed          int
+		wheelMaxSpeed           int
+		cursorSniperSpeed       int
+		wheelSniperSpeed        int
+		teleportDistance        int
+		commandKeyStringPathMap map[di.CommandKeyString]struct{}
 	}
 
-	isDouble := false
-	if willOk {
-		delta := time.Now().UnixMilli() - lastOkMap[ld]
-		if delta <= int64(cachedDataMap[def.DoublePressSpeed].int) {
-			isDouble = true
-			lastOkMap[ld] = 0
-		} else {
+	channel struct {
+		configChange chan di.Config
 
-			lastOkMap[ld] = time.Now().UnixMilli()
-		}
-	}
+		cursorMove <-chan di.Point
 
-	if key.IsDouble && !isDouble {
-		lg.Logf("%s ok but not double", fd.Name)
-		return
-	}
+		keyIn  <-chan di.HookKeyInfo
+		keyOut chan<- bool
 
-	if keyCode == key.KeyCode {
-		if isDown && willOk || !isDown && wasOk {
-			preventDefault = true
-		}
-	}
+		nextKeyIn  <-chan struct{}
+		nextKeyOut chan<- di.CommandKeyString
 
-	if !wasOk && willOk {
-		registerStart(ld)
-	}
+		exit <-chan struct{}
 
-	if wasOk && !willOk {
-		registerStop(ld)
-	}
-
-	return
-}
-func makeModInfo(keyCode uint32) (mi modInfo) {
-	mi.isWin = funk.ContainsUInt32(winKeys, keyCode)
-	mi.isControl = funk.ContainsUInt32(controlKeys, keyCode)
-	mi.isAlt = funk.ContainsUInt32(altKeys, keyCode)
-	mi.isShift = funk.ContainsUInt32(shiftKeys, keyCode)
-	return
-}
-
-func updateModInfo(keyCode uint32, isDown bool, src modInfo) (mi modInfo) {
-	newMI := makeModInfo(keyCode)
-	mi = src
-	if newMI.isWin {
-		mi.isWin = isDown
-	}
-	if newMI.isControl {
-		mi.isControl = isDown
-	}
-	if newMI.isAlt {
-		mi.isAlt = isDown
-	}
-	if newMI.isShift {
-		mi.isShift = isDown
-	}
-	return
-}
-
-func registerStart(ld *logicDefinition) {
-	if funk.Contains(willStartLogics, ld) {
-		lg.Errorf("LOGIC FALLACY: %s is already registered to start", ld.function.Name)
-	} else {
-		willStartLogics = append(willStartLogics, ld)
-	}
-
-}
-
-func registerStop(ld *logicDefinition) {
-	if funk.Contains(willStopLogics, ld) {
-		lg.Errorf("LOGIC FALLACY: %s is already registered to stop", ld.function.Name)
-	} else {
-		willStopLogics = append(willStopLogics, ld)
-	}
-
-}
-
-func findLogicDefinition(fd *def.FunctionDefinition) *logicDefinition {
-	for i := range logicDefinitions {
-		if logicDefinitions[i].function == fd {
-			return logicDefinitions[i]
-		}
-	}
-	return nil
-}
-
-func updateKeyState(keyCode uint32, isDown bool, ks keyState) (newKS keyState) {
-	newKS.keyCodes = updateKeyCodes(keyCode, isDown, ks.keyCodes)
-	newKS.modInfo = updateModInfo(keyCode, isDown, ks.modInfo)
-	return
-}
-
-func updateKeyCodes(keyCode uint32, isDown bool, keyCodes []uint32) []uint32 {
-	isContain := funk.ContainsUInt32(keyCodes, keyCode)
-	if isContain {
-		if isDown {
-			return keyCodes
-		}
-		return funk.FilterUInt32(
-			keyCodes, func(s uint32) bool {
-				return s != keyCode
-			},
-		)
-	} else {
-		if isDown {
-			return append(keyCodes, keyCode)
-		}
-		return keyCodes
+		cursorBuffer chan vectorInt
+		wheelBuffer  chan vectorInt
 	}
 }
 
-func isKeyOk(ks keyState, key def.FunctionKey) bool {
-	return isModOk(key, ks.modInfo) && (funk.ContainsUInt32(ks.keyCodes, key.KeyCode) || key.KeyCode == 0)
+func Run() {
+	uiManager := ui.New()
+	defer recoverFn(uiManager)
+
+	ioManager := io.New()
+	ioManager.Lock()
+
+	hookManager := hook.New()
+	overlayManager := overlay.New()
+	definitionManager := def.New()
+
+	logic := logicState{
+		ioManager:         ioManager,
+		hookManager:       hookManager,
+		overlayManager:    overlayManager,
+		definitionManager: definitionManager,
+		uiManager:         uiManager,
+	}
+
+	logic.Run()
 }
 
-func isModOk(key def.FunctionKey, mi modInfo) (ok bool) {
-	if key.IsWin && !mi.isWin {
-		return
-	}
+func recoverFn(uim di.UIManager) {
+	cause := recover()
+	if cause != nil {
+		message := fmt.Sprintf("%v", cause)
+		err, ok := cause.(error)
+		st := ""
+		if ok {
+			for {
+				stackTracer, ok := err.(interface {
+					StackTrace() errors.StackTrace
+				})
+				if ok {
+					st = fmt.Sprintf("%+v\n", stackTracer.StackTrace())
+					err = errors.Unwrap(err)
+					if err != nil {
+						continue
+					}
+				}
 
-	if key.IsControl && !mi.isControl {
-		return
-	}
-
-	if key.IsAlt && !mi.isAlt {
-		return
-	}
-
-	if key.IsShift && !mi.isShift {
-		return
-	}
-
-	ok = true
-	return
-}
-
-func procNormal(keyCode uint32, isDown bool) (preventDefault bool) {
-	mi := makeModInfo(keyCode)
-	if isDown && !(mi.isWin || mi.isAlt || mi.isControl || mi.isShift) {
-		select {
-		case <-DI.NormalKeyChan:
-			DI.NormalKeyChan <- keyCode
-			lastNormalKeyCode = keyCode
-			preventDefault = true
-		default:
-		}
-	}
-
-	if !isDown && lastNormalKeyCode == keyCode {
-		lastNormalKeyCode = 0
-		preventDefault = true
-	}
-	return
-}
-
-func Loop() {
-	var last int64
-	for {
-		delta := time.Now().Unix() - last
-		last = time.Now().Unix()
-		sleep := time.Duration(10-delta) * time.Millisecond
-		time.Sleep(sleep)
-		mutex.Lock()
-		startFunctions()
-		stopFunctions()
-		stepFunctions()
-		moveCursor()
-		rotateWheel()
-		procFriction()
-		procActivate()
-		mutex.Unlock()
-	}
-}
-
-func startFunctions() {
-	for _, ld := range willStartLogics {
-		lg.Logf("Start Function %s", ld.function.Name)
-		if ld.onStart != nil {
-			ld.onStart(&lState)
-		}
-
-		if funk.Contains(steppingLogics, ld) {
-			lg.Errorf("LOGIC FALLACY: %s already stepping", ld.function.Name)
-		} else {
-			steppingLogics = append(steppingLogics, ld)
-		}
-	}
-	willStartLogics = []*logicDefinition{}
-
-}
-
-func stopFunctions() {
-	for _, ld := range willStopLogics {
-		lg.Logf("Stop Function %s", ld.function.Name)
-		if ld.onStop != nil {
-			ld.onStop(&lState)
-		}
-		if !funk.Contains(steppingLogics, ld) {
-			lg.Errorf("LOGIC FALLACY: %s is not stepping", ld.function.Name)
-		}
-		steppingLogics = funk.Filter(
-			steppingLogics, func(a *logicDefinition) bool {
-				return a != ld
-			},
-		).([]*logicDefinition)
-	}
-	willStopLogics = []*logicDefinition{}
-}
-
-func moveCursor() {
-	ix := int(math.Round(lState.cursorDX))
-	iy := int(math.Round(lState.cursorDY))
-	if ix != 0 || iy != 0 {
-		if lState.fixedSpeedH != 0 && lState.fixedSpeedV != 0 {
-			if ix > 0 {
-				ix = lState.fixedSpeedH
-			} else if ix < 0 {
-				ix = -lState.fixedSpeedH
+				break
 			}
-			if iy > 0 {
-				iy = lState.fixedSpeedV
-			} else if iy < 0 {
-				iy = -lState.fixedSpeedV
-			}
-			lState.cursorDX = float64(ix)
-			lState.cursorDY = float64(iy)
 		}
-		DI.AddCursorPos(ix, iy)
-		if !wasCursorMoving {
-			wasCursorMoving = true
-			go DI.OnCursorMove()
+		if st == "" {
+			st = string(debug.Stack())
 		}
-	} else if wasCursorMoving {
-		wasCursorMoving = false
-		go DI.OnCursorStop()
-	}
-}
 
-func rotateWheel() {
-	if lState.wheelDX != 0 {
-		go DI.Wheel(lState.wheelDX, true)
-	}
-
-	if lState.wheelDY != 0 {
-		go DI.Wheel(lState.wheelDY, false)
-	}
-}
-
-func procFriction() {
-	procFrictionFloat(cachedDataMap[def.CursorFrictionH].float, &lState.cursorDX)
-	procFrictionFloat(cachedDataMap[def.CursorFrictionV].float, &lState.cursorDY)
-	procFrictionInt(cachedDataMap[def.WheelFrictionH].int, &lState.wheelDX)
-	procFrictionInt(cachedDataMap[def.WheelFrictionV].int, &lState.wheelDY)
-}
-
-func procFrictionFloat(friction float64, s *float64) {
-	if *s > 0 {
-		*s -= friction
-		if *s < 0 {
-			*s = 0
-		}
-		return
-	}
-
-	if *s < 0 {
-		*s += friction
-		if *s > 0 {
-			*s = 0
-		}
-	}
-}
-
-func procFrictionInt(friction int, s *int) {
-	if *s > 0 {
-		*s -= friction
-		if *s < 0 {
-			*s = 0
-		}
-		return
-	}
-
-	if *s < 0 {
-		*s += friction
-		if *s > 0 {
-			*s = 0
-		}
-	}
-}
-
-func stepFunctions() {
-	cnt := len(steppingLogics)
-	if cnt == 0 {
-		return
-	}
-
-	lds := make([]*logicDefinition, cnt)
-	for i := range steppingLogics {
-		lds[i] = steppingLogics[i]
-	}
-	sort.Slice(
-		lds, func(i, j int) bool {
-			return lds[i].function.Order < lds[i].function.Order
-		},
-	)
-	for _, ld := range lds {
-		if ld.onStep != nil {
-			ld.onStep(&lState)
-		}
-	}
-}
-
-func procActivate() {
-	if lState.willActivate {
-		lState.willActivate = false
-		isActivated = true
-		go DI.OnActivated()
-		return
-	}
-
-	if lState.willDeactivate {
-		lState.willDeactivate = false
-		isActivated = false
-		steppingLogics = []*logicDefinition{}
-		go DI.OnDeactivated()
+		text := fmt.Sprintf("%s\n\nStackTrace:\n%s", message, st)
+		lg.Errorf(text)
+		uim.ShowError(text)
+		os.Exit(1)
 	}
 }

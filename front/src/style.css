@@ -1,0 +1,85 @@
+* {
+  box-sizing: border-box;
+  font-family: "D2Coding", Consolas, monospace;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  height: 100%;
+}
+
+div {
+  padding: 0;
+  margin: 0;
+}
+
+#my-monaco {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  border: 1px solid #ccc;
+}
+
+#top {
+  display: flex;
+  flex-direction: row;
+}
+
+#more-modal-button {
+  margin-left: auto;
+}
+
+#more-modal {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  background-color: beige;
+  padding: 0 10px 5px;
+  box-shadow: 2px 2px 2px black;
+  z-index: 100;
+}
+
+#examples-modal {
+  background-color: beige;
+  z-index: 100;
+  padding: 5px;
+}
+
+#not-connected {
+  position: absolute;
+  background-color: white;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+#above {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+#config-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 1.3rem;
+}
+
+button.text {
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-shadow: 1px 1px 1px #555;
+}

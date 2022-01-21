@@ -4,22 +4,17 @@ import (
 	"fmt"
 	"log"
 	"os"
-
-	"github.com/wirekang/mouseable/internal/cnst"
 )
 
 var logger = log.New(os.Stdout, "", log.LstdFlags)
 
 func printf(prefix string, format string, v ...interface{}) {
-	if !cnst.IsDev {
-		return
-	}
-
 	logger.SetPrefix(fmt.Sprintf("%-7s", prefix))
-	logger.Printf(format, v...)
+	v = append([]interface{}{prefix}, v...)
+	logger.Printf("%-7s"+format, v...)
 }
 
-func Logf(format string, v ...interface{}) {
+func Printf(format string, v ...interface{}) {
 	printf("LOG", format, v...)
 }
 
