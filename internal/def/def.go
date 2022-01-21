@@ -93,7 +93,7 @@ func (m *manager) JSONSchema() di.ConfigJSONSchema {
 				whenToString(cmdDef.when),
 			),
 			// todo
-			"pattern": ".*",
+			// "pattern": "",
 		}
 	}
 	command["properties"] = cmdProperties
