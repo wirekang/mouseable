@@ -4,45 +4,41 @@ https://user-images.githubusercontent.com/43294688/148503688-66ea2e4b-9212-4392-
 
 ## Features
 
-* Access mouse features without real mouse.
+* Leverage on the features of a computer mouse without using the actual device.
 * Fully customizable hotkeys.
-* Convenient features helping move cursor quickly.
+* Convenient features which helps to move the cursor quickly.
 
-## Install
+## Installation
 
-Download installer or portable executable file
+Download the installer or portable executable file
 at **[Releases](https://github.com/wirekang/mouseable/releases)**.
 
-*Requires Chrome or Edge because Mouseable use [lorca](https://github.com/zserge/lorca) to draw GUI.*
+*Requires Chrome or Edge because Mouseable uses [lorca](https://github.com/zserge/lorca) to draw the GUI.*
 
 
-## Reasons why to stop using mouse
+## Reasons for using Mouseable, in Replacement of an Actual Computer Mouse 
 
-1. **Productivity**
+1. **Better Productivity**
 
-   When you use your mouse during programming? Does it necessary? Most tasks you do with the mouse are
-   inefficient. Every single actions in IDE have shortcuts. If you become skilled at doing everything by
-   keyboard, your productivity will increase a lot.
-
+   Ask yourself, do you use your mouse frequently (or at all) during programming? Is it really necessary? I think not. Since, you could very well perform most of the tasks in    your workflow using various keyboard shortcuts and hotkeys, and achieve even better productivity and efficiency, as you would otherwise, achieve using a mouse. Every single action in your IDE of chocie will most likely have a binded shortcut. If you could familiarize yourself with just using a keyboard, instead of relying on a mouse, you will most likely attain way better productivity. For instance, in these common situations listed down below, you don't even need a mouse:
     * In IDE, use vim plugin and shortcuts.
     * In Browser,
       use [Vimium](https://chrome.google.com/webstore/detail/vimium/dbepggeogbaibhgnhhndojpepiihcmeb?hl=en)
     * Other situations, use mouseable!
 
 
-2. **Health**
+2. **Health Benefits**
 
-   Using a mouse puts strain on your wrist. Fix your wrist in front of your keyboard!
+   Using a mouse puts unnecessary strain on your wrist. As such, just place your wrists in front of your keyboard and maintain that position, instead of constantly having to move your wrist around while using a mouse!
 
-3. **Space Saving**
+3. **Better Utilization of Existing Table Space**
 
-   A large space is required to use the mouse. Keep your desk clean by putting away your mouse!
+   Extra table space is required to use a computer mouse. Hence, keep your desk nice and free by putting away your mouse!
    
 ## Limitations
 
 * Windows Only
-* Should run Mouseable as administrator otherwise Mouseable won't work with other administrator program such
-  as Task Manager.
+* Mouseable must be run with administrator privileges, otherwise it will not work on system software such as Task Manager.
 
 ## Contributing
 
@@ -52,7 +48,7 @@ at **[Releases](https://github.com/wirekang/mouseable/releases)**.
 
 * Graphic
 
-  This project needs image assets such as icon, social preview image.
+  This project needs image assets such as icons and a social-preview image.
   
 ## Motivation
 
