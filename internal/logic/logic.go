@@ -12,15 +12,10 @@ import (
 	"github.com/wirekang/mouseable/internal/hook"
 	"github.com/wirekang/mouseable/internal/io"
 	"github.com/wirekang/mouseable/internal/lg"
+	"github.com/wirekang/mouseable/internal/logic/mover"
 	"github.com/wirekang/mouseable/internal/overlay"
 	"github.com/wirekang/mouseable/internal/ui"
 )
-
-type vectorInt struct{ x, y int }
-type vectorFloat struct{ x, y float64 }
-
-var emptyVectorInt = vectorInt{}
-var emptyVectorFloat = vectorFloat{}
 
 var emptyStruct = struct{}{}
 
@@ -47,24 +42,19 @@ type logicState struct {
 	}
 
 	cursorState struct {
-		cursorSpeed         vectorInt
-		wheelSpeed          vectorInt
-		lastTeleportForward vectorInt
-		maxCursorSpeed      int
-		maxWheelSpeed       int
-		cursorDirectionMap  map[di.Direction]struct{}
-		wheelDirectionMap   map[di.Direction]struct{}
+		teleportMover *mover.Mover
+		cursorMover   *mover.Mover
+		wheelMover    *mover.Mover
 	}
 
 	configCache struct {
 		keyTimeout              int64
-		cursorAccel             int
-		wheelAccel              int
+		cursorAccel             float64
+		wheelAccel              float64
 		cursorMaxSpeed          int
 		wheelMaxSpeed           int
 		cursorSniperSpeed       int
 		wheelSniperSpeed        int
-		teleportDistance        int
 		commandKeyStringPathMap map[di.CommandKeyString]struct{}
 	}
 
@@ -81,8 +71,8 @@ type logicState struct {
 
 		exit <-chan struct{}
 
-		cursorBuffer chan vectorInt
-		wheelBuffer  chan vectorInt
+		cursorBuffer chan mover.VectorInt
+		wheelBuffer  chan mover.VectorInt
 	}
 }
 

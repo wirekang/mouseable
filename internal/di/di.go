@@ -131,14 +131,10 @@ type UIManager interface {
 type Direction uint
 
 const (
-	DirectionRight     Direction = 0
-	DirectionRightUp   Direction = 1
-	DirectionUp        Direction = 2
-	DirectionLeftUp    Direction = 3
-	DirectionLeft      Direction = 4
-	DirectionLeftDown  Direction = 5
-	DirectionDown      Direction = 6
-	DirectionRightDown Direction = 7
+	DirectionRight Direction = 0b0001
+	DirectionUp    Direction = 0b0010
+	DirectionLeft  Direction = 0b0100
+	DirectionDown  Direction = 0b1000
 )
 
 type CommandTool struct {

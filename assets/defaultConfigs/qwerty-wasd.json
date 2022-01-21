@@ -19,7 +19,7 @@
   },
   "data": {
     "cursor-sniper-speed": 2,
-    "cursor-acceleration": 1,
+    "cursor-acceleration": 0.5,
     "cursor-max-speed": 10,
     "key-timeout": 150,
     "show-overlay": true,

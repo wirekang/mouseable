@@ -1,7 +1,6 @@
 package logic
 
 import (
-	"math"
 	"os"
 	"time"
 
@@ -9,6 +8,7 @@ import (
 
 	"github.com/wirekang/mouseable/internal/di"
 	"github.com/wirekang/mouseable/internal/lg"
+	"github.com/wirekang/mouseable/internal/logic/mover"
 )
 
 func (s *logicState) Run() {
@@ -57,39 +57,26 @@ func (s *logicState) bufferLoop() {
 	for {
 		select {
 		case v := <-s.channel.cursorBuffer:
-			s.hookManager.AddCursorPosition(v.x, v.y)
+			s.hookManager.AddCursorPosition(v.X, v.Y)
 		case v := <-s.channel.wheelBuffer:
-			s.hookManager.MouseWheel(v.x, true)
-			s.hookManager.MouseWheel(-v.y, false)
+			s.hookManager.MouseWheel(v.X, true)
+			s.hookManager.MouseWheel(-v.Y, false)
 		}
 	}
 }
 
 func (s *logicState) onTick() {
-	for command := range s.cmdState.steppingCmdMap {
-		command.OnStep(s.commandTool)
-	}
+	// todo
+	// No command use OnStep now.
+	// for command := range s.cmdState.steppingCmdMap {
+	// 	command.OnStep(s.commandTool)
+	// }
 
-	if len(s.cursorState.cursorDirectionMap) > 0 {
-		s.cursorState.cursorSpeed = combineDirectionMap(
-			s.cursorState.cursorSpeed,
-			s.cursorState.cursorDirectionMap,
-			s.configCache.cursorAccel,
-			s.cursorState.maxCursorSpeed,
-		)
-	}
+	s.cursorState.cursorMover.AddSpeedIfDirection(s.configCache.cursorAccel)
+	s.cursorState.wheelMover.AddSpeedIfDirection(s.configCache.wheelAccel)
 
-	if len(s.cursorState.wheelDirectionMap) > 0 {
-		s.cursorState.wheelSpeed = combineDirectionMap(
-			s.cursorState.wheelSpeed,
-			s.cursorState.wheelDirectionMap,
-			s.configCache.wheelAccel,
-			s.cursorState.maxWheelSpeed,
-		)
-	}
-
-	s.channel.cursorBuffer <- s.cursorState.cursorSpeed
-	s.channel.wheelBuffer <- s.cursorState.wheelSpeed
+	s.channel.cursorBuffer <- s.cursorState.cursorMover.Vector()
+	s.channel.wheelBuffer <- s.cursorState.wheelMover.Vector()
 }
 
 func (s *logicState) onConfigChange(config di.Config) {
@@ -105,18 +92,21 @@ func (s *logicState) onConfigChange(config di.Config) {
 
 	s.overlayManager.SetVisibility(getBool("show-overlay"))
 	s.configCache.keyTimeout = int64(getInt("key-timeout"))
-	s.configCache.cursorAccel = getInt("cursor-acceleration")
-	s.configCache.wheelAccel = getInt("wheel-acceleration")
+	s.configCache.cursorAccel = getFloat("cursor-acceleration")
+	s.configCache.wheelAccel = getFloat("wheel-acceleration")
 	s.configCache.cursorMaxSpeed = getInt("cursor-max-speed")
 	s.configCache.wheelMaxSpeed = getInt("wheel-max-speed")
 	s.configCache.cursorSniperSpeed = getInt("cursor-sniper-speed")
 	s.configCache.wheelSniperSpeed = getInt("wheel-sniper-speed")
-	s.configCache.teleportDistance = getInt("teleport-distance")
-
 	s.configCache.commandKeyStringPathMap = config.CommandKeyStringPathMap()
 
-	s.cursorState.maxCursorSpeed = s.configCache.cursorMaxSpeed
-	s.cursorState.maxWheelSpeed = s.configCache.wheelMaxSpeed
+	s.cursorState.cursorMover.SetMaxSpeed(s.configCache.cursorMaxSpeed)
+	s.cursorState.wheelMover.SetMaxSpeed(s.configCache.wheelMaxSpeed)
+
+	teleportDistance := getInt("teleport-distance")
+	s.cursorState.teleportMover.SetMaxSpeed(teleportDistance)
+	s.cursorState.teleportMover.SetSpeed(float64(teleportDistance))
+
 }
 
 func (s *logicState) onCursorMove(x, y int) {
@@ -139,8 +129,9 @@ func (s *logicState) loadAndApplyConfig() {
 }
 
 func (s *logicState) init() {
-	s.cursorState.cursorDirectionMap = make(map[di.Direction]struct{}, 8)
-	s.cursorState.wheelDirectionMap = make(map[di.Direction]struct{}, 8)
+	s.cursorState.cursorMover = &mover.Mover{}
+	s.cursorState.wheelMover = &mover.Mover{}
+	s.cursorState.teleportMover = &mover.Mover{}
 	s.cmdState.steppingCmdMap = make(map[*di.Command]struct{}, 5)
 	s.keyState.pressingKeyMap = make(map[string]struct{}, 5)
 	s.keyState.eatUntilUpMap = make(map[string]struct{}, 5)
@@ -159,8 +150,8 @@ func (s *logicState) init() {
 	s.channel.nextKeyOut = nextKeyChan
 	s.channel.cursorMove = cursorInfoChan
 	s.channel.exit = exitChan
-	s.channel.cursorBuffer = make(chan vectorInt, 100)
-	s.channel.wheelBuffer = make(chan vectorInt, 100)
+	s.channel.cursorBuffer = make(chan mover.VectorInt, 100)
+	s.channel.wheelBuffer = make(chan mover.VectorInt, 100)
 	s.channel.configChange = make(chan di.Config)
 
 	s.hookManager.SetOnCursorMoveListener(makeCursorListener(cursorInfoChan))
@@ -213,29 +204,4 @@ func (s *logicState) makeDataGetterString(config di.Config) func(name di.DataNam
 		dv := s.dataValueOrDefault(config, name)
 		return dv.String()
 	}
-}
-
-func combineDirectionMap(v vectorInt, m map[di.Direction]struct{}, accel, max int) (r vectorInt) {
-	x := float64(v.x)
-	y := float64(v.y)
-	for direction := range m {
-		x += directionVectorMap[direction].x * float64(accel)
-		y += directionVectorMap[direction].y * float64(accel)
-	}
-
-	if x == 0 && y == 0 {
-		return
-	}
-
-	length := math.Sqrt(math.Pow(x, 2) + math.Pow(y, 2))
-	if length > float64(max) {
-		x = x / length
-		y = y / length
-		r.x = int(math.Round(x * float64(max)))
-		r.y = int(math.Round(y * float64(max)))
-	} else {
-		r.x = int(math.Round(x))
-		r.y = int(math.Round(y))
-	}
-	return
 }

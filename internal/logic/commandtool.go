@@ -1,9 +1,8 @@
 package logic
 
 import (
-	"math"
-
 	"github.com/wirekang/mouseable/internal/di"
+	"github.com/wirekang/mouseable/internal/logic/mover"
 )
 
 func (s *logicState) initCommandTool() {
@@ -17,39 +16,31 @@ func (s *logicState) initCommandTool() {
 			s.cmdState.when = di.WhenDeactivated
 			s.overlayManager.Hide()
 			s.uiManager.SetTrayIconEnabled(false)
-			s.cursorState.cursorSpeed = emptyVectorInt
-			s.cursorState.wheelSpeed = emptyVectorInt
+			s.cursorState.cursorMover.SetSpeed(0)
 		},
 		RegisterCursorAccelerator: func(dir di.Direction) {
-			s.cursorState.cursorDirectionMap[dir] = emptyStruct
+			s.cursorState.cursorMover.AddDirection(dir)
 		},
 		UnregisterCursorAccelerator: func(dir di.Direction) {
-			delete(s.cursorState.cursorDirectionMap, dir)
-			if len(s.cursorState.cursorDirectionMap) == 0 {
-				s.cursorState.cursorSpeed = emptyVectorInt
-			}
+			s.cursorState.cursorMover.RemoveDirection(dir)
 		},
 		RegisterWheelAccelerator: func(dir di.Direction) {
-			s.cursorState.wheelDirectionMap[dir] = emptyStruct
-
+			s.cursorState.wheelMover.AddDirection(dir)
 		},
 		UnregisterWheelAccelerator: func(dir di.Direction) {
-			delete(s.cursorState.wheelDirectionMap, dir)
-			if len(s.cursorState.wheelDirectionMap) == 0 {
-				s.cursorState.wheelSpeed = emptyVectorInt
-			}
+			s.cursorState.wheelMover.RemoveDirection(dir)
 		},
 		FixCursorSpeed: func() {
-			s.cursorState.maxCursorSpeed = s.configCache.cursorSniperSpeed
+			s.cursorState.cursorMover.SetMaxSpeed(s.configCache.cursorSniperSpeed)
 		},
 		UnfixCursorSpeed: func() {
-			s.cursorState.maxCursorSpeed = s.configCache.cursorMaxSpeed
+			s.cursorState.cursorMover.SetMaxSpeed(s.configCache.cursorMaxSpeed)
 		},
 		FixWheelSpeed: func() {
-			s.cursorState.maxWheelSpeed = s.configCache.wheelSniperSpeed
+			s.cursorState.wheelMover.SetMaxSpeed(s.configCache.wheelSniperSpeed)
 		},
 		UnfixWheelSpeed: func() {
-			s.cursorState.maxWheelSpeed = s.configCache.wheelMaxSpeed
+			s.cursorState.wheelMover.SetMaxSpeed(s.configCache.wheelMaxSpeed)
 		},
 		MouseDown: func(button di.MouseButton) {
 			go s.hookManager.MouseDown(button)
@@ -58,22 +49,12 @@ func (s *logicState) initCommandTool() {
 			go s.hookManager.MouseUp(button)
 		},
 		Teleport: func(dir di.Direction) {
-			s.channel.cursorBuffer <- directionToVectorInt(dir, s.configCache.teleportDistance)
+			s.cursorState.teleportMover.SetDirection(dir)
+			s.channel.cursorBuffer <- s.cursorState.teleportMover.Vector()
 		},
 		TeleportForward: func() {
-			if math.Abs(float64(s.cursorState.cursorSpeed.x)) > 0.3 ||
-				math.Abs(float64(s.cursorState.cursorSpeed.y)) > 0.3 {
-				distance := s.configCache.teleportDistance
-				angle := math.Atan2(
-					float64(s.cursorState.cursorSpeed.x),
-					float64(s.cursorState.cursorSpeed.y),
-				)
-				s.cursorState.lastTeleportForward = vectorInt{
-					x: int(math.Round(float64(distance) * math.Sin(angle))),
-					y: int(math.Round(float64(distance) * math.Cos(angle))),
-				}
-			}
-			s.channel.cursorBuffer <- s.cursorState.lastTeleportForward
+			s.cursorState.teleportMover.SetDirection(s.cursorState.cursorMover.Direction())
+			s.channel.cursorBuffer <- s.cursorState.teleportMover.Vector()
 		},
 		Toggle: func() {
 			if s.cmdState.when == di.WhenDeactivated {
@@ -83,27 +64,11 @@ func (s *logicState) initCommandTool() {
 			}
 		},
 		Attach: func(dir di.Direction) {
-			s.channel.cursorBuffer <- directionToVectorInt(dir, 20000)
+			m := mover.Mover{}
+			m.SetDirection(dir)
+			m.SetMaxSpeed(20000)
+			m.SetSpeed(20000)
+			s.channel.cursorBuffer <- m.Vector()
 		},
 	}
-}
-
-const slow = 1 / math.Sqrt2
-
-var directionVectorMap = map[di.Direction]vectorFloat{
-	di.DirectionRight:     {x: 1, y: 0},
-	di.DirectionRightUp:   {x: slow, y: -slow},
-	di.DirectionUp:        {x: 0, y: -1},
-	di.DirectionLeftUp:    {x: -slow, y: -slow},
-	di.DirectionLeft:      {x: -1, y: 0},
-	di.DirectionLeftDown:  {x: -slow, y: slow},
-	di.DirectionDown:      {x: 0, y: 1},
-	di.DirectionRightDown: {x: slow, y: slow},
-}
-
-func directionToVectorInt(d di.Direction, distance int) (r vectorInt) {
-	f := directionVectorMap[d]
-	r.x = int(math.Round(f.x * float64(distance)))
-	r.y = int(math.Round(f.y * float64(distance)))
-	return
 }

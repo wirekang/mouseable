@@ -81,10 +81,10 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.RegisterCursorAccelerator(di.DirectionRightUp)
+				tool.RegisterCursorAccelerator(di.DirectionRight | di.DirectionUp)
 			},
 			OnEnd: func(tool *di.CommandTool) {
-				tool.UnregisterCursorAccelerator(di.DirectionRightUp)
+				tool.UnregisterCursorAccelerator(di.DirectionRight | di.DirectionUp)
 			},
 		},
 	)
@@ -107,10 +107,10 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.RegisterCursorAccelerator(di.DirectionLeftUp)
+				tool.RegisterCursorAccelerator(di.DirectionLeft | di.DirectionUp)
 			},
 			OnEnd: func(tool *di.CommandTool) {
-				tool.UnregisterCursorAccelerator(di.DirectionLeftUp)
+				tool.UnregisterCursorAccelerator(di.DirectionLeft | di.DirectionUp)
 			},
 		},
 	)
@@ -133,10 +133,10 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.RegisterCursorAccelerator(di.DirectionLeftDown)
+				tool.RegisterCursorAccelerator(di.DirectionLeft | di.DirectionDown)
 			},
 			OnEnd: func(tool *di.CommandTool) {
-				tool.UnregisterCursorAccelerator(di.DirectionLeftDown)
+				tool.UnregisterCursorAccelerator(di.DirectionLeft | di.DirectionDown)
 			},
 		},
 	)
@@ -159,10 +159,10 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.RegisterCursorAccelerator(di.DirectionRightDown)
+				tool.RegisterCursorAccelerator(di.DirectionRight | di.DirectionDown)
 			},
 			OnEnd: func(tool *di.CommandTool) {
-				tool.UnregisterCursorAccelerator(di.DirectionRightDown)
+				tool.UnregisterCursorAccelerator(di.DirectionRight | di.DirectionDown)
 			},
 		},
 	)
@@ -249,7 +249,7 @@ func New() di.DefinitionManager {
 		"MouseWheel ↓",
 		di.WhenActivated,
 		&di.Command{
-			OnStep: func(tool *di.CommandTool) {
+			OnBegin: func(tool *di.CommandTool) {
 				tool.RegisterWheelAccelerator(di.DirectionDown)
 			},
 			OnEnd: func(tool *di.CommandTool) {
@@ -262,7 +262,7 @@ func New() di.DefinitionManager {
 		"MouseWheel →",
 		di.WhenActivated,
 		&di.Command{
-			OnStep: func(tool *di.CommandTool) {
+			OnBegin: func(tool *di.CommandTool) {
 				tool.RegisterWheelAccelerator(di.DirectionRight)
 			},
 			OnEnd: func(tool *di.CommandTool) {
@@ -275,7 +275,7 @@ func New() di.DefinitionManager {
 		"MouseWheel ←",
 		di.WhenActivated,
 		&di.Command{
-			OnStep: func(tool *di.CommandTool) {
+			OnBegin: func(tool *di.CommandTool) {
 				tool.RegisterWheelAccelerator(di.DirectionLeft)
 			},
 			OnEnd: func(tool *di.CommandTool) {
@@ -309,7 +309,7 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.Teleport(di.DirectionRightUp)
+				tool.Teleport(di.DirectionRight | di.DirectionUp)
 			},
 		},
 	)
@@ -329,7 +329,7 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.Teleport(di.DirectionLeftUp)
+				tool.Teleport(di.DirectionLeft | di.DirectionUp)
 			},
 		},
 	)
@@ -349,7 +349,7 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.Teleport(di.DirectionLeftDown)
+				tool.Teleport(di.DirectionLeft | di.DirectionDown)
 			},
 		},
 	)
@@ -369,7 +369,7 @@ func New() di.DefinitionManager {
 		di.WhenActivated,
 		&di.Command{
 			OnBegin: func(tool *di.CommandTool) {
-				tool.Teleport(di.DirectionRightDown)
+				tool.Teleport(di.DirectionRight | di.DirectionDown)
 			},
 		},
 	)
@@ -415,9 +415,9 @@ func New() di.DefinitionManager {
 	)
 
 	m.insertData("key-timeout", "Key press timeout for continuous input in ms", di.Int, 150)
-	m.insertData("cursor-acceleration", "Cursor acceleration", di.Int, 2)
+	m.insertData("cursor-acceleration", "Cursor acceleration", di.Float, 0.5)
 	m.insertData("cursor-max-speed", "Cursor max speed", di.Int, 10)
-	m.insertData("wheel-acceleration", "Wheel acceleration", di.Int, 2)
+	m.insertData("wheel-acceleration", "Wheel acceleration", di.Float, 4.0)
 	m.insertData("wheel-max-speed", "Wheel max speed", di.Int, 40)
 	m.insertData("cursor-sniper-speed", "Sniper mode speed", di.Int, 2)
 	m.insertData("wheel-sniper-speed", "Sniper mode speed (Wheel)", di.Int, 8)
