@@ -7,7 +7,6 @@ import (
 	"github.com/wirekang/mouseable/internal/lg"
 )
 
-// todo
 func (s *logicState) onKey(keyInfo di.HookKeyInfo) (eat bool) {
 	key := keyInfo.Key
 	isDown := keyInfo.IsDown
