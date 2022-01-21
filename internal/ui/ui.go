@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 
 	"github.com/lxn/walk"
 	"github.com/zserge/lorca"
@@ -164,8 +165,10 @@ func (m *manager) bindLorca(lorcaUI lorca.UI) {
 	f("getVersion", func() string { return cnst.VERSION })
 	f(
 		"openLink", func(url string) {
+			url = strings.TrimPrefix(url, "https://")
+			url = strings.TrimPrefix(url, "http://")
 			_ = exec.Command(
-				"rundll32", "url.dll,FileProtocolHandler", "https://github.com/wirekang/mouseable",
+				"rundll32", "url.dll,FileProtocolHandler", "https://"+url,
 			).Start()
 		},
 	)
