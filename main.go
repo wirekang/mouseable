@@ -37,7 +37,7 @@ func initFS() {
 		panic(err)
 	}
 
-	cnst.DefaultConfigsFS, err = fs.Sub(cnst.DefaultConfigsFS, "defaultConfigs")
+	cnst.DefaultConfigsFS, err = fs.Sub(cnst.AssetFS, "defaultConfigs")
 	if err != nil {
 		panic(err)
 	}
