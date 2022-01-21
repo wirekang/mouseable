@@ -18,12 +18,14 @@
     "click-right": "L"
   },
   "data": {
-    "cursor-sniper-speed": 4,
-    "cursor-speed": 10,
+    "cursor-sniper-speed": 2,
+    "cursor-acceleration": 1,
+    "cursor-max-speed": 10,
     "key-timeout": 150,
     "show-overlay": true,
     "teleport-distance": 200,
+    "wheel-acceleration": 4,
     "wheel-sniper-speed": 8,
-    "wheel-speed": 40
+    "wheel-max-speed": 40
   }
 }
