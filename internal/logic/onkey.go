@@ -9,6 +9,10 @@ import (
 
 func (s *logicState) onKey(keyInfo di.HookKeyInfo) (eat bool) {
 	key := keyInfo.Key
+	if key == "" {
+		return
+	}
+
 	isDown := keyInfo.IsDown
 	isRepeat, pressingCount := s.updatePressingKeyMap(key, isDown)
 	didBegin := false
