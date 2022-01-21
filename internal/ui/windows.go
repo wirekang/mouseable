@@ -4,6 +4,7 @@ package ui
 
 import (
 	"io/fs"
+	"os"
 
 	"github.com/JamesHovious/w32"
 	"github.com/lxn/walk"
@@ -64,6 +65,7 @@ func (m *manager) runNotifyIcon() {
 	if err != nil {
 		panic(err)
 	}
+
 	m.notifyIcon.MouseDown().Attach(
 		func(x, y int, button walk.MouseButton) {
 			if button == walk.LeftButton {
@@ -71,6 +73,15 @@ func (m *manager) runNotifyIcon() {
 			}
 		},
 	)
+
+	exitAction := walk.NewAction()
+	exitAction.SetText("Terminate")
+	exitAction.Triggered().Attach(
+		func() {
+			os.Exit(0)
+		},
+	)
+	m.notifyIcon.ContextMenu().Actions().Add(exitAction)
 
 	err = m.notifyIcon.SetVisible(true)
 	if err != nil {
