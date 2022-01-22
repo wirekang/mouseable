@@ -1,3 +1,7 @@
+# v2.0.2
+
+* Fixed high CPU usage.
+
 # v2.0.1
 
 ### UI
