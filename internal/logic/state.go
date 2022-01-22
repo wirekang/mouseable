@@ -30,19 +30,15 @@ Loop:
 		select {
 		case keyInfo := <-s.channel.keyIn:
 			s.channel.keyOut <- s.onKey(keyInfo)
-		default:
-			select {
-			case <-s.channel.exit:
-				lg.Printf("Exit mainLoop")
-				break Loop
-			case point := <-s.channel.cursorMove:
-				s.onCursorMove(point.X, point.Y)
-			case config := <-s.channel.configChange:
-				s.onConfigChange(config)
-			case <-ticker.C:
-				s.onTick()
-			default:
-			}
+		case <-s.channel.exit:
+			lg.Printf("Exit mainLoop")
+			break Loop
+		case point := <-s.channel.cursorMove:
+			s.onCursorMove(point.X, point.Y)
+		case config := <-s.channel.configChange:
+			s.onConfigChange(config)
+		case <-ticker.C:
+			s.onTick()
 		}
 	}
 
