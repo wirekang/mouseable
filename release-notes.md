@@ -1,3 +1,8 @@
+# v2.0.4
+
+* Installer will automatically kill Mouseable process.
+* Fixed a bug where Attach not working.
+
 # v2.0.3
 
 * Added data **(cursor|wheel|teleport)-factor**. You can set horizontal/vertical speed differently like
