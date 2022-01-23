@@ -1,17 +1,3 @@
-/*
-
-This example script installs a simple application for all users on a machine.
-
-All-users installers should only write to HKLM, $ProgramFiles, $CommonFiles and the
-"All context" versions of $LocalAppData, $Templates, $SMPrograms etc.
-
-It should not write to HKCU nor any folders in the users profile!
-If the application requires writable template data in $AppData it
-must copy the required files from a shared location the
-first time a user launches the application.
-
-*/
-
 !define NAME "Mouseable"
 !define REGPATH_UNINSTSUBKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}"
 Name "${NAME}"
@@ -23,7 +9,6 @@ InstallDirRegKey HKLM "${REGPATH_UNINSTSUBKEY}" "UninstallString"
 
 !include LogicLib.nsh
 !include Integration.nsh
-
 
 Page Directory
 Page InstFiles
@@ -51,6 +36,21 @@ Function un.onInit
   SetShellVarContext All
   !insertmacro EnsureAdminRights
 FunctionEnd
+
+
+Section "Kill process"
+  StrCpy $1 "mouseable.exe"
+
+  nsProcess::_FindProcess "$1"
+  Pop $R0
+  ${If} $R0 = 0
+    nsProcess::_KillProcess "$1"
+    Pop $R0
+    MessageBox MB_OK 'process has been killed.'
+    Sleep 500
+  ${EndIf}
+
+SectionEnd
 
 
 Section "Program files (Required)"

@@ -56,11 +56,6 @@ need a mouse:
 
 ## Contributing
 
-* Better installation and execution  
-  Mouseable needs to be terminated while it is being installed, and run automatically on startup by admin
-  privileges. If you know well about it, please help me!
-
-
 * Readme
 
   If you find any awkward sentence, please PR! I'm not good at english.
