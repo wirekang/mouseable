@@ -1,3 +1,11 @@
+# v2.0.3
+
+* Added data **(cursor|wheel|teleport)-factor**. You can set horizontal/vertical speed differently like
+  **TeleportDistanceH/V** in previous version. #19
+
+
+* Now accelerations not carried over. #17
+
 # v2.0.2
 
 * Fixed high CPU usage.
