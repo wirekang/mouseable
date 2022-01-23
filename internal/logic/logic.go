@@ -77,7 +77,7 @@ type logicState struct {
 func Run() {
 	uiManager := ui.New()
 
-	defer ferr.Recover(
+	defer ferr.RecoverCallback(
 		func(s string) {
 			lg.Errorf(s)
 			uiManager.ShowError(s)
