@@ -14,6 +14,8 @@ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/thoas/go-funk v0.9.1 h1:O549iLZqPpTUQ10ykd26sZhzD+rmR5pWhuElrhbC20M=
 github.com/thoas/go-funk v0.9.1/go.mod h1:+IWnUfUmFO1+WVYQWQtIJHeRRdaIyyYglZN7xzUPe4Q=
+github.com/wirekang/first-error v0.0.0-20220123070531-e04545a1f799 h1:UB/50gX+tVwPsqrLhhLjsq5k/FPEJdI+sFDm9+/oKwY=
+github.com/wirekang/first-error v0.0.0-20220123070531-e04545a1f799/go.mod h1:Tbobj4UqhyR8dOqhL0UPjAZ4FKlIvlug3E1ZI5bRp3I=
 github.com/wirekang/w32 v1.2.1-0.20220109051044-e6d7dabffcd3 h1:zZnRCKOLXiJZdsxlW9TbvpoBKaGKTjcj2iAblVdbnVw=
 github.com/wirekang/w32 v1.2.1-0.20220109051044-e6d7dabffcd3/go.mod h1:L6LTHMKvhtpGUkIYGTo4U9PKancYKpGS/+naYtTs8Ys=
 github.com/zserge/lorca v0.1.10 h1:f/xBJ3D3ipcVRCcvN8XqZnpoKcOXV8I4vwqlFyw7ruc=

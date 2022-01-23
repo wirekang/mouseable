@@ -1,11 +1,9 @@
 package logic
 
 import (
-	"fmt"
 	"os"
-	"runtime/debug"
 
-	"github.com/pkg/errors"
+	"github.com/wirekang/first-error"
 
 	"github.com/wirekang/mouseable/internal/def"
 	"github.com/wirekang/mouseable/internal/di"
@@ -78,7 +76,14 @@ type logicState struct {
 
 func Run() {
 	uiManager := ui.New()
-	defer recoverFn(uiManager)
+
+	defer ferr.Recover(
+		func(s string) {
+			lg.Errorf(s)
+			uiManager.ShowError(s)
+			os.Exit(1)
+		},
+	)
 
 	ioManager := io.New()
 	ioManager.Lock()
@@ -96,37 +101,4 @@ func Run() {
 	}
 
 	logic.Run()
-}
-
-func recoverFn(uim di.UIManager) {
-	cause := recover()
-	if cause != nil {
-		message := fmt.Sprintf("%v", cause)
-		err, ok := cause.(error)
-		st := ""
-		if ok {
-			for {
-				stackTracer, ok := err.(interface {
-					StackTrace() errors.StackTrace
-				})
-				if ok {
-					st = fmt.Sprintf("%+v\n", stackTracer.StackTrace())
-					err = errors.Unwrap(err)
-					if err != nil {
-						continue
-					}
-				}
-
-				break
-			}
-		}
-		if st == "" {
-			st = string(debug.Stack())
-		}
-
-		text := fmt.Sprintf("%s\n\nStackTrace:\n%s", message, st)
-		lg.Errorf(text)
-		uim.ShowError(text)
-		os.Exit(1)
-	}
 }

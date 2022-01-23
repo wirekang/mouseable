@@ -16,6 +16,7 @@ require (
 require (
 	github.com/lxn/win v0.0.0-20210218163916-a377121e959e // indirect
 	github.com/thoas/go-funk v0.9.1 // indirect
+	github.com/wirekang/first-error v0.0.0-20220123070531-e04545a1f799 // indirect
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410 // indirect
 	golang.org/x/net v0.0.0-20220107192237-5cfca573fb4d // indirect
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
