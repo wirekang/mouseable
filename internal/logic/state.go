@@ -62,7 +62,6 @@ func (s *logicState) bufferLoop() {
 }
 
 func (s *logicState) onTick() {
-	// todo
 	// No command use OnStep now.
 	// for command := range s.cmdState.steppingCmdMap {
 	// 	command.OnStep(s.commandTool)
@@ -98,6 +97,10 @@ func (s *logicState) onConfigChange(config di.Config) {
 
 	s.cursorState.cursorMover.SetMaxSpeed(s.configCache.cursorMaxSpeed)
 	s.cursorState.wheelMover.SetMaxSpeed(s.configCache.wheelMaxSpeed)
+
+	s.cursorState.cursorMover.SetFactor(getFloat("cursor-factor"))
+	s.cursorState.wheelMover.SetFactor(getFloat("wheel-factor"))
+	s.cursorState.teleportMover.SetFactor(getFloat("teleport-factor"))
 
 	teleportDistance := getInt("teleport-distance")
 	s.cursorState.teleportMover.SetMaxSpeed(teleportDistance)

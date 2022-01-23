@@ -423,6 +423,15 @@ func New() di.DefinitionManager {
 	m.insertData("wheel-sniper-speed", "Sniper mode speed (Wheel)", di.Int, 8)
 	m.insertData("teleport-distance", "Teleport distance", di.Int, 300)
 	m.insertData("show-overlay", "Show overlay when Mouseable activated", di.Bool, true)
+	m.insertData(
+		"cursor-factor",
+		"If value is 1, cursor moves at the same vertical/horizontal speed.\n\n"+
+			" If value is 2, horizontal speed of cursor is vertical speed x 2.\n\n"+
+			"If value is 0.5,horizontal speed of cursor is vertical speed x 0.5",
+		di.Float, 1.0,
+	)
+	m.insertData("wheel-factor", "Same as cursor-factor", di.Float, 1.0)
+	m.insertData("teleport-factor", "Same as cursor-factor", di.Float, 1.0)
 
 	return m
 }

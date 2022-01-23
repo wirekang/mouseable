@@ -12,6 +12,7 @@ type Mover struct {
 	direction  di.Direction
 	directions []di.Direction
 	isLocked   bool
+	factor     float64
 }
 
 func (m *Mover) SetMaxSpeed(v int) {
@@ -70,7 +71,7 @@ func (m *Mover) Vector() (r VectorInt) {
 	}
 
 	f := dirVectorMap[m.direction]
-	r.X = int(math.Round(m.speed * f.X))
+	r.X = int(math.Round(m.speed * f.X * m.factor))
 	r.Y = int(math.Round(m.speed * f.Y))
 	return
 }
@@ -84,6 +85,10 @@ func (m *Mover) calcDirection() {
 	if m.direction == 0 {
 		m.speed = 0
 	}
+}
+
+func (m *Mover) SetFactor(f float64) {
+	m.factor = f
 }
 
 type VectorInt struct {
