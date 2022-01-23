@@ -73,6 +73,9 @@ func (m *Mover) Vector() (r VectorInt) {
 	f := dirVectorMap[m.direction]
 	r.X = int(math.Round(m.speed * f.X * m.factor))
 	r.Y = int(math.Round(m.speed * f.Y))
+	if r.X == 0 && r.Y == 0 {
+		m.speed = 0
+	}
 	return
 }
 
