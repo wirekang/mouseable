@@ -11,7 +11,6 @@ type Mover struct {
 	maxSpeed   float64
 	direction  di.Direction
 	directions []di.Direction
-	isLocked   bool
 	factor     float64
 }
 

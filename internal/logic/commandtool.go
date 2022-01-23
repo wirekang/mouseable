@@ -65,6 +65,7 @@ func (s *logicState) initCommandTool() {
 		},
 		Attach: func(dir di.Direction) {
 			m := mover.Mover{}
+			m.SetFactor(1)
 			m.SetDirection(dir)
 			m.SetMaxSpeed(20000)
 			m.SetSpeed(20000)
