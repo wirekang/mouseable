@@ -1,3 +1,7 @@
+# v2.0.5
+
+* New tray icon painted by **Koka (gavrilovne@gmail.com)**
+
 # v2.0.4
 
 * Installer will automatically kill Mouseable process.
@@ -19,8 +23,8 @@
 
 ### UI
 
-Dropped sloppy UI, embed [monaco-editor](https://microsoft.github.io/monaco-editor). Now you can edit json
-file directly with comfortable suggestion.
+Dropped sloppy UI, embed [monaco-editor](https://microsoft.github.io/monaco-editor). Now you can edit json file directly
+with comfortable suggestion.
 
 ### New Logic
 
