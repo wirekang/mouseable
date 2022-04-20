@@ -25,7 +25,7 @@ func (c *config) CommandKeyStringPathMap() map[di.CommandKeyString]struct{} {
 }
 
 func (c *config) CommandKeyString(name di.CommandName) di.CommandKeyString {
-	return c.cmdMap[name]
+	return di.CommandKeyString(strings.ToLower(string(c.cmdMap[name])))
 }
 
 func (c *config) SetJSON(configJSON di.ConfigJSON) (err error) {

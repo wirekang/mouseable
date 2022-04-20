@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"strings"
 	"time"
 
 	"github.com/wirekang/mouseable/internal/di"
@@ -12,6 +13,7 @@ func (s *logicState) onKey(keyInfo di.HookKeyInfo) (eat bool) {
 	if key == "" {
 		return
 	}
+	key = strings.ToLower(key)
 
 	isDown := keyInfo.IsDown
 	isRepeat, pressingCount := s.updatePressingKeyMap(key, isDown)
