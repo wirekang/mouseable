@@ -1,3 +1,7 @@
+# v2.0.7
+
+* Ignored capitalisation.
+
 # v2.0.5
 
 * New tray icon painted by **Koka (gavrilovne@gmail.com)**
