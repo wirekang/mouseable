@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"math"
 	"os"
 	"time"
 
@@ -106,6 +107,13 @@ func (s *logicState) onConfigChange(config di.Config) {
 	s.cursorState.teleportMover.SetMaxSpeed(teleportDistance)
 	s.cursorState.teleportMover.SetSpeed(float64(teleportDistance))
 
+	diagonalSpeed := 1 / math.Sqrt2
+	if getBool("fast-diagonals") {
+		diagonalSpeed = 1
+	}
+	s.cursorState.cursorMover.SetDiagonalSpeed(diagonalSpeed)
+	s.cursorState.wheelMover.SetDiagonalSpeed(diagonalSpeed)
+	s.cursorState.teleportMover.SetDiagonalSpeed(diagonalSpeed)
 }
 
 func (s *logicState) onCursorMove(x, y int) {

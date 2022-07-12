@@ -432,6 +432,7 @@ func New() di.DefinitionManager {
 	)
 	m.insertData("wheel-factor", "Same as cursor-factor", di.Float, 1.0)
 	m.insertData("teleport-factor", "Same as cursor-factor", di.Float, 1.0)
+	m.insertData("fast-diagonals", "If true, cursor moves faster on the diagonal.", di.Bool, false)
 
 	return m
 }

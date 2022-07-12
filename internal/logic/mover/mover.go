@@ -7,11 +7,26 @@ import (
 )
 
 type Mover struct {
-	speed      float64
-	maxSpeed   float64
-	direction  di.Direction
-	directions []di.Direction
-	factor     float64
+	speed        float64
+	maxSpeed     float64
+	direction    di.Direction
+	directions   []di.Direction
+	factor       float64
+	dirVectorMap map[di.Direction]VectorFloat
+}
+
+// for issue #26
+func (m *Mover) SetDiagonalSpeed(r float64) {
+	m.dirVectorMap = map[di.Direction]VectorFloat{
+		di.DirectionUp:                       {+0, -1},
+		di.DirectionDown:                     {+0, +1},
+		di.DirectionRight:                    {+1, +0},
+		di.DirectionRight | di.DirectionUp:   {+r, -r},
+		di.DirectionRight | di.DirectionDown: {+r, +r},
+		di.DirectionLeft:                     {-1, +0},
+		di.DirectionLeft | di.DirectionUp:    {-r, -r},
+		di.DirectionLeft | di.DirectionDown:  {-r, +r},
+	}
 }
 
 func (m *Mover) SetMaxSpeed(v int) {
@@ -69,7 +84,7 @@ func (m *Mover) Vector() (r VectorInt) {
 		return
 	}
 
-	f := dirVectorMap[m.direction]
+	f := m.dirVectorMap[m.direction]
 	r.X = int(math.Round(m.speed * f.X * m.factor))
 	r.Y = int(math.Round(m.speed * f.Y))
 	if r.X == 0 && r.Y == 0 {
@@ -99,17 +114,4 @@ type VectorInt struct {
 
 type VectorFloat struct {
 	X, Y float64
-}
-
-const r = 1 / math.Sqrt2
-
-var dirVectorMap = map[di.Direction]VectorFloat{
-	di.DirectionUp:                       {+0, -1},
-	di.DirectionDown:                     {+0, +1},
-	di.DirectionRight:                    {+1, +0},
-	di.DirectionRight | di.DirectionUp:   {+r, -r},
-	di.DirectionRight | di.DirectionDown: {+r, +r},
-	di.DirectionLeft:                     {-1, +0},
-	di.DirectionLeft | di.DirectionUp:    {-r, -r},
-	di.DirectionLeft | di.DirectionDown:  {-r, +r},
 }
