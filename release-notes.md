@@ -1,3 +1,7 @@
+# v2.0.8
+
+* Add 'fast-diagonals' #26
+
 # v2.0.7
 
 * Ignored capitalisation.
