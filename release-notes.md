@@ -1,6 +1,10 @@
+# v2.0.9
+
+* Fixed bug. 
+
 # v2.0.8
 
-* Add 'fast-diagonals' #26
+* Added 'fast-diagonals' #26
 
 # v2.0.7
 
