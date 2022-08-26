@@ -1,5 +1,7 @@
 # Mouseable
 
+Control the mouse via the keyboard. intended to replace a mouse or trackpad.
+
 https://user-images.githubusercontent.com/43294688/148503688-66ea2e4b-9212-4392-90a5-87cf240358e4.mp4
 
 ## Features
